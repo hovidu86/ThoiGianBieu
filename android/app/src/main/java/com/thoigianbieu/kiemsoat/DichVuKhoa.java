@@ -62,6 +62,7 @@ public class DichVuKhoa extends Service {
     private static final int ID_THONG_BAO_NEN = 1;
     private static final int ID_THONG_BAO_CANH_BAO = 2;
     private static final int ID_THONG_BAO_NGAT_QUANG = 3;
+    private static final int ID_THONG_BAO_MAT_QUYEN = 4;
 
     /** Chưa mở khoá được sau chừng này thì tắt màn hình lần nữa. */
     private static final long CHU_KY_KHOA_LAI = 120_000L;
@@ -756,14 +757,46 @@ public class DichVuKhoa extends Service {
 
                 if (lopKhoa == null && lopNghi == null
                         && manHinhDangBat() && !mayDangKhoa()) {
-                    NhatKy.ghi(DichVuKhoa.this, "nq-canh-gac",
-                            "màn hình sáng giữa quãng nghỉ, dựng lại lớp phủ");
-                    hienLopNghi();
+                    if (Settings.canDrawOverlays(DichVuKhoa.this)) {
+                        NhatKy.ghi(DichVuKhoa.this, "nq-canh-gac",
+                                "màn hình sáng giữa quãng nghỉ, dựng lại lớp phủ");
+                        hienLopNghi();
+                    } else {
+                        // Vào Settings gỡ quyền lớp phủ giữa quãng nghỉ. Không
+                        // dựng được màn chắn thì chuyển sang tắt màn hình, và
+                        // cứ hai giây tắt lại — gỡ quyền không phải đường thoát,
+                        // chỉ là đổi cách bị chặn.
+                        ch.nqTangSoNeTranh();
+                        NhatKy.ghi(DichVuKhoa.this, "ne-tranh",
+                                "gỡ quyền lớp phủ giữa quãng nghỉ, chuyển sang tắt màn hình");
+                        baoMatQuyenLopPhu();
+                        khoaManHinhNeuDuoc();
+                    }
                 }
                 tay.postDelayed(this, 2000);
             }
         };
         tay.postDelayed(canhGacNghi, 2000);
+    }
+
+    /** Nhắc bật lại quyền lớp phủ, kèm lối tắt mở thẳng trang cấp quyền. */
+    private void baoMatQuyenLopPhu() {
+        Intent y = new Intent(this, ChinhActivity.class);
+        y.putExtra(ChinhActivity.MO_TAB, ChinhActivity.TAB_MAY);
+        PendingIntent pi = PendingIntent.getActivity(this, 9300, y,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        if (nm == null) return;
+        nm.notify(ID_THONG_BAO_MAT_QUYEN, new Notification.Builder(this, KENH_CANH_BAO)
+                .setContentTitle(getString(R.string.mat_quyen_lop_phu))
+                .setContentText(getString(R.string.mat_quyen_lop_phu_noi))
+                .setStyle(new Notification.BigTextStyle()
+                        .bigText(getString(R.string.mat_quyen_lop_phu_noi)))
+                .setSmallIcon(R.drawable.bieu_tuong)
+                .setContentIntent(pi)
+                .setAutoCancel(true)
+                .build());
     }
 
     private void dungCanhGacNghi() {

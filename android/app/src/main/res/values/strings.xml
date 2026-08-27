@@ -258,4 +258,8 @@
     <!-- Nút i: tình trạng đầy đủ -->
     <string name="nut_thong_tin">i</string>
     <string name="tinh_trang_day_du">Tình trạng đầy đủ</string>
+
+    <!-- Gỡ quyền lớp phủ giữa quãng nghỉ -->
+    <string name="mat_quyen_lop_phu">Đã tắt quyền hiển thị của Thời gian biểu</string>
+    <string name="mat_quyen_lop_phu_noi">Quãng nghỉ vẫn còn hiệu lực. Không dựng được màn chắn thì màn hình sẽ tự tắt cho tới hết giờ nghỉ. Bấm vào đây để bật lại quyền.</string>
 </resources>

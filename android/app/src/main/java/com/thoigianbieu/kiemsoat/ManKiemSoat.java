@@ -314,6 +314,7 @@ public class ManKiemSoat {
         s.append("  Số đợt nghỉ bắt buộc: ").append(ch.nqSoDotHomNay()).append('\n');
         s.append("  Thoát khẩn cấp: đã dùng ").append(ch.nqSoKhanCapHomNay())
                 .append('/').append(ch.nqKhanCapMoiNgay()).append('\n');
+        s.append("  Số lần né tránh: ").append(ch.nqSoNeTranhHomNay()).append('\n');
 
         s.append("\nQUYỀN\n");
         PowerManager pm = ac.getSystemService(PowerManager.class);

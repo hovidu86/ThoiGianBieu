@@ -166,6 +166,17 @@ public class CauHinh {
         p.edit().putInt("nqSoKhanCap", p.getInt("nqSoKhanCap", 0) + 1).apply();
     }
 
+    public int nqSoNeTranhHomNay() { doiNgayNeuCan(); return p.getInt("nqSoNeTranh", 0); }
+
+    /**
+     * Đếm số lần né tránh trong ngày. Không chặn được người quyết tâm gỡ quyền,
+     * nhưng mỗi lần đều để lại dấu — và con số này hiện ngay ở bảng tình trạng.
+     */
+    public void nqTangSoNeTranh() {
+        doiNgayNeuCan();
+        p.edit().putInt("nqSoNeTranh", p.getInt("nqSoNeTranh", 0) + 1).apply();
+    }
+
     /* ==================== BĂM MÃ ==================== */
 
     public static String bam(String vanBan) {
