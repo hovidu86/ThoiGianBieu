@@ -50,6 +50,18 @@ public class NgatQuang {
 
     /** Màn hình vừa bật và máy đã mở khoá: bắt đầu tính giờ. */
     public void batDauDung(long bayGio) {
+        long batDauCu = ch.nqBatDauPhien();
+        if (batDauCu > 0) {
+            // Phiên trước còn đang mở: dịch vụ bị hệ thống giết giữa lúc màn
+            // hình đang bật rồi dựng lại. Chốt nốt quãng đó rồi mở phiên mới.
+            // Tuyệt đối không xét ngưỡng reset ở đây — màn hình có tắt đâu mà
+            // gọi là nghỉ, xét vào là biếu không người dùng một đợt 15 phút mới
+            // sau mỗi lần app bị giết.
+            long them = Math.max(0, bayGio - batDauCu);
+            ch.nqDatTrangThai(ch.nqDaDungMs() + them, bayGio, ch.nqLucTatManHinh());
+            ch.nqCongThemHomNay(them);
+            return;
+        }
         long lucTat = ch.nqLucTatManHinh();
         long daDung = phaiReset(lucTat, bayGio, ch.nqPhutReset()) ? 0 : ch.nqDaDungMs();
         ch.nqDatTrangThai(daDung, bayGio, lucTat);
@@ -91,6 +103,12 @@ public class NgatQuang {
 
     /** Vào quãng nghỉ bắt buộc, bộ đếm đợt về 0. */
     public void batDauNghi(long bayGio) {
+        // Chốt phiên đang mở vào thống kê ngày TRƯỚC khi xoá bộ đếm. Quên bước
+        // này thì một mạch dùng 15 phút liền sẽ hiện "hôm nay đã dùng 0 phút"
+        // ngay bên cạnh "số đợt nghỉ: 1".
+        long batDau = ch.nqBatDauPhien();
+        if (batDau > 0) ch.nqCongThemHomNay(Math.max(0, bayGio - batDau));
+
         ch.nqDatKetThucNghi(bayGio + ch.nqPhutNghi() * 60_000L);
         ch.nqDatTrangThai(0, 0, bayGio);
         ch.nqTangSoDot();

@@ -19,12 +19,35 @@ param(
   [switch]$Go,
   [string]$Ten = 'ThoiGianBieu-KiemSoatMay',
   [switch]$ChiKiemTra,  # đăng ký, kiểm tra, xoá lại - không khởi động app
-  # Tài khoản sẽ chạy tác vụ. Cai-dat.cmd bắt tên NGƯỜI DÙNG THẬT trước khi
-  # nâng quyền rồi truyền vào đây. Nếu đọc $env:USERNAME sau khi nâng quyền,
-  # trên máy dùng tài khoản thường sẽ ra tên người quản trị vừa bấm Yes ở hộp
-  # thoại UAC, và tác vụ không bao giờ chạy cho người dùng thật.
+  # Chỉ dùng khi muốn ép một tài khoản cụ thể. Để trống thì tự dò, xem
+  # hàm Tim-NguoiDungThat bên dưới.
   [string]$NguoiDung = ''
 )
+
+<#
+  Tài khoản đang thật sự ngồi trước máy.
+
+  Không đọc $env:USERNAME được: script này chạy sau khi nâng quyền, nên trên
+  máy dùng tài khoản thường nó sẽ ra tên người quản trị vừa bấm Yes ở hộp thoại
+  UAC, và tác vụ đăng ký xong không bao giờ chạy cho người dùng thật.
+
+  Cũng không truyền qua tham số dòng lệnh được: tên tài khoản trên máy này là
+  "HOANG VIET DUNG", có dấu cách, mà Start-Process nối các tham số bằng dấu
+  cách và không tự bọc nháy — sang tới cmd thì %1 chỉ còn "PC\HOANG".
+
+  Cách chắc chắn: hỏi chủ sở hữu tiến trình explorer.exe. Đó luôn là người
+  đang đăng nhập, không phải người vừa nâng quyền.
+#>
+function Tim-NguoiDungThat {
+  try {
+    $vo = Get-WmiObject Win32_Process -Filter "Name='explorer.exe'" | Select-Object -First 1
+    if ($vo) {
+      $chu = $vo.GetOwner()
+      if ($chu -and $chu.User) { return ($chu.Domain + '\' + $chu.User) }
+    }
+  } catch { }
+  return "$env:USERDOMAIN\$env:USERNAME"
+}
 
 $TenTacVu = $Ten
 $ThuMuc = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -46,7 +69,7 @@ if (-not (Test-Path $Vbs)) {
   exit 1
 }
 
-$nguoiDung = if ($NguoiDung -ne '') { $NguoiDung } else { "$env:USERDOMAIN\$env:USERNAME" }
+$nguoiDung = if ($NguoiDung -ne '') { $NguoiDung } else { Tim-NguoiDungThat }
 Write-Host ('  Tac vu se chay duoi tai khoan: ' + $nguoiDung)
 
 # Dựng thẳng XML thay vì dùng dòng lệnh schtasks: chỉ XML mới đặt được

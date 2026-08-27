@@ -271,6 +271,10 @@ $script:XamlPhu = @'
 #>
 function Che-ManHinhPhu($cuaSoGoc) {
   $script:CuaSoPhu = @()
+  # Mỗi cửa sổ che dựng lên đều cướp tiêu điểm của cửa sổ khoá. Không dựng cờ
+  # này thì mỗi màn hình phụ lại đẻ ra một dòng "né tránh" giả trong nhật ký,
+  # làm hỏng đúng cái nhật ký dùng để phát hiện né tránh thật.
+  $script:DangCheManHinh = $true
 
   $doi = $null
   try {
@@ -296,6 +300,8 @@ function Che-ManHinhPhu($cuaSoGoc) {
       $script:CuaSoPhu += $w
     } catch { }
   }
+
+  $script:DangCheManHinh = $false
 }
 
 function Khoa-May {
@@ -414,16 +420,21 @@ function Khoa-May {
   })
   # Bị mất tiêu điểm thì giành lại
   $win.Add_Deactivated({
-    if ($script:DangKhoa) {
+    if (-not $script:DangKhoa) { return }
+    # Cửa sổ che màn hình phụ của chính mình cũng làm mất tiêu điểm, đừng tính
+    # đó là né tránh. Và mỗi lần khoá chỉ ghi một dòng, không ghi mỗi lần click.
+    if (-not $script:DangCheManHinh -and -not $script:DaGhiNeTranh) {
+      $script:DaGhiNeTranh = $true
       Ghi-NhatKy 'ne-tranh' 'cửa sổ khoá bị mất tiêu điểm'
-      try {
-        $script:CuaSoKhoa.Topmost = $true
-        $script:CuaSoKhoa.Activate() | Out-Null
-      } catch { }
     }
+    try {
+      $script:CuaSoKhoa.Topmost = $true
+      $script:CuaSoKhoa.Activate() | Out-Null
+    } catch { }
   })
 
   $script:DangKhoa = $true
+  $script:DaGhiNeTranh = $false
   $win.Show()
   Che-ManHinhPhu $win
   $win.Activate() | Out-Null

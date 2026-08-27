@@ -14,7 +14,7 @@ Bắt buộc phải là app gốc, dùng quyền quản trị thiết bị (`Dev
 
 ## Cài lên điện thoại
 
-APK dựng sẵn nằm ở `dist-apk/KiemSoatMay.apk` (47 KB).
+APK dựng sẵn nằm ở `dist-apk/KiemSoatMay.apk` (48 KB).
 
 1. Chép file APK sang điện thoại — qua cáp, Zalo, Google Drive, hoặc tải thẳng từ
    GitHub bằng trình duyệt trên máy.
@@ -92,7 +92,9 @@ trọn vẹn một đợt mới.
 màn hình cuộc gọi đến. Phải bấm **hai lần trong 5 giây** mới thoát được, mỗi lần
 đều bị ghi vào nhật ký và trừ vào hạn mức trong ngày. Ngoài ra khi máy đang trong
 cuộc gọi thì app không tắt màn hình — kiểm bằng `AudioManager.getMode()`, không
-cần xin thêm quyền nào.
+cần xin thêm quyền nào. Việc hoãn này có **trần 20 phút**: `MODE_IN_COMMUNICATION`
+không chỉ có cuộc gọi thật, khối ứng dụng ghi âm và trợ lý giọng nói cũng giữ chế
+độ đó, hoãn vô hạn thì mở một ứng dụng như thế lên là thoát khoá cả đêm.
 
 Nút **Xem thống kê hôm nay** cho biết tổng thời gian đã dùng, số đợt nghỉ, số lần
 thoát khẩn cấp, và đợt hiện tại đã đi được bao xa.
@@ -116,7 +118,7 @@ nên hệ thống có giết dịch vụ rồi dựng lại thì vẫn đếm ti
 | `NhatKy.java` | ghi CSV mọi lần khoá / mở / nhập sai / né tránh |
 
 Java thuần, **không phụ thuộc thư viện ngoài nào** — không AndroidX, không
-Capacitor. Nhờ vậy APK chỉ 47 KB và dựng được mà không cần tải gì thêm.
+Capacitor. Nhờ vậy APK chỉ 48 KB và dựng được mà không cần tải gì thêm.
 
 Vì sao dùng lớp phủ chứ không dùng Activity: từ Android 10, app chạy nền không
 được tự mở Activity. Lớp phủ `TYPE_APPLICATION_OVERLAY` thì dựng lúc nào cũng

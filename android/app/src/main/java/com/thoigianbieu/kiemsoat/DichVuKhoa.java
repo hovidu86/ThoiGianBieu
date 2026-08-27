@@ -55,6 +55,8 @@ public class DichVuKhoa extends Service {
     private static final long CHU_KY_KHOA_LAI = 120_000L;
     /** Nhịp soát hạn mức dùng ngắt quãng. */
     private static final long CHU_KY_SOAT_NQ = 20_000L;
+    /** Hoãn khoá vì đang gọi điện lâu nhất chừng này rồi thôi. */
+    private static final long HOAN_TOI_DA = 20 * 60_000L;
 
     private CauHinh ch;
     private NgatQuang nq;
@@ -73,6 +75,8 @@ public class DichVuKhoa extends Service {
     private Runnable nhipNghi;
     private boolean daCanhBaoDot;
     private boolean khanCapChoXacNhan;
+    /** Lúc bắt đầu hoãn khoá vì đang gọi điện. 0 = không hoãn. */
+    private long hoanTuLuc;
 
     private BroadcastReceiver batTatManHinh;
 
@@ -247,12 +251,13 @@ public class DichVuKhoa extends Service {
         if (!ch.daDatMa()) return;
 
         // Đang gọi điện thì hoãn lại, nhịp soát sau sẽ khoá bù.
-        if (ch.nqKhongKhoaKhiGoi() && dangGoiDien()) {
+        if (choPhepHoan()) {
             NhatKy.ghi(this, "hoan-khoa", "đang gọi điện");
             ch.datMocKhoa(System.currentTimeMillis() + 60_000L);
             LenLich.datLai(this);
             return;
         }
+        hoanTuLuc = 0;
 
         goLopCanhBao();
         goLopNghi();
@@ -393,6 +398,11 @@ public class DichVuKhoa extends Service {
         ch.datMocKhoa(ch.mocSauKhiMo(System.currentTimeMillis()));
         LenLich.datLai(this);
         chayNen();
+
+        // Mở khoá đêm xong thì màn hình đang bật, nhưng sẽ không có tin bật màn
+        // hình nào nữa để khởi động lại bộ đếm ngắt quãng. Không gọi tay ở đây
+        // thì ngắt quãng nằm im suốt cả quãng vừa mở khoá được.
+        if (manHinhDangBat()) manHinhVaoDung(System.currentTimeMillis());
     }
 
     /* ==================== DÙNG NGẮT QUÃNG ==================== */
@@ -487,10 +497,11 @@ public class DichVuKhoa extends Service {
     }
 
     private void vaoNghi(long bayGio) {
-        if (ch.nqKhongKhoaKhiGoi() && dangGoiDien()) {
+        if (choPhepHoan()) {
             NhatKy.ghi(this, "hoan-nghi", "đang gọi điện");
             return;
         }
+        hoanTuLuc = 0;
         nq.batDauNghi(bayGio);
         daCanhBaoDot = false;
         dungNhipNgatQuang();
@@ -593,11 +604,36 @@ public class DichVuKhoa extends Service {
     /* ==================== LẶT VẶT ==================== */
 
     private void khoaManHinhNeuDuoc() {
-        if (ch.nqKhongKhoaKhiGoi() && dangGoiDien()) return;
+        if (choPhepHoan()) return;
         QuanTriReceiver.khoaNgay(this);
     }
 
-    /** Đang gọi điện thì đừng tắt màn hình giữa cuộc gọi. */
+    /**
+     * Có được hoãn khoá vì đang gọi điện không.
+     *
+     * Phải có trần thời gian. MODE_IN_COMMUNICATION không chỉ có cuộc gọi thật:
+     * khối ứng dụng ghi âm, trợ lý giọng nói, cả vài trò chơi cũng giữ chế độ
+     * này. Hoãn vô hạn nghĩa là mở một ứng dụng như thế lên là thoát được khoá
+     * cả đêm. Quá {@link #HOAN_TOI_DA} thì khoá, gọi hay không cũng khoá.
+     */
+    private boolean choPhepHoan() {
+        if (!ch.nqKhongKhoaKhiGoi() || !dangGoiDien()) {
+            hoanTuLuc = 0;
+            return false;
+        }
+        long bayGio = System.currentTimeMillis();
+        if (hoanTuLuc == 0) {
+            hoanTuLuc = bayGio;
+            return true;
+        }
+        if (bayGio - hoanTuLuc >= HOAN_TOI_DA) {
+            NhatKy.ghi(this, "het-han-hoan", "hoãn quá lâu vì chế độ gọi, khoá luôn");
+            hoanTuLuc = 0;
+            return false;
+        }
+        return true;
+    }
+
     private boolean dangGoiDien() {
         AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am == null) return false;
