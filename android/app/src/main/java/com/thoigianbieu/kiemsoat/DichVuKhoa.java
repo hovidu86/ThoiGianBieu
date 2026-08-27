@@ -98,6 +98,8 @@ public class DichVuKhoa extends Service {
     private Runnable nhipDemLui;
     private Runnable canhGacNghi;
     private boolean daCanhBaoDot;
+    /** Mỗi quãng nghỉ chỉ đếm một lần né tránh và báo một lần, khỏi dội liên tục. */
+    private boolean daBaoMatQuyen;
     private boolean khanCapChoXacNhan;
     /** Lúc bắt đầu hoãn khoá vì đang gọi điện. 0 = không hoãn. */
     private long hoanTuLuc;
@@ -656,18 +658,7 @@ public class DichVuKhoa extends Service {
         if (nq.dangNghi(bayGio)) {
             NhatKy.ghi(this, "nq-chan-mo-khoa",
                     "đang nghỉ, còn " + (nq.conNghi(bayGio) / 1000) + " giây");
-            // CHỈ dựng lớp phủ, KHÔNG tắt màn hình lần nữa.
-            //
-            // Trước đây tắt luôn, và đó là gốc của ba lỗi user báo: tắt màn
-            // hình khiến chính lớp phủ vừa dựng bị gỡ đi (xem manHinhRoiDung),
-            // nên người dùng chẳng thấy đồng hồ nghỉ đâu cả, chỉ thấy màn hình
-            // cứ chết đi chết lại — mở app cũng tắt, đang dùng cũng tắt. Còn
-            // lúc lệnh tắt về chậm một nhịp thì lại dùng được bình thường,
-            // thành ra "lúc chặn lúc không".
-            //
-            // Lớp phủ mới là cái chặn. Nó che kín màn hình, đếm ngược cho thấy
-            // còn bao lâu, và tự tan khi hết giờ.
-            hienLopNghi();
+            chanQuangNghi();
             return;
         }
         nq.batDauDung(bayGio);
@@ -751,6 +742,7 @@ public class DichVuKhoa extends Service {
             return;
         }
         hoanTuLuc = 0;
+        daBaoMatQuyen = false;
         goLopDemLui();
         nq.batDauNghi(bayGio);
         daCanhBaoDot = false;
@@ -785,33 +777,43 @@ public class DichVuKhoa extends Service {
                     return;
                 }
 
-                // Phải hỏi "cửa sổ CÓ CÒN TRÊN MÀN HÌNH không", chứ không phải
-                // "biến tham chiếu có khác null không". Gỡ quyền giữa chừng thì
-                // hệ thống lấy mất cửa sổ mà app không hề được báo — biến vẫn
-                // trỏ vào một cái xác, và vòng canh gác tưởng màn chắn còn đó
-                // nên không làm gì. Đúng lỗi user vừa gặp.
-                if (lopKhoa == null && !conTrenManHinh(lopNghi)
-                        && manHinhDangBat() && !mayDangKhoa()) {
-                    if (Settings.canDrawOverlays(DichVuKhoa.this)) {
-                        NhatKy.ghi(DichVuKhoa.this, "nq-canh-gac",
-                                "màn hình sáng giữa quãng nghỉ, dựng lại lớp phủ");
-                        hienLopNghi();
-                    } else {
-                        // Vào Settings gỡ quyền lớp phủ giữa quãng nghỉ. Không
-                        // dựng được màn chắn thì chuyển sang tắt màn hình, và
-                        // cứ hai giây tắt lại — gỡ quyền không phải đường thoát,
-                        // chỉ là đổi cách bị chặn.
-                        ch.nqTangSoNeTranh();
-                        NhatKy.ghi(DichVuKhoa.this, "ne-tranh",
-                                "gỡ quyền lớp phủ giữa quãng nghỉ, chuyển sang tắt màn hình");
-                        baoMatQuyenLopPhu();
-                        khoaManHinhNeuDuoc();
-                    }
+                // Màn hình đang sáng và máy đã mở khoá giữa quãng nghỉ thì phải
+                // chặn. Chặn bằng cách nào để chanQuangNghi() quyết — ở đây
+                // không đoán gì về trạng thái lớp phủ nữa.
+                if (lopKhoa == null && manHinhDangBat() && !mayDangKhoa()) {
+                    chanQuangNghi();
                 }
                 tay.postDelayed(this, 2000);
             }
         };
         tay.postDelayed(canhGacNghi, 2000);
+    }
+
+    /**
+     * Chặn người dùng trong quãng nghỉ. Một chỗ duy nhất quyết định chặn bằng
+     * cách nào, để không nơi nào còn tự đoán.
+     *
+     * Điều kiện đầu tiên là QUYỀN, không phải trạng thái của lớp phủ. Bài học
+     * từ hai lần sửa hụt: gỡ quyền xong, biến vẫn trỏ vào cửa sổ cũ và
+     * isAttachedToWindow() vẫn trả về true, nên mọi phép kiểm dựa trên lớp phủ
+     * đều kết luận sai là "màn chắn còn đó" rồi đứng im.
+     */
+    private void chanQuangNghi() {
+        if (Settings.canDrawOverlays(this)) {
+            hienLopNghi();
+            return;
+        }
+
+        // Mất quyền: màn chắn chắc chắn vô tác dụng, dù biến còn trỏ vào gì.
+        goLopNghi();
+        if (!daBaoMatQuyen) {
+            daBaoMatQuyen = true;
+            ch.nqTangSoNeTranh();
+            NhatKy.ghi(this, "ne-tranh",
+                    "gỡ quyền lớp phủ giữa quãng nghỉ, chuyển sang tắt màn hình");
+            baoMatQuyenLopPhu();
+        }
+        khoaManHinhNeuDuoc();
     }
 
     /** Nhắc bật lại quyền lớp phủ, kèm lối tắt mở thẳng trang cấp quyền. */
@@ -1020,8 +1022,13 @@ public class DichVuKhoa extends Service {
     /* ==================== LẶT VẶT ==================== */
 
     private void khoaManHinhNeuDuoc() {
-        if (choPhepHoan()) return;
-        QuanTriReceiver.khoaNgay(this);
+        if (choPhepHoan()) {
+            NhatKy.ghi(this, "hoan-tat-man-hinh", "đang ở chế độ gọi điện");
+            return;
+        }
+        if (!QuanTriReceiver.khoaNgay(this)) {
+            NhatKy.ghi(this, "khong-tat-duoc", "thiếu quyền quản trị thiết bị");
+        }
     }
 
     /**
