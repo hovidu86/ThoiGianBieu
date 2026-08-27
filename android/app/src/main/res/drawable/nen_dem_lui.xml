@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nền đồng hồ đếm ngược: đậm và mờ nhẹ để đọc được trên mọi ứng dụng. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#F00B1121" />
+    <corners android:radius="24dp" />
+    <stroke android:width="2dp" android:color="@color/vang" />
+</shape>

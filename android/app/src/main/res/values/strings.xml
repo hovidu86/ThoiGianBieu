@@ -249,4 +249,13 @@
     <string name="dang_tai_cn">Đang tải… %1$d%%</string>
     <string name="loi_cap_nhat">Không kiểm tra được: %1$s</string>
     <string name="goi_y_cap_nhat">Android không cho ứng dụng tự cài đè chính nó, nên app chỉ tải sẵn rồi mở trình cài đặt — bạn bấm Cài đặt một lần là xong.</string>
+
+    <!-- Đồng hồ đếm ngược trước khi tắt màn hình -->
+    <string name="giay_nua">giây nữa</string>
+    <string name="sap_tat_man_hinh">SẮP TẮT MÀN HÌNH</string>
+    <string name="sap_het_dot_dung">HẾT ĐỢT DÙNG</string>
+
+    <!-- Nút i: tình trạng đầy đủ -->
+    <string name="nut_thong_tin">i</string>
+    <string name="tinh_trang_day_du">Tình trạng đầy đủ</string>
 </resources>

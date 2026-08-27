@@ -45,8 +45,19 @@ public class DichVuKhoa extends Service {
     public static final String HANH_DONG_CANH_GIU = "canh_giu";
     public static final String HANH_DONG_CANH_BAO = "canh_bao";
     public static final String HANH_DONG_KHOA = "khoa";
+    public static final String HANH_DONG_DEM_LUI = "dem_lui";
+    public static final String HANH_DONG_THONG_BAO_BI_VUOT = "thong_bao_bi_vuot";
+    public static final String MOC_TAT = "moc_tat";
 
-    private static final String KENH_NEN = "chay_nen";
+    /** Để màn hình Khoá máy biết dịch vụ còn sống hay không. */
+    public static volatile boolean dangChay;
+
+    /**
+     * Kênh mới, mức MIN. Không sửa được mức của kênh cũ — Android khoá cứng cấu
+     * hình kênh sau lần tạo đầu tiên, muốn đổi phải tạo kênh khác và xoá kênh cũ.
+     */
+    private static final String KENH_NEN = "chay_nen_min";
+    private static final String KENH_NEN_CU = "chay_nen";
     private static final String KENH_CANH_BAO = "canh_bao";
     private static final int ID_THONG_BAO_NEN = 1;
     private static final int ID_THONG_BAO_CANH_BAO = 2;
@@ -74,6 +85,7 @@ public class DichVuKhoa extends Service {
     private View lopKhoa;
     private View lopCanhBao;
     private View lopNghi;
+    private View lopDemLui;
 
     private int buoc = 1;        // 1 = chờ lần 1, 2 = đang đếm ngược, 3 = chờ lần 2
     private int conLai = 0;
@@ -82,6 +94,7 @@ public class DichVuKhoa extends Service {
     private Runnable canhGac;
     private Runnable nhipNgatQuang;
     private Runnable nhipNghi;
+    private Runnable nhipDemLui;
     private boolean daCanhBaoDot;
     private boolean khanCapChoXacNhan;
     /** Lúc bắt đầu hoãn khoá vì đang gọi điện. 0 = không hoãn. */
@@ -93,6 +106,7 @@ public class DichVuKhoa extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        dangChay = true;
         ch = new CauHinh(this);
         nq = new NgatQuang(ch);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
@@ -115,6 +129,11 @@ public class DichVuKhoa extends Service {
             hienCanhBao(intent.getIntExtra(LenLich.SO_PHUT, 0));
         } else if (HANH_DONG_KHOA.equals(hanhDong)) {
             khoa();
+        } else if (HANH_DONG_DEM_LUI.equals(hanhDong)) {
+            hienDemLui(ch.mocKhoa(), getString(R.string.sap_tat_man_hinh));
+        } else if (HANH_DONG_THONG_BAO_BI_VUOT.equals(hanhDong)) {
+            // chayNen() ở trên đã dựng lại thông báo rồi, chỉ cần ghi lại.
+            NhatKy.ghi(this, "thong-bao-bi-vuot", "đã dựng lại thông báo chạy nền");
         } else {
             soatLaiToanBo();
         }
@@ -210,10 +229,17 @@ public class DichVuKhoa extends Service {
         NotificationManager nm = getSystemService(NotificationManager.class);
         if (nm == null) return;
 
+        // MIN: không có icon trên thanh trạng thái, nằm gọn ở mục im lặng dưới
+        // cùng. Android bắt buộc dịch vụ tiền cảnh phải có thông báo, không thể
+        // giấu hẳn — đây là mức kín đáo nhất còn hợp lệ.
         NotificationChannel nen = new NotificationChannel(
-                KENH_NEN, getString(R.string.kenh_nen), NotificationManager.IMPORTANCE_LOW);
+                KENH_NEN, getString(R.string.kenh_nen), NotificationManager.IMPORTANCE_MIN);
         nen.setShowBadge(false);
+        nen.setSound(null, null);
+        nen.enableVibration(false);
+        nen.setLockscreenVisibility(Notification.VISIBILITY_SECRET);
         nm.createNotificationChannel(nen);
+        try { nm.deleteNotificationChannel(KENH_NEN_CU); } catch (Exception ignore) { }
 
         NotificationChannel canhBao = new NotificationChannel(
                 KENH_CANH_BAO, getString(R.string.kenh_canh_bao), NotificationManager.IMPORTANCE_HIGH);
@@ -237,14 +263,30 @@ public class DichVuKhoa extends Service {
             phu = getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()));
         }
 
-        Notification tb = new Notification.Builder(this, KENH_NEN)
+        Notification.Builder b = new Notification.Builder(this, KENH_NEN)
                 .setContentTitle(getString(R.string.ten_app))
                 .setContentText(phu)
                 .setStyle(new Notification.BigTextStyle().bigText(phu))
                 .setSmallIcon(R.drawable.bieu_tuong)
                 .setContentIntent(moApp)
                 .setOngoing(true)
-                .build();
+                // Kênh đã đặt mức MIN, tắt âm và tắt rung; setPriority chỉ để
+                // các máy cũ hiểu. (setSilent là của AndroidX, không có ở đây.)
+                .setPriority(Notification.PRIORITY_MIN)
+                // Vuốt bỏ thì cứ để nó biến mất, không dựng lại — user không
+                // muốn thấy nó. Chỉ ghi một dòng nhật ký cho biết đã bị vuốt;
+                // dịch vụ vẫn chạy y nguyên.
+                .setDeleteIntent(PendingIntent.getForegroundService(this, 9200,
+                        new Intent(this, DichVuKhoa.class)
+                                .setAction(HANH_DONG_THONG_BAO_BI_VUOT),
+                        PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // Hoãn hiện 10 giây: mấy lần dựng dịch vụ chớp nhoáng sẽ không kịp
+            // loé lên thông báo nào.
+            b.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_DEFERRED);
+        }
+        Notification tb = b.build();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(ID_THONG_BAO_NEN, tb, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
@@ -332,6 +374,7 @@ public class DichVuKhoa extends Service {
 
         goLopCanhBao();
         goLopNghi();
+        goLopDemLui();
         NhatKy.ghi(this, "khoa", "mốc " + LenLich.gioPhut(ch.mocKhoa()));
 
         if (!Settings.canDrawOverlays(this)) {
@@ -576,6 +619,8 @@ public class DichVuKhoa extends Service {
         if (lopKhoa != null) return;   // đang khoá đêm, chuyện khác
 
         if (nq.dangNghi(bayGio)) {
+            NhatKy.ghi(this, "nq-chan-mo-khoa",
+                    "đang nghỉ, còn " + (nq.conNghi(bayGio) / 1000) + " giây");
             hienLopNghi();
             khoaManHinhNeuDuoc();
             return;
@@ -640,8 +685,18 @@ public class DichVuKhoa extends Service {
             rung(250);
         }
 
+        // Mười giây cuối: hiện đồng hồ đếm ngược nổi và soát từng giây.
+        if (con <= 10_500) {
+            hienDemLui(bayGio + con, getString(R.string.sap_het_dot_dung));
+            return 500;
+        }
+
         // Còn xa thì soát thưa, sắp hết thì soát dày.
-        return Math.max(SOAT_NQ_DAY, Math.min(SOAT_NQ_THUA, con / 3));
+        long cho = Math.max(SOAT_NQ_DAY, Math.min(SOAT_NQ_THUA, con / 3));
+        // Nhưng đừng nhảy qua mốc 10 giây cuối, nếu không đồng hồ đếm ngược
+        // hiện ra khi chỉ còn 4 giây — đúng lỗi vừa thấy trên máy thật.
+        if (con - cho < 10_000) cho = Math.max(500, con - 10_000);
+        return cho;
     }
 
     private void vaoNghi(long bayGio) {
@@ -650,6 +705,7 @@ public class DichVuKhoa extends Service {
             return;
         }
         hoanTuLuc = 0;
+        goLopDemLui();
         nq.batDauNghi(bayGio);
         daCanhBaoDot = false;
         NhatKy.ghi(this, "ngat-quang", "hết hạn mức " + ch.nqPhutDung()
@@ -660,8 +716,14 @@ public class DichVuKhoa extends Service {
 
     /** Lớp phủ nghỉ: chỉ có đồng hồ đếm ngược, không đòi mã. Hết giờ tự tan. */
     private void hienLopNghi() {
-        if (lopNghi != null) return;
-        if (!Settings.canDrawOverlays(this)) return;
+        if (lopNghi != null) {
+            NhatKy.ghi(this, "nq-lop-nghi", "đã hiện sẵn rồi, bỏ qua");
+            return;
+        }
+        if (!Settings.canDrawOverlays(this)) {
+            NhatKy.ghi(this, "nq-lop-nghi", "KHÔNG dựng được: thiếu quyền lớp phủ");
+            return;
+        }
 
         goLopCanhBao();
         khanCapChoXacNhan = false;
@@ -716,6 +778,8 @@ public class DichVuKhoa extends Service {
         try {
             wm.addView(khung, lp);
             lopNghi = khung;
+            NhatKy.ghi(this, "nq-lop-nghi", "đã dựng, còn "
+                    + (nq.conNghi(System.currentTimeMillis()) / 1000) + " giây");
         } catch (Exception e) {
             NhatKy.ghi(this, "loi-lop-nghi", String.valueOf(e.getMessage()));
             return;
@@ -746,6 +810,71 @@ public class DichVuKhoa extends Service {
         if (lopNghi == null) return;
         try { wm.removeView(lopNghi); } catch (Exception ignore) { }
         lopNghi = null;
+    }
+
+    /* ==================== ĐỒNG HỒ ĐẾM NGƯỢC ==================== */
+
+    /**
+     * Đồng hồ đếm ngược nổi ở khoảng 1/5 phía trên màn hình, cho những giây
+     * cuối trước khi tắt màn hình.
+     *
+     * Không nhận chạm (FLAG_NOT_TOUCHABLE) nên không cản việc đang làm dở —
+     * chỉ để biết còn mấy giây mà kịp lưu lại.
+     */
+    private void hienDemLui(final long mocTat, String lyDo) {
+        if (!Settings.canDrawOverlays(this)) return;
+        // Đã có đồng hồ rồi thì để yên cho nó đếm nốt. Dựng lại mỗi nửa giây
+        // vừa nhấp nháy vừa đầy nhật ký.
+        if (lopDemLui != null) return;
+        long con = mocTat - System.currentTimeMillis();
+        if (con <= 0 || con > 60_000) return;
+
+        View v = LayoutInflater.from(this).inflate(R.layout.lop_phu_dem_lui, null);
+        final TextView so = v.findViewById(R.id.dem_lui_so);
+        ((TextView) v.findViewById(R.id.dem_lui_ly_do)).setText(lyDo);
+
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                        | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT);
+        lp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
+        lp.y = getResources().getDisplayMetrics().heightPixels / 5;
+
+        try {
+            wm.addView(v, lp);
+            lopDemLui = v;
+        } catch (Exception e) {
+            NhatKy.ghi(this, "loi-dem-lui", String.valueOf(e.getMessage()));
+            return;
+        }
+        NhatKy.ghi(this, "dem-lui", lyDo + ", còn " + (con / 1000) + " giây");
+        rung(150);
+
+        nhipDemLui = new Runnable() {
+            @Override
+            public void run() {
+                long conLai = mocTat - System.currentTimeMillis();
+                if (conLai <= 0 || lopDemLui == null) {
+                    goLopDemLui();
+                    return;
+                }
+                so.setText(String.valueOf((int) Math.ceil(conLai / 1000.0)));
+                tay.postDelayed(this, 200);
+            }
+        };
+        tay.post(nhipDemLui);
+    }
+
+    private void goLopDemLui() {
+        if (nhipDemLui != null) tay.removeCallbacks(nhipDemLui);
+        nhipDemLui = null;
+        if (lopDemLui == null) return;
+        try { wm.removeView(lopDemLui); } catch (Exception ignore) { }
+        lopDemLui = null;
     }
 
     /* ==================== LẶT VẶT ==================== */
@@ -808,6 +937,8 @@ public class DichVuKhoa extends Service {
 
     @Override
     public void onDestroy() {
+        dangChay = false;
+        goLopDemLui();
         if (batTatManHinh != null) {
             try { unregisterReceiver(batTatManHinh); } catch (Exception ignore) { }
             batTatManHinh = null;

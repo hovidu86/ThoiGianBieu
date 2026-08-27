@@ -88,6 +88,7 @@ public class ManKiemSoat {
         oNqDenGio.setOnClickListener(v ->
                 GiaoDien.chonGio(ac, oNqDenGio.getText().toString(), oNqDenGio::setText));
 
+        goc.findViewById(R.id.nut_thong_tin).setOnClickListener(v -> hienTinhTrangDayDu());
         ((Button) goc.findViewById(R.id.nut_luu)).setOnClickListener(v -> luu());
         ((Button) goc.findViewById(R.id.nut_thong_ke)).setOnClickListener(v -> xemThongKe());
         ((Button) goc.findViewById(R.id.nut_quyen_quan_tri)).setOnClickListener(v -> xinQuyenQuanTri());
@@ -257,6 +258,76 @@ public class ManKiemSoat {
         Intent i = new Intent(ac, DichVuKhoa.class);
         i.setAction(DichVuKhoa.HANH_DONG_KHOA);
         ac.startForegroundService(i);
+    }
+
+    /**
+     * Bảng tình trạng đầy đủ, mở bằng nút i nhỏ ở góc thẻ Tình trạng.
+     * Gom hết những gì đang diễn ra vào một chỗ, khỏi phải đoán.
+     */
+    private void hienTinhTrangDayDu() {
+        long bayGio = System.currentTimeMillis();
+        NgatQuang nq = new NgatQuang(ch);
+        StringBuilder s = new StringBuilder();
+
+        s.append("DỊCH VỤ NỀN\n");
+        s.append(DichVuKhoa.dangChay ? "  Đang chạy\n" : "  KHÔNG chạy — mở lại app\n");
+
+        s.append("\nKHOÁ THEO GIỜ\n");
+        s.append("  Khoảng khoá: ").append(ch.gioKhoa()).append(" → ").append(ch.gioKetThuc()).append('\n');
+        s.append("  Đang trong khoảng khoá: ")
+                .append(ch.trongKhoangKhoa(bayGio) ? "có" : "không").append('\n');
+        if (ch.daDatMa() && ch.mocKhoa() > 0) {
+            long con = ch.mocKhoa() - bayGio;
+            s.append("  Lần khoá kế tiếp: ").append(LenLich.gioPhut(ch.mocKhoa()));
+            if (con > 0) s.append("  (còn ").append(LuatGiacNgu.khoangCach(con)).append(")");
+            s.append('\n');
+        } else {
+            s.append("  Chưa đặt mã mở khoá nên chưa khoá gì\n");
+        }
+        s.append("  Mở khoá xong khoá lại sau: ").append(ch.lapLaiPhut()).append(" phút\n");
+        s.append("  Cảnh báo trước: ").append(ch.canhBaoPhut()).append(" phút\n");
+
+        s.append("\nDÙNG NGẮT QUÃNG\n");
+        if (!ch.ngatQuangBat()) {
+            s.append("  Đang tắt\n");
+        } else {
+            s.append("  Hạn mức: ").append(ch.nqPhutDung()).append(" phút, nghỉ ")
+                    .append(ch.nqPhutNghi()).append(" phút\n");
+            s.append("  Khung giờ: ").append(ch.nqTuGio().equals(ch.nqDenGio())
+                    ? "cả ngày" : ch.nqTuGio() + " → " + ch.nqDenGio()).append('\n');
+            s.append("  Đang trong khung giờ: ")
+                    .append(ch.nqTrongKhungGio(bayGio) ? "có" : "không").append('\n');
+            if (nq.dangNghi(bayGio)) {
+                s.append("  ĐANG NGHỈ, còn ").append(nq.conNghi(bayGio) / 1000).append(" giây\n");
+            } else {
+                long daDung = nq.daDung(bayGio);
+                s.append("  Đợt này đã dùng: ").append(daDung / 60_000).append(" phút ")
+                        .append((daDung / 1000) % 60).append(" giây\n");
+                s.append("  Còn lại: ").append(Math.max(0, nq.conLai(bayGio) / 60_000))
+                        .append(" phút\n");
+            }
+            s.append("  Nghỉ ").append(ch.nqPhutReset()).append(" phút thì bộ đếm về 0\n");
+        }
+
+        s.append("\nHÔM NAY\n");
+        s.append("  Tổng thời gian dùng: ").append(CauHinh.doDai(ch.nqTongHomNay())).append('\n');
+        s.append("  Số đợt nghỉ bắt buộc: ").append(ch.nqSoDotHomNay()).append('\n');
+        s.append("  Thoát khẩn cấp: đã dùng ").append(ch.nqSoKhanCapHomNay())
+                .append('/').append(ch.nqKhanCapMoiNgay()).append('\n');
+
+        s.append("\nQUYỀN\n");
+        PowerManager pm = ac.getSystemService(PowerManager.class);
+        s.append("  ").append(danhDau(QuanTriReceiver.daBat(ac))).append(" quản trị thiết bị\n");
+        s.append("  ").append(danhDau(Settings.canDrawOverlays(ac))).append(" lớp phủ\n");
+        s.append("  ").append(danhDau(pm != null
+                && pm.isIgnoringBatteryOptimizations(ac.getPackageName()))).append(" bỏ tối ưu pin\n");
+        s.append("  ").append(danhDau(ch.daDatMa())).append(" đã đặt mã mở khoá");
+
+        new AlertDialog.Builder(ac)
+                .setTitle(R.string.tinh_trang_day_du)
+                .setMessage(s.toString())
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void xemNhatKy() {

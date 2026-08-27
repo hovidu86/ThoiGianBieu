@@ -8,8 +8,8 @@ android {
         applicationId 'com.thoigianbieu.kiemsoat'
         minSdkVersion 26
         targetSdkVersion 36
-        versionCode 9
-        versionName '2.4'
+        versionCode 11
+        versionName '2.6'
     }
 
     compileOptions {
@@ -20,7 +20,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            // Ký bằng khoá debug để cài tay được ngay, không cần tạo keystore riêng.
+            // KÃ½ báº±ng khoÃ¡ debug Ä‘á»ƒ cÃ i tay Ä‘Æ°á»£c ngay, khÃ´ng cáº§n táº¡o keystore riÃªng.
             signingConfig signingConfigs.debug
         }
     }

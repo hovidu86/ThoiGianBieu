@@ -29,6 +29,11 @@ public class BaoThucReceiver extends BroadcastReceiver {
             return;
         }
 
+        if (LenLich.VIEC_DEM_LUI.equals(viec)) {
+            goiDichVu(ctx, DichVuKhoa.HANH_DONG_DEM_LUI, 0, false);
+            return;
+        }
+
         boolean laViecKhoa = !LenLich.VIEC_CANH_BAO.equals(viec);
         goiDichVu(ctx,
                 laViecKhoa ? DichVuKhoa.HANH_DONG_KHOA : DichVuKhoa.HANH_DONG_CANH_BAO,

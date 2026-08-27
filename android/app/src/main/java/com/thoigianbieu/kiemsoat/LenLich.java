@@ -20,11 +20,13 @@ public class LenLich {
     public static final String VIEC_KHOA = "khoa";
     public static final String VIEC_CANH_BAO = "canh_bao";
     public static final String VIEC_NHIP = "nhip";
+    public static final String VIEC_DEM_LUI = "dem_lui";
     public static final String SO_PHUT = "so_phut";
 
     private static final int MA_KHOA = 1000;
     private static final int MA_CANH_BAO = 2000;   // + số phút
     private static final int MA_NHIP = 3000;
+    private static final int MA_DEM_LUI = 4000;
 
     /**
      * Nhịp tự hồi phục, cũng là cái phao dựng lại dịch vụ.
@@ -54,6 +56,8 @@ public class LenLich {
         if (am == null) return;
 
         dat(ctx, am, MA_KHOA, moc, VIEC_KHOA, 0);
+        // Đồng hồ đếm ngược 10 giây cuối trước khi tắt màn hình.
+        if (moc - 10_000 > bayGio) dat(ctx, am, MA_DEM_LUI, moc - 10_000, VIEC_DEM_LUI, 0);
 
         // Nhớ lại đúng những mốc đã đặt, để lần sau huỷ cho sạch.
         java.util.List<Integer> daDat = new java.util.ArrayList<>();
@@ -99,6 +103,7 @@ public class LenLich {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
         am.cancel(taoY(ctx, MA_KHOA, VIEC_KHOA, 0));
+        am.cancel(taoY(ctx, MA_DEM_LUI, VIEC_DEM_LUI, 0));
         // Huỷ đúng những mốc đã đặt lần trước. Quét mù một dải cố định sẽ bỏ
         // sót mốc lớn hơn dải đó và để lại báo thức ma nổ ra cảnh báo vô nghĩa
         // sau khi người dùng sửa danh sách.

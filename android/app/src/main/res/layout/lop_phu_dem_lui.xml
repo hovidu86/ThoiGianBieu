@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Đồng hồ đếm ngược 10 giây cuối trước khi tắt màn hình. Nổi lên trên mọi ứng
+  dụng, không nhận chạm nên không cản trở việc đang làm dở.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/nen_dem_lui"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingLeft="26dp"
+    android:paddingTop="14dp"
+    android:paddingRight="26dp"
+    android:paddingBottom="16dp">
+
+    <TextView
+        android:id="@+id/dem_lui_ly_do"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="0.06"
+        android:textColor="@color/vang"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dem_lui_so"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:letterSpacing="-0.04"
+        android:text="10"
+        android:textColor="@color/chu"
+        android:textSize="58sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dem_lui_don_vi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-6dp"
+        android:text="@string/giay_nua"
+        android:textColor="@color/chu_mo"
+        android:textSize="12sp" />
+</LinearLayout>

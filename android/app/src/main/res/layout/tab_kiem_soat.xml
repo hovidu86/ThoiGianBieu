@@ -28,9 +28,32 @@
             android:orientation="vertical"
             android:padding="13dp">
 
-            <TextView
-                style="@style/Nhom"
-                android:text="@string/nhan_tinh_trang" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Nhom"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/nhan_tinh_trang" />
+
+                <!-- Nút i nhỏ ở góc: mở bảng tình trạng đầy đủ. -->
+                <TextView
+                    android:id="@+id/nut_thong_tin"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/nut_tron_nho"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/nut_thong_tin"
+                    android:textColor="@color/xanh"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tinh_trang"
