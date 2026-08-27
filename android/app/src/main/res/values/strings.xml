@@ -103,4 +103,96 @@
     <string name="loi_nq_canh_bao">Mốc cảnh báo phải là số phút từ 0 trở lên và nhỏ hơn thời lượng mỗi đợt.</string>
     <string name="loi_nq_gio">Khung giờ áp dụng phải đúng dạng HH:mm.</string>
     <string name="loi_nq_khan_cap">Số lần thoát khẩn cấp phải là số từ 0 trở lên.</string>
+
+    <!-- ============ MODULE GIẤC NGỦ ============ -->
+
+    <string name="ten_day_du">Thời gian biểu</string>
+    <string name="tab_ghi_nhan">Ghi nhận</string>
+    <string name="tab_thong_ke">Thống kê</string>
+    <string name="tab_cai_dat">Cài đặt</string>
+    <string name="tab_may">Khoá máy</string>
+
+    <string name="chua_ket_noi">Chưa kết nối</string>
+    <string name="dang_gui">Đang gửi…</string>
+    <string name="cho_gui">Chờ gửi %1$d</string>
+    <string name="da_dong_bo">Đã đồng bộ</string>
+    <string name="loi_gui">Lỗi gửi</string>
+    <string name="phu_de_muc_tieu">Giấc ngủ · mục tiêu trước %1$s</string>
+
+    <string name="quy_thuong_phat">Quỹ thưởng phạt</string>
+    <string name="chuoi_ky_luat">Chuỗi kỷ luật</string>
+    <string name="chuoi_ngay">%1$d ngày</string>
+    <string name="chuan_bi_ngu">Chuẩn bị ngủ</string>
+    <string name="chuan_bi_ngu_dem">Chuẩn bị ngủ (%1$d/%2$d)</string>
+    <string name="goi_y_buoc_chua_xong">Làm đủ cả %1$d bước (khoảng %2$d phút) để được thưởng thêm %3$s.</string>
+    <string name="goi_y_buoc_xong">Xong hết! Đêm nay được cộng thêm %1$s.</string>
+    <string name="chua_co_buoc">Chưa có bước nào. Thêm ở tab Cài đặt.</string>
+
+    <string name="ghi_nhan_dem">Ghi nhận đêm nay</string>
+    <string name="nhan_dem">Đêm (YYYY-MM-DD)</string>
+    <string name="nhan_gio_len_giuong">Giờ lên giường</string>
+    <string name="nhan_gio_day">Giờ thức dậy</string>
+    <string name="chon_gio_de_xem">Nhập giờ để xem mức thưởng/phạt.</string>
+    <string name="nut_bay_gio">Bây giờ</string>
+    <string name="nut_xac_nhan">Xác nhận</string>
+    <string name="gan_day">Gần đây</string>
+    <string name="chua_ghi_dem_nao">Chưa ghi đêm nào. Bấm "Bây giờ" rồi "Xác nhận" khi lên giường.</string>
+
+    <string name="con_den_gio">Còn %1$s nữa tới giờ mục tiêu %2$s</string>
+    <string name="da_qua_gio">Đã quá giờ mục tiêu %1$s — %2$s</string>
+    <string name="dem_nay_da_ghi">Đêm nay đã ghi lúc %1$s</string>
+
+    <string name="gio_ngu_14_dem">Giờ ngủ 14 đêm gần nhất</string>
+    <string name="cot_cao_la_muon">Cột càng cao là đi ngủ càng muộn. Đỏ là đêm bị mất chuỗi.</string>
+    <string name="thuong_thang_nay">Thưởng tháng này</string>
+    <string name="phat_thang_nay">Phạt tháng này</string>
+    <string name="nut_keo_ve">Tải từ Sheet</string>
+    <string name="nut_xuat_csv">Xuất CSV</string>
+    <string name="toan_bo_lich_su">Toàn bộ lịch sử</string>
+    <string name="tk_chi_tiet">Số đêm đã ghi: %1$d\nTỉ lệ đúng giờ: %2$d%%\nGiờ ngủ trung bình: %3$s\nThời lượng ngủ TB: %4$s\nChuỗi dài nhất: %5$d ngày\nChuỗi hiện tại: %6$d ngày\nTổng quỹ: %7$s</string>
+
+    <string name="dong_bo_google_sheets">Đồng bộ Google Sheets</string>
+    <string name="goi_y_url">Dán URL Web App một lần. URL nằm trong máy bạn, không bao giờ lên GitHub.</string>
+    <string name="mau_url">https://script.google.com/macros/s/…/exec</string>
+    <string name="nut_kiem_tra">Kiểm tra</string>
+    <string name="nut_luu_url">Lưu URL</string>
+    <string name="chua_kiem_tra">Chưa kiểm tra kết nối.</string>
+    <string name="dang_kiem_tra">Đang kiểm tra…</string>
+    <string name="url_sai_dinh_dang">URL phải bắt đầu bằng https://script.google.com/ và kết thúc bằng /exec</string>
+
+    <string name="moc_thuong_phat">Mốc thưởng phạt</string>
+    <string name="goi_y_moc">Ngủ trước mốc nào thì ăn tiền của mốc đó. Giờ sau nửa đêm ghi 24:00 đến 27:00.</string>
+    <string name="nut_them_moc">+ Thêm mốc</string>
+    <string name="nhan_phat_moi_gio">Vượt mốc cuối, phạt thêm mỗi giờ (VNĐ)</string>
+    <string name="nhan_truoc_gio_nay">Ngủ trước — chuỗi +1</string>
+    <string name="nhan_mat_chuoi_sau">Muộn hơn — mất chuỗi</string>
+    <string name="thuong_moc_chuoi">Thưởng mốc chuỗi</string>
+    <string name="nut_them_moc_chuoi">+ Thêm mốc chuỗi</string>
+    <string name="cac_buoc_chuan_bi">Các bước chuẩn bị ngủ</string>
+    <string name="nut_them_buoc">+ Thêm bước</string>
+    <string name="nhan_thuong_thoi_quen">Thưởng làm đủ (VNĐ)</string>
+    <string name="nhan_nhac_luc">Nhắc lúc (HH:mm)</string>
+    <string name="nut_luu_cai_dat_ngu">Lưu cài đặt giấc ngủ</string>
+    <string name="nut_quyen_thong_bao">Bật quyền thông báo</string>
+    <string name="nut_xoa">Xoá</string>
+
+    <string name="da_ghi_nhan">Đã ghi nhận</string>
+    <string name="da_ghi_bi_phat">Đã ghi nhận (bị phạt)</string>
+    <string name="ket_qua_dem">%1$s · chuỗi %2$d ngày</string>
+    <string name="thieu_du_lieu">Hãy nhập đêm và giờ lên giường.</string>
+    <string name="gio_sai">Giờ phải đúng dạng HH:mm, ví dụ 22:30.</string>
+    <string name="dem_sai">Đêm phải đúng dạng YYYY-MM-DD.</string>
+    <string name="ghi_de_dem">Đêm %1$s đã có dữ liệu (%2$s). Ghi đè?</string>
+    <string name="xoa_dem_hoi">Xoá đêm %1$s?</string>
+    <string name="da_xoa_dem">Đã xoá đêm %1$s.</string>
+    <string name="da_luu_cai_dat">Đã lưu cài đặt giấc ngủ.</string>
+    <string name="da_keo_ve">Đã tải về %1$d đêm từ Google Sheets.</string>
+    <string name="chua_dat_url">Chưa dán URL Web App ở tab Cài đặt.</string>
+    <string name="chuoi_sau_khi_ghi">Chuỗi sau khi ghi: %1$d ngày</string>
+    <string name="thuong_them">%1$s +%2$s</string>
+    <string name="thoi_quen_them">Thói quen +%1$s</string>
+    <string name="loi_tat_ghi_ngay">Ghi ngay</string>
+    <string name="loi_tat_ghi_ngay_dai">Ghi giờ lên giường ngay bây giờ</string>
+    <string name="loi_tat_chuan_bi">Chuẩn bị</string>
+    <string name="loi_tat_chuan_bi_dai">Mở checklist chuẩn bị ngủ</string>
 </resources>

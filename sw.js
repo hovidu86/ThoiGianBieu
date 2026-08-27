@@ -1,5 +1,5 @@
 /* Service worker: chạy offline hoàn toàn, trừ phần gọi Google Apps Script. */
-var CACHE = 'thoi-gian-bieu-v1';
+var CACHE = 'thoi-gian-bieu-v2';
 var SHELL = [
   './',
   './index.html',

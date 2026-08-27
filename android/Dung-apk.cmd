@@ -9,8 +9,8 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-copy /Y "app\build\outputs\apk\release\app-release.apk" "dist-apk\KiemSoatMay.apk" >nul
-echo   Xong: dist-apk\KiemSoatMay.apk
+copy /Y "app\build\outputs\apk\release\app-release.apk" "dist-apk\ThoiGianBieu.apk" >nul
+echo   Xong: dist-apk\ThoiGianBieu.apk
 echo   NHO tang versionCode trong app\build.gradle truoc moi lan phat hanh,
 echo   neu khong Android coi la cung mot ban va co the khong cap nhat.
 pause

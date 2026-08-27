@@ -1,7 +1,10 @@
-# Kiểm soát máy — Android
+# Thời gian biểu — Android
 
-Module Android của *Thời gian biểu*. Hai tính năng:
+Bản chính của *Thời gian biểu*. Ba tính năng:
 
+0. **Giấc ngủ** — chuyển nguyên từ bản PWA sang: ghi giờ lên giường, thưởng phạt
+   theo mốc giờ, chuỗi kỷ luật, checklist chuẩn bị ngủ, biểu đồ 14 đêm, đồng bộ
+   Google Sheets. Chạy gốc nên nhắc nhở và đồng bộ không cần mở trình duyệt.
 1. **Khoá theo giờ** — giống hệt bản Windows: tới giờ đã hẹn thì tắt màn hình,
    muốn dùng lại phải nhập mã dài **hai lần, cách nhau 15 giây**, sau đó cứ mỗi
    15 phút lại khoá tiếp cho tới giờ kết thúc. Gác giờ đi ngủ.
@@ -14,7 +17,7 @@ Bắt buộc phải là app gốc, dùng quyền quản trị thiết bị (`Dev
 
 ## Cài lên điện thoại
 
-APK dựng sẵn nằm ở `dist-apk/KiemSoatMay.apk` (48 KB).
+APK dựng sẵn nằm ở `dist-apk/ThoiGianBieu.apk` (89 KB).
 
 1. Chép file APK sang điện thoại — qua cáp, Zalo, Google Drive, hoặc tải thẳng từ
    GitHub bằng trình duyệt trên máy.
@@ -106,7 +109,14 @@ nên hệ thống có giết dịch vụ rồi dựng lại thì vẫn đếm ti
 
 | Tệp | Việc |
 |---|---|
-| `CauHinh.java` | cấu hình + toàn bộ phép tính mốc thời gian + băm mã. Không đụng giao diện |
+| `ChinhActivity.java` | màn hình chính: ba tab Ghi nhận / Thống kê / Cài đặt |
+| `LuatGiacNgu.java` | luật thưởng phạt và chuỗi. Bản port của `js/rules.js`, đối chiếu 90/90 dòng |
+| `CaiDatNgu.java` `DemNgu.java` | mô hình dữ liệu module Giấc ngủ |
+| `KhoGiacNgu.java` | lưu cấu hình và danh sách đêm ra JSON, tính lại, đánh dấu cần đồng bộ |
+| `DongBo.java` | HTTP tới Apps Script Web App, tự đi theo chuyển hướng |
+| `NhacNgu.java` | hai lời nhắc mỗi đêm, im lặng nếu đêm đó đã ghi |
+| `BieuDo.java` | biểu đồ 14 đêm, vẽ tay bằng Canvas |
+| `CauHinh.java` | cấu hình khoá máy + phép tính mốc thời gian + băm mã |
 | `NgatQuang.java` | luật dùng ngắt quãng. Phần tính toán là hàm tĩnh, kiểm thử được bằng Java thuần |
 | `LenLich.java` | đặt báo thức chính xác cho lần khoá và từng mốc cảnh báo |
 | `BaoThucReceiver.java` | báo thức nổ → chuyển việc sang dịch vụ |
@@ -118,7 +128,7 @@ nên hệ thống có giết dịch vụ rồi dựng lại thì vẫn đếm ti
 | `NhatKy.java` | ghi CSV mọi lần khoá / mở / nhập sai / né tránh |
 
 Java thuần, **không phụ thuộc thư viện ngoài nào** — không AndroidX, không
-Capacitor. Nhờ vậy APK chỉ 48 KB và dựng được mà không cần tải gì thêm.
+Capacitor. Nhờ vậy APK chỉ 89 KB và dựng được mà không cần tải gì thêm.
 
 Vì sao dùng lớp phủ chứ không dùng Activity: từ Android 10, app chạy nền không
 được tự mở Activity. Lớp phủ `TYPE_APPLICATION_OVERLAY` thì dựng lúc nào cũng

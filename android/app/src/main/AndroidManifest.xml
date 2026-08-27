@@ -5,6 +5,10 @@
          kể cả màn hình chính, sau khi người dùng mở khoá điện thoại. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
+    <!-- Đồng bộ với Google Apps Script Web App -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -18,20 +22,31 @@
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/ten_app"
+        android:label="@string/ten_day_du"
         android:supportsRtl="false"
         android:theme="@style/GiaoDien">
 
         <activity
-            android:name=".CaiDatActivity"
+            android:name=".ChinhActivity"
             android:exported="true"
-            android:label="@string/ten_app"
+            android:label="@string/ten_day_du"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/loi_tat" />
         </activity>
+
+        <activity
+            android:name=".CaiDatActivity"
+            android:exported="false"
+            android:label="@string/ten_app"
+            android:parentActivityName=".ChinhActivity"
+            android:windowSoftInputMode="adjustResize" />
 
         <service
             android:name=".DichVuKhoa"
@@ -44,6 +59,10 @@
 
         <receiver
             android:name=".BaoThucReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".NhacNguReceiver"
             android:exported="false" />
 
         <receiver

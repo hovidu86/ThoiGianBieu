@@ -12,10 +12,17 @@ public class KhoiDongReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context ctx, Intent intent) {
+        NhatKy.ghi(ctx, "khoi-dong-lai", String.valueOf(intent.getAction()));
+
+        // Lời nhắc giờ ngủ phải dựng lại kể cả khi chưa dùng tính năng khoá máy.
+        try {
+            NhacNgu.datLai(ctx);
+        } catch (Exception e) {
+            NhatKy.ghi(ctx, "loi-nhac", String.valueOf(e.getMessage()));
+        }
+
         CauHinh ch = new CauHinh(ctx);
         if (!ch.daDatMa()) return;
-
-        NhatKy.ghi(ctx, "khoi-dong-lai", String.valueOf(intent.getAction()));
 
         // Đang trong khoảng khoá mà máy vừa bật lại thì khoá lại sau 1 phút.
         long bayGio = System.currentTimeMillis();

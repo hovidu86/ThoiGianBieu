@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lối tắt khi giữ icon app trên màn hình chính. Giữ đúng hai lối tắt mà bản
+  PWA đã có, để thói quen "ba chạm là xong" không đổi.
+
+  Dùng action riêng chứ không dùng extra: extra trong shortcuts.xml không phải
+  máy Android nào cũng đọc, còn action thì chắc chắn.
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/bieu_tuong"
+        android:shortcutId="ghi_ngay"
+        android:shortcutLongLabel="@string/loi_tat_ghi_ngay_dai"
+        android:shortcutShortLabel="@string/loi_tat_ghi_ngay">
+        <intent
+            android:action="com.thoigianbieu.kiemsoat.GHI_NGAY"
+            android:targetClass="com.thoigianbieu.kiemsoat.ChinhActivity"
+            android:targetPackage="com.thoigianbieu.kiemsoat" />
+    </shortcut>
+
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/bieu_tuong"
+        android:shortcutId="chuan_bi"
+        android:shortcutLongLabel="@string/loi_tat_chuan_bi_dai"
+        android:shortcutShortLabel="@string/loi_tat_chuan_bi">
+        <intent
+            android:action="com.thoigianbieu.kiemsoat.CHUAN_BI"
+            android:targetClass="com.thoigianbieu.kiemsoat.ChinhActivity"
+            android:targetPackage="com.thoigianbieu.kiemsoat" />
+    </shortcut>
+</shortcuts>
