@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "2.6",
+  "versionCode": 13,
+  "versionName": "2.8",
   "apk": "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-  "ghiChu": "Thông báo chạy nền ẩn hẳn xuống mục im lặng, vuốt bỏ là mất luôn. Thêm đồng hồ đếm ngược 10 giây và nút i xem tình trạng đầy đủ."
+  "ghiChu": "Quãng nghỉ giờ chặn thật: màn hình sáng lên giữa lúc nghỉ là bị chặn lại cho đủ số phút đã đặt."
 }

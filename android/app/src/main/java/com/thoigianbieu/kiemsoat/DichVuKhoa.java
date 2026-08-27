@@ -95,6 +95,7 @@ public class DichVuKhoa extends Service {
     private Runnable nhipNgatQuang;
     private Runnable nhipNghi;
     private Runnable nhipDemLui;
+    private Runnable canhGacNghi;
     private boolean daCanhBaoDot;
     private boolean khanCapChoXacNhan;
     /** Lúc bắt đầu hoãn khoá vì đang gọi điện. 0 = không hoãn. */
@@ -188,6 +189,8 @@ public class DichVuKhoa extends Service {
         if (nq.dangApDung(bayGio) && manHinhDangBat() && !mayDangKhoa() && lopKhoa == null) {
             manHinhVaoDung(bayGio);
         }
+        // Dịch vụ vừa dựng lại giữa quãng nghỉ thì vòng canh gác chưa ai bật.
+        if (nq.dangNghi(bayGio) && canhGacNghi == null) batCanhGacNghi();
         ghiTrangThaiNgatQuang();
     }
 
@@ -584,6 +587,7 @@ public class DichVuKhoa extends Service {
             public void onReceive(Context ctx, Intent intent) {
                 long bayGio = System.currentTimeMillis();
                 String viec = intent.getAction();
+                NhatKy.ghi(DichVuKhoa.this, "tin-man-hinh", String.valueOf(viec));
                 if (Intent.ACTION_SCREEN_OFF.equals(viec)) {
                     manHinhRoiDung(bayGio);
                 } else if (Intent.ACTION_USER_PRESENT.equals(viec)) {
@@ -621,8 +625,18 @@ public class DichVuKhoa extends Service {
         if (nq.dangNghi(bayGio)) {
             NhatKy.ghi(this, "nq-chan-mo-khoa",
                     "đang nghỉ, còn " + (nq.conNghi(bayGio) / 1000) + " giây");
+            // CHỈ dựng lớp phủ, KHÔNG tắt màn hình lần nữa.
+            //
+            // Trước đây tắt luôn, và đó là gốc của ba lỗi user báo: tắt màn
+            // hình khiến chính lớp phủ vừa dựng bị gỡ đi (xem manHinhRoiDung),
+            // nên người dùng chẳng thấy đồng hồ nghỉ đâu cả, chỉ thấy màn hình
+            // cứ chết đi chết lại — mở app cũng tắt, đang dùng cũng tắt. Còn
+            // lúc lệnh tắt về chậm một nhịp thì lại dùng được bình thường,
+            // thành ra "lúc chặn lúc không".
+            //
+            // Lớp phủ mới là cái chặn. Nó che kín màn hình, đếm ngược cho thấy
+            // còn bao lâu, và tự tan khi hết giờ.
             hienLopNghi();
-            khoaManHinhNeuDuoc();
             return;
         }
         nq.batDauDung(bayGio);
@@ -633,6 +647,7 @@ public class DichVuKhoa extends Service {
     private void manHinhRoiDung(long bayGio) {
         nq.dungDem(bayGio);
         dungNhipNgatQuang();
+        goLopDemLui();
         goLopNghi();   // màn hình tắt rồi thì lớp phủ để đó vô nghĩa
     }
 
@@ -711,7 +726,49 @@ public class DichVuKhoa extends Service {
         NhatKy.ghi(this, "ngat-quang", "hết hạn mức " + ch.nqPhutDung()
                 + " phút, nghỉ " + ch.nqPhutNghi() + " phút");
         hienLopNghi();
+        batCanhGacNghi();
         khoaManHinhNeuDuoc();
+    }
+
+    /**
+     * Vòng canh gác quãng nghỉ — hai giây một lần, chỉ chạy trong lúc đang nghỉ.
+     *
+     * Không tin vào tin BẬT MÀN HÌNH nữa. Trên máy thật đã thấy: nghỉ xong,
+     * người dùng gõ PIN vào lại bình thường, mà nhật ký không hề có dòng nào
+     * cho thấy mã chặn đã chạy — tin ấy không tới nơi. Vòng này tự nhìn: hễ
+     * màn hình sáng, máy đã mở khoá, mà lớp phủ không còn thì dựng lại ngay.
+     */
+    private void batCanhGacNghi() {
+        dungCanhGacNghi();
+        canhGacNghi = new Runnable() {
+            @Override
+            public void run() {
+                long bayGio = System.currentTimeMillis();
+
+                if (!nq.dangNghi(bayGio)) {
+                    NhatKy.ghi(DichVuKhoa.this, "het-nghi", "được dùng tiếp");
+                    nq.ketThucNghi(bayGio);
+                    goLopNghi();
+                    dungCanhGacNghi();
+                    if (manHinhDangBat()) batNhipNgatQuang();
+                    return;
+                }
+
+                if (lopKhoa == null && lopNghi == null
+                        && manHinhDangBat() && !mayDangKhoa()) {
+                    NhatKy.ghi(DichVuKhoa.this, "nq-canh-gac",
+                            "màn hình sáng giữa quãng nghỉ, dựng lại lớp phủ");
+                    hienLopNghi();
+                }
+                tay.postDelayed(this, 2000);
+            }
+        };
+        tay.postDelayed(canhGacNghi, 2000);
+    }
+
+    private void dungCanhGacNghi() {
+        if (canhGacNghi != null) tay.removeCallbacks(canhGacNghi);
+        canhGacNghi = null;
     }
 
     /** Lớp phủ nghỉ: chỉ có đồng hồ đếm ngược, không đòi mã. Hết giờ tự tan. */
@@ -760,6 +817,7 @@ public class DichVuKhoa extends Service {
                 ch.nqTangSoKhanCap();
                 NhatKy.ghi(this, "khan-cap", "thoát quãng nghỉ sớm");
                 nq.ketThucNghi(System.currentTimeMillis());
+                dungCanhGacNghi();
                 goLopNghi();
                 batNhipNgatQuang();
             });
@@ -771,8 +829,9 @@ public class DichVuKhoa extends Service {
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                        | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                // Nhận tiêu điểm để KhungPhu nuốt được phím Quay lại. Đây là
+                // lớp chặn, không cho lách bằng một cú bấm Back.
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.OPAQUE);
 
         try {
@@ -790,10 +849,8 @@ public class DichVuKhoa extends Service {
             public void run() {
                 long conMs = nq.conNghi(System.currentTimeMillis());
                 if (conMs <= 0) {
-                    NhatKy.ghi(DichVuKhoa.this, "het-nghi", "được dùng tiếp");
-                    nq.ketThucNghi(System.currentTimeMillis());
+                    // Vòng canh gác lo phần kết thúc, ở đây chỉ cần gỡ lớp phủ.
                     goLopNghi();
-                    if (manHinhDangBat()) batNhipNgatQuang();
                     return;
                 }
                 long giay = conMs / 1000;
@@ -938,6 +995,7 @@ public class DichVuKhoa extends Service {
     @Override
     public void onDestroy() {
         dangChay = false;
+        dungCanhGacNghi();
         goLopDemLui();
         if (batTatManHinh != null) {
             try { unregisterReceiver(batTatManHinh); } catch (Exception ignore) { }
