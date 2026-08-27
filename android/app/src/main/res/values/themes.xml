@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="GiaoDien" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/nen</item>
+        <item name="android:colorAccent">@color/xanh</item>
+        <item name="android:textColor">@color/chu</item>
+    </style>
+</resources>

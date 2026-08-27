@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ten_app">Kiểm soát máy</string>
+    <string name="phu_de">Thời gian biểu · module Android</string>
+
+    <!-- Nhãn trong màn hình cài đặt -->
+    <string name="nhan_gio_khoa">Giờ khoá lần đầu (HH:mm)</string>
+    <string name="nhan_gio_ket_thuc">Giờ kết thúc — sau mốc này thôi khoá (HH:mm)</string>
+    <string name="nhan_lap_lai">Mở khoá xong thì bao lâu khoá lại (phút)</string>
+    <string name="nhan_canh_bao">Cảnh báo trước bao nhiêu phút — cách nhau dấu phẩy</string>
+    <string name="nhan_khoang_cach">Khoảng cách giữa hai lần nhập mã (giây)</string>
+    <string name="nhan_ma">Mã mở khoá — tối thiểu 10 ký tự, nhập hai lần</string>
+    <string name="goi_y_ma">Để trống hai ô này nếu không muốn đổi mã.</string>
+    <string name="nhan_quyen">Ba quyền dưới đây đều bắt buộc</string>
+    <string name="nhan_tinh_trang">Tình trạng</string>
+
+    <string name="nut_luu">Lưu cài đặt</string>
+    <string name="nut_quyen_quan_tri">1. Quyền quản trị thiết bị</string>
+    <string name="nut_quyen_lop_phu">2. Hiển thị trên ứng dụng khác</string>
+    <string name="nut_quyen_pin">3. Bỏ tối ưu hoá pin</string>
+    <string name="nut_khoa_thu">Khoá thử ngay bây giờ</string>
+    <string name="nut_nhat_ky">Xem nhật ký</string>
+
+    <!-- Thông báo và cảnh báo -->
+    <string name="kenh_nen">Chạy nền</string>
+    <string name="kenh_canh_bao">Cảnh báo sắp khoá</string>
+    <string name="khoa_luc">Lần khoá kế tiếp: %1$s</string>
+    <string name="chua_dat_ma">Chưa đặt mã mở khoá — app chưa khoá gì cả.</string>
+    <string name="sap_khoa">Khoá máy sau %1$d phút</string>
+    <string name="canh_bao_mot_phut">Còn 1 phút. Lưu lại việc đang làm ngay bây giờ.</string>
+    <string name="canh_bao_nhieu_phut">Còn %1$d phút nữa màn hình sẽ tắt. Mở lại phải nhập mã hai lần, cách nhau %2$d giây.</string>
+
+    <!-- Lớp phủ khoá -->
+    <string name="tieu_de_khoa">MÁY ĐÃ KHOÁ THEO THỜI GIAN BIỂU</string>
+    <string name="huong_dan_mo_khoa">Nhập mã mở khoá, đợi %1$d giây, rồi nhập lại đúng mã đó lần nữa. Nhập sai bất kỳ lần nào là phải làm lại từ đầu.</string>
+    <string name="buoc_1">Bước 1 — nhập mã mở khoá</string>
+    <string name="buoc_2">Bước 2 — nhập lại đúng mã đó</string>
+    <string name="xac_nhan_lan_1">Xác nhận lần 1</string>
+    <string name="mo_khoa">Mở khoá</string>
+    <string name="cho_sau_lan_1">Chờ sau khi nhập đúng lần 1.</string>
+    <string name="cho_them_giay">Chờ thêm %1$d giây nữa mới được nhập lần 2…</string>
+    <string name="duoc_roi">Được rồi. Nhập lại mã lần 2.</string>
+    <string name="sai_ma">Sai mã. Nhập lại.</string>
+    <string name="sai_ma_lan_2">Sai mã ở lần 2. Làm lại từ đầu, kể cả thời gian chờ.</string>
+
+    <!-- Lỗi khi lưu -->
+    <string name="chua_luu_duoc">Chưa lưu được</string>
+    <string name="loi_gio_khoa">Giờ khoá phải đúng dạng HH:mm, ví dụ 22:45.</string>
+    <string name="loi_gio_ket_thuc">Giờ kết thúc phải đúng dạng HH:mm, ví dụ 05:30.</string>
+    <string name="loi_lap_lai">Số phút lặp lại phải là số nguyên từ 1 trở lên.</string>
+    <string name="loi_khoang_cach">Khoảng cách hai lần nhập phải là số giây từ 1 trở lên.</string>
+    <string name="loi_canh_bao">Mốc cảnh báo phải là các số cách nhau bởi dấu phẩy, ví dụ 15,5,1.</string>
+    <string name="loi_ma_ngan">Mã phải dài tối thiểu %1$d ký tự.</string>
+    <string name="loi_ma_khong_khop">Hai ô mã không khớp nhau.</string>
+    <string name="da_luu">Đã lưu. Lần khoá kế tiếp: %1$s</string>
+
+    <!-- Quyền -->
+    <string name="quyen_da_co">Quyền này đã có rồi.</string>
+    <string name="thieu_quyen">Còn thiếu quyền. Bật đủ cả ba quyền ở trên đã.</string>
+    <string name="giai_thich_quan_tri">Chỉ dùng đúng một việc: tắt màn hình khi tới giờ đã hẹn trong thời gian biểu. Không xoá dữ liệu, không đổi mật khẩu máy.</string>
+    <string name="canh_bao_go_quyen">Gỡ quyền này thì Kiểm soát máy không tắt được màn hình nữa. Lần gỡ này sẽ bị ghi vào nhật ký.</string>
+    <string name="tt_quan_tri">Quyền quản trị thiết bị</string>
+    <string name="tt_lop_phu">Quyền hiển thị trên ứng dụng khác</string>
+    <string name="tt_pin">Đã bỏ tối ưu hoá pin</string>
+    <string name="tt_ma">Đã đặt mã mở khoá</string>
+
+    <string name="nhat_ky">Nhật ký</string>
+    <string name="nhat_ky_trong">Chưa có gì được ghi.</string>
+</resources>

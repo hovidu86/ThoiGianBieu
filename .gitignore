@@ -10,3 +10,6 @@ desktop.ini
 # Editor
 .vscode/
 .idea/
+
+# Typings cua tien ich Apps Script trong VS Code, khong can len repo
+.gas-sync/

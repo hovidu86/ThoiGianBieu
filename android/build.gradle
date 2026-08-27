@@ -1,0 +1,22 @@
+// Bản dựng gốc. Dùng đúng phiên bản AGP đã có sẵn trong cache Gradle của máy
+// (xem BaoCao/android-shell) để không phải tải gì thêm.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.13.0'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}

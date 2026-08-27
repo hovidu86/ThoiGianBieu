@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/nen"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="600dp"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/tieu_de_khoa"
+            android:textColor="#7DD3FC"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/huong_dan"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:textColor="@color/chu_mo"
+            android:textSize="14sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:background="@color/nen_the"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/buoc_1"
+                android:textColor="@color/chu"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/o_ma_1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/nen_o"
+                android:importantForAutofill="no"
+                android:inputType="textPassword"
+                android:padding="12dp"
+                android:textColor="@color/chu"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/nut_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/xanh"
+                android:text="@string/xac_nhan_lan_1"
+                android:textColor="@color/chu" />
+
+            <TextView
+                android:id="@+id/dem_nguoc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="#111C31"
+                android:gravity="center"
+                android:padding="12dp"
+                android:text="@string/cho_sau_lan_1"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:text="@string/buoc_2"
+                android:textColor="@color/chu_mo"
+                android:textSize="13sp" />
+
+            <EditText
+                android:id="@+id/o_ma_2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="@color/nen_o"
+                android:importantForAutofill="no"
+                android:inputType="textPassword"
+                android:padding="12dp"
+                android:textColor="@color/chu"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/nut_2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/xanh_la"
+                android:text="@string/mo_khoa"
+                android:textColor="@color/chu" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/trang_thai"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:textColor="@color/mau_do"
+            android:textSize="14sp" />
+    </LinearLayout>
+</ScrollView>

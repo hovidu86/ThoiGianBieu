@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="nen">#0B1220</color>
+    <color name="nen_the">#0F172A</color>
+    <color name="nen_o">#1E293B</color>
+    <color name="chu">#F8FAFC</color>
+    <color name="chu_mo">#94A3B8</color>
+    <color name="chu_rat_mo">#64748B</color>
+    <color name="xanh">#2563EB</color>
+    <color name="xanh_la">#16A34A</color>
+    <color name="mau_do">#F87171</color>
+    <color name="vang">#FBBF24</color>
+    <color name="nen_canh_bao">#F21E293B</color>
+    <color name="nen_bieu_tuong">#0F172A</color>
+</resources>
