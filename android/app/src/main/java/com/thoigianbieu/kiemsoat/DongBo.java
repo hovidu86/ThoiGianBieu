@@ -108,6 +108,9 @@ public class DongBo {
                 goi.put("action", "delete");
                 goi.put("date", ngay);
                 JSONObject o = new JSONObject(gui(url, goi.toString()));
+                if (!"success".equals(o.optString("status"))) {
+                    throw new Exception(o.optString("message", "Xoá trên Sheet thất bại"));
+                }
                 return o.optInt("deleted", 0);
             }
         }, xong);

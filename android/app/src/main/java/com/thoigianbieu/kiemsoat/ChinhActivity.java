@@ -123,12 +123,12 @@ public class ChinhActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (kho.doiDemNeuCan()) veTatCa();
+        if (kho.doiDemNeuCan()) sangDemMoi();
         veDemNguoc();
         nhip = new Runnable() {
             @Override
             public void run() {
-                if (kho.doiDemNeuCan()) veTatCa();
+                if (kho.doiDemNeuCan()) sangDemMoi();
                 veDemNguoc();
                 tay.postDelayed(this, 30_000L);
             }
@@ -140,6 +140,15 @@ public class ChinhActivity extends Activity {
     protected void onPause() {
         super.onPause();
         if (nhip != null) tay.removeCallbacks(nhip);
+    }
+
+    /**
+     * Qua mốc 18:00 là sang "đêm" mới. Phải điền lại ô Đêm, nếu không nó còn
+     * giữ ngày hôm qua và một cú bấm Xác nhận sẽ ghi nhầm vào đêm đã qua.
+     */
+    private void sangDemMoi() {
+        oDem.setText(kho.demNay);
+        veTatCa();
     }
 
     /* ==================== GẮN VIEW ==================== */
@@ -259,25 +268,26 @@ public class ChinhActivity extends Activity {
     private void veDemNguoc() {
         DemNgu daCo = kho.timTheoNgay(kho.demNay);
         if (daCo != null) {
-            demNhan.setText(R.string.gan_day);
+            demNhan.setText(R.string.dem_nay);
             demChinh.setText(getString(R.string.dem_nay_da_ghi, daCo.gio));
             return;
         }
+
+        // Neo mốc mục tiêu vào chính đêm này. Nếu chỉ hỏi "lần tới của 22:30"
+        // thì lúc 04:00 sáng sẽ ra "còn 18 giờ nữa" cho một đêm đã kết thúc.
         long bayGio = System.currentTimeMillis();
-        long moc = LuatGiacNgu.mocKeTiep(kho.caiDat.truocGioNay, bayGio);
+        long moc = LuatGiacNgu.mocMucTieu(kho.demNay, kho.caiDat.truocGioNay);
         long conLai = moc - bayGio;
 
-        // mocKeTiep luôn trả về mốc trong tương lai, nên nếu đã quá giờ hôm nay
-        // thì khoảng cách sẽ gần đủ 24 giờ — đó là dấu hiệu đã muộn.
-        boolean daMuon = conLai > 20L * 60 * 60 * 1000;
-        if (daMuon) {
-            demNhan.setText(getString(R.string.da_qua_gio, kho.caiDat.truocGioNay,
-                    LuatGiacNgu.gioHienTai(bayGio)));
-            demChinh.setText(R.string.tab_ghi_nhan);
-        } else {
+        if (conLai > 0) {
             demNhan.setText(getString(R.string.con_den_gio,
                     LuatGiacNgu.khoangCach(conLai), kho.caiDat.truocGioNay));
             demChinh.setText(LuatGiacNgu.khoangCach(conLai));
+        } else {
+            demNhan.setText(getString(R.string.da_qua_gio, kho.caiDat.truocGioNay,
+                    LuatGiacNgu.gioHienTai(bayGio)));
+            demChinh.setText(getString(R.string.muon_bao_lau,
+                    LuatGiacNgu.khoangCach(-conLai)));
         }
     }
 
@@ -572,7 +582,13 @@ public class ChinhActivity extends Activity {
                     if (DongBo.urlHopLe(kho.caiDat.urlWebApp)) {
                         DongBo.xoa(kho.caiDat.urlWebApp, ngay, new DongBo.Xong<Integer>() {
                             @Override public void thanhCong(Integer k) { }
-                            @Override public void thatBai(String loi) { }
+                            @Override
+                            public void thatBai(String loi) {
+                                // Xoá hụt mà im lặng thì lần "Tải từ Sheet" sau
+                                // đêm đó sống lại, người dùng không hiểu vì sao.
+                                bao(getString(R.string.xoa_sheet_that_bai,
+                                        LuatGiacNgu.ngayNgan(ngay), loi));
+                            }
                         });
                     }
                 })
@@ -793,6 +809,11 @@ public class ChinhActivity extends Activity {
         List<String> loi = new ArrayList<>();
         CaiDatNgu c = new CaiDatNgu();
         c.urlWebApp = oUrl.getText().toString().trim();
+        // Nút "Lưu URL" đã kiểm, nhưng nút này cũng ghi đè URL — gõ nhầm mà
+        // không ai kêu thì đồng bộ chết lặng lẽ.
+        if (!c.urlWebApp.isEmpty() && !DongBo.urlHopLe(c.urlWebApp)) {
+            loi.add(getString(R.string.url_sai_dinh_dang));
+        }
 
         c.phatMoiGioVuot = soNguyen(oPhatVuot, 0);
         c.truocGioNay = oTruocGio.getText().toString().trim();
@@ -839,6 +860,10 @@ public class ChinhActivity extends Activity {
         c.phutChuanBi = kho.caiDat.phutChuanBi;
         kho.caiDat = c;
         kho.luuCaiDat();
+
+        // Xoá bớt bước mà vẫn giữ dấu tích cũ thì checklist hiện "(5/3)" và
+        // thưởng thói quen được trao oan.
+        kho.cheoLaiDauTich();
         // Đổi mốc tiền thì mọi đêm cũ đổi kết quả theo, và phải gửi lại lên Sheet.
         kho.tinhLai();
         kho.luuDanhSach();

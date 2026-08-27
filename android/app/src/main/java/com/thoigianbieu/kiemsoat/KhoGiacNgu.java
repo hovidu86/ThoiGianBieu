@@ -111,6 +111,21 @@ public class KhoGiacNgu {
         } catch (Exception ignore) { }
     }
 
+    /**
+     * Bỏ những dấu tích trỏ vào bước đã bị xoá. Gọi sau mỗi lần sửa danh sách
+     * bước, nếu không checklist sẽ hiện kiểu "(5/3)" và thưởng thói quen được
+     * trao dù người dùng chưa làm đủ.
+     */
+    public void cheoLaiDauTich() {
+        int soBuoc = caiDat.cacBuoc.size();
+        Set<Integer> con = new HashSet<>();
+        for (Integer i : daTich) if (i != null && i >= 0 && i < soBuoc) con.add(i);
+        if (con.size() != daTich.size()) {
+            daTich = con;
+            luuDemNay();
+        }
+    }
+
     /** Sang đêm mới thì xoá sạch checklist. Trả về true nếu vừa đổi đêm. */
     public boolean doiDemNeuCan() {
         String demBayGio = LuatGiacNgu.demHienTai();
@@ -289,6 +304,12 @@ public class KhoGiacNgu {
         d.soBuocXong = o.optInt("soBuocXong", 0);
         d.daGui = o.optBoolean("daGui", false);
         d.daXacNhan = o.optBoolean("daXacNhan", false);
+        // Hai trường này là kết quả tính, nhưng vẫn phải lưu: dấu vân tay dùng
+        // chúng để biết đêm nào vừa đổi kết quả. Không lưu thì mỗi lần mở app
+        // dấu vân tay cũ luôn là "|0|0", mọi đêm bị coi là vừa đổi, và cả cuốn
+        // lịch sử bị đẩy lại lên Sheet.
+        d.tongTien = o.optLong("tongTien", 0);
+        d.chuoiSauDem = o.optInt("chuoiSauDem", 0);
         return d;
     }
 
@@ -301,6 +322,8 @@ public class KhoGiacNgu {
             o.put("soBuocXong", d.soBuocXong);
             o.put("daGui", d.daGui);
             o.put("daXacNhan", d.daXacNhan);
+            o.put("tongTien", d.tongTien);
+            o.put("chuoiSauDem", d.chuoiSauDem);
             return o;
         } catch (Exception e) {
             return new JSONObject();

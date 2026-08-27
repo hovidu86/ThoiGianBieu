@@ -253,6 +253,29 @@ public class LuatGiacNgu {
         return (phut / 60) + " giờ " + (phut % 60) + " phút";
     }
 
+    /**
+     * Mốc giờ mục tiêu của một đêm cụ thể.
+     *
+     * Neo vào chính đêm đó chứ không phải "lần tới của HH:mm": mốc 22:30 của đêm
+     * 27/08 là 22:30 ngày 27/08, và lúc 04:00 sáng 28/08 thì mốc ấy đã qua rồi.
+     * Mốc sau nửa đêm (00:30 tức 24.5) tự rơi sang ngày hôm sau.
+     */
+    public static long mocMucTieu(String demISO, String hhmm) {
+        String[] n = demISO.split("-");
+        Calendar c = Calendar.getInstance();
+        try {
+            c.set(Integer.parseInt(n[0]), Integer.parseInt(n[1]) - 1, Integer.parseInt(n[2]),
+                    0, 0, 0);
+        } catch (Exception e) {
+            return System.currentTimeMillis();
+        }
+        c.set(Calendar.MILLISECOND, 0);
+        double v = giaTri(hhmm);
+        if (Double.isNaN(v)) return c.getTimeInMillis();
+        c.add(Calendar.MINUTE, (int) Math.round(v * 60));
+        return c.getTimeInMillis();
+    }
+
     /** Thời điểm tới của mốc HH:mm gần nhất kể từ bây giờ. */
     public static long mocKeTiep(String hhmm, long bayGio) {
         String[] p = hhmm.split(":");

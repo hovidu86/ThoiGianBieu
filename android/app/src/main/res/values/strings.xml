@@ -195,4 +195,7 @@
     <string name="loi_tat_ghi_ngay_dai">Ghi giờ lên giường ngay bây giờ</string>
     <string name="loi_tat_chuan_bi">Chuẩn bị</string>
     <string name="loi_tat_chuan_bi_dai">Mở checklist chuẩn bị ngủ</string>
+    <string name="dem_nay">Đêm nay</string>
+    <string name="muon_bao_lau">Muộn %1$s</string>
+    <string name="xoa_sheet_that_bai">Đã xoá trên máy nhưng chưa xoá được đêm %1$s trên Sheet: %2$s</string>
 </resources>
