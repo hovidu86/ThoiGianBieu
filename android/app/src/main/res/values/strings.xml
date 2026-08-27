@@ -198,4 +198,43 @@
     <string name="dem_nay">Đêm nay</string>
     <string name="muon_bao_lau">Muộn %1$s</string>
     <string name="xoa_sheet_that_bai">Đã xoá trên máy nhưng chưa xoá được đêm %1$s trên Sheet: %2$s</string>
+
+    <!-- ============ GIAO DIỆN MỚI ============ -->
+
+    <string name="ngay">ngày</string>
+    <string name="mau_gio">--:--</string>
+    <string name="tong_quan">Tổng quan</string>
+    <string name="dung_gio">Đúng giờ</string>
+    <string name="tre_gio">Trễ giờ</string>
+    <string name="khong_ghi">Không ghi</string>
+
+    <string name="hinh_ghi_nhan">🌙</string>
+    <string name="hinh_thong_ke">📊</string>
+    <string name="hinh_cai_dat">⚙️</string>
+    <string name="hinh_khoa_may">🔒</string>
+
+    <string name="nhan_url">URL Web App (kết thúc bằng /exec)</string>
+    <string name="cot_truoc">TRƯỚC</string>
+    <string name="cot_tien">TIỀN (₫)</string>
+    <string name="cot_thong_diep">THÔNG ĐIỆP</string>
+    <string name="goi_y_moc_chuoi">Giữ chuỗi đủ số ngày bên trái thì được thưởng thêm số tiền bên phải.</string>
+
+    <string name="nhom_khoa_theo_gio">Khoá theo giờ</string>
+    <string name="nhan_gio_khoa_ngan">Giờ khoá lần đầu</string>
+    <string name="nhan_gio_ket_thuc_ngan">Giờ thôi khoá</string>
+    <string name="nhan_nq_phut_dung_ngan">Dùng mỗi đợt (phút)</string>
+    <string name="nhan_nq_phut_nghi_ngan">Nghỉ bắt buộc (phút)</string>
+    <string name="nhan_nq_phut_reset_ngan">Nghỉ để reset (phút)</string>
+    <string name="nhan_nq_canh_bao_ngan">Cảnh báo trước (phút)</string>
+
+    <!-- Thẻ "đêm nay / đêm qua" -->
+    <string name="dem_qua">Đêm qua</string>
+    <string name="da_ghi_luc">Đã ghi lúc %1$s</string>
+    <string name="nua_toi_gio">nữa tới giờ mục tiêu %1$s</string>
+    <string name="muon_hon_gio">Đã quá giờ mục tiêu %1$s</string>
+    <string name="chua_ghi">Chưa ghi</string>
+    <string name="ghi_bu_di">Bấm "Bây giờ" rồi "Xác nhận" để ghi bù.</string>
+    <string name="chon_gio_len_giuong">Chọn giờ lên giường</string>
+    <string name="chon_gio_thuc_day">Chọn giờ thức dậy</string>
+    <string name="chon_dem">Chọn đêm</string>
 </resources>

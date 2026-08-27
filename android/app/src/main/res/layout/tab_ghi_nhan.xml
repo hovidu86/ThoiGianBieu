@@ -2,13 +2,17 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/nen">
+    android:clipToPadding="false"
+    android:paddingLeft="11dp"
+    android:paddingTop="10dp"
+    android:paddingRight="11dp"
+    android:paddingBottom="16dp"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <!-- Quỹ và chuỗi -->
         <LinearLayout
@@ -20,110 +24,129 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:background="@color/nen_the"
+                android:background="@drawable/the"
                 android:orientation="vertical"
-                android:padding="14dp">
+                android:padding="13dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/quy_thuong_phat"
-                    android:textColor="@color/chu_rat_mo"
-                    android:textSize="12sp" />
+                    style="@style/Nhom"
+                    android:text="@string/quy_thuong_phat" />
 
                 <TextView
                     android:id="@+id/ui_so_du"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:letterSpacing="-0.03"
                     android:text="0 ₫"
                     android:textColor="@color/xanh_la"
-                    android:textSize="21sp"
+                    android:textSize="24sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="8dp"
                 android:layout_weight="1"
-                android:background="@color/nen_the"
+                android:background="@drawable/the"
                 android:orientation="vertical"
-                android:padding="14dp">
+                android:padding="13dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/chuoi_ky_luat"
-                    android:textColor="@color/chu_rat_mo"
-                    android:textSize="12sp" />
+                    style="@style/Nhom"
+                    android:text="@string/chuoi_ky_luat" />
 
-                <TextView
-                    android:id="@+id/ui_chuoi"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textColor="@color/vang"
-                    android:textSize="21sp"
-                    android:textStyle="bold" />
+                    android:layout_marginTop="8dp"
+                    android:gravity="bottom"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/ui_chuoi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="-0.03"
+                        android:text="0"
+                        android:textColor="@color/vang"
+                        android:textSize="24sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="5dp"
+                        android:layout_marginBottom="3dp"
+                        android:text="@string/ngay"
+                        android:textColor="@color/chu_mo"
+                        android:textSize="13sp" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Đếm ngược tới giờ mục tiêu -->
+        <!-- Đêm nay -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@color/nen_the"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:padding="13dp">
 
             <TextView
                 android:id="@+id/dem_nhan"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/chu_rat_mo"
-                android:textSize="12sp" />
+                style="@style/Nhom"
+                android:text="@string/dem_nay" />
 
             <TextView
                 android:id="@+id/dem_chinh"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:letterSpacing="-0.02"
                 android:text="--"
                 android:textColor="@color/chu"
                 android:textSize="26sp"
                 android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/dem_phu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/chu_mo"
+                android:textSize="13sp" />
         </LinearLayout>
 
         <!-- Chuẩn bị ngủ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@color/nen_the"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:padding="13dp">
 
             <TextView
                 android:id="@+id/tieu_de_buoc"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/chuan_bi_ngu"
-                android:textColor="@color/chu"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                style="@style/Nhom"
+                android:text="@string/chuan_bi_ngu" />
 
             <LinearLayout
                 android:id="@+id/ds_buoc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
                 android:orientation="vertical" />
 
             <TextView
                 android:id="@+id/goi_y_buoc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="10dp"
+                android:lineSpacingExtra="3dp"
                 android:textColor="@color/chu_rat_mo"
                 android:textSize="12sp" />
         </LinearLayout>
@@ -132,41 +155,30 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@color/nen_the"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
             android:orientation="vertical"
-            android:padding="14dp">
+            android:padding="13dp">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/ghi_nhan_dem"
-                android:textColor="@color/chu"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                style="@style/Nhom"
+                android:text="@string/ghi_nhan_dem" />
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/nhan_dem"
-                android:textColor="@color/chu_mo"
-                android:textSize="12sp" />
+                style="@style/Nhan"
+                android:layout_marginTop="11dp"
+                android:text="@string/nhan_dem" />
 
-            <EditText
+            <TextView
                 android:id="@+id/o_dem"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/nen_o"
-                android:importantForAutofill="no"
-                android:inputType="date"
-                android:padding="12dp"
-                android:textColor="@color/chu" />
+                style="@style/O"
+                android:clickable="true"
+                android:focusable="true" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="11dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
@@ -176,48 +188,40 @@
                     android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/nhan_gio_len_giuong"
-                        android:textColor="@color/chu_mo"
-                        android:textSize="12sp" />
+                        style="@style/Nhan"
+                        android:text="@string/nhan_gio_len_giuong" />
 
-                    <EditText
+                    <TextView
                         android:id="@+id/o_gio_ngu"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@color/nen_o"
-                        android:importantForAutofill="no"
-                        android:inputType="datetime"
-                        android:padding="12dp"
-                        android:textColor="@color/chu"
-                        android:textSize="18sp" />
+                        style="@style/O"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:hint="@string/mau_gio"
+                        android:textSize="21sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
                     android:orientation="vertical">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/nhan_gio_day"
-                        android:textColor="@color/chu_mo"
-                        android:textSize="12sp" />
+                        style="@style/Nhan"
+                        android:text="@string/nhan_gio_day" />
 
-                    <EditText
+                    <TextView
                         android:id="@+id/o_gio_day"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@color/nen_o"
-                        android:importantForAutofill="no"
-                        android:inputType="datetime"
-                        android:padding="12dp"
-                        android:textColor="@color/chu"
-                        android:textSize="18sp" />
+                        style="@style/O"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:hint="@string/mau_gio"
+                        android:textSize="21sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -225,10 +229,10 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@color/nen_o"
+                android:layout_marginTop="11dp"
+                android:background="@drawable/the_trong"
                 android:orientation="vertical"
-                android:padding="12dp">
+                android:padding="14dp">
 
                 <TextView
                     android:id="@+id/xem_truoc_loi"
@@ -250,54 +254,48 @@
                     android:id="@+id/xem_truoc_tien"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="8dp"
+                    android:letterSpacing="-0.03"
                     android:text="--"
                     android:textColor="@color/chu"
-                    android:textSize="24sp"
+                    android:textSize="27sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="11dp"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/nut_bay_gio"
+                    style="@style/NutPhu"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/nen_o"
-                    android:text="@string/nut_bay_gio"
-                    android:textColor="@color/chu" />
+                    android:text="@string/nut_bay_gio" />
 
                 <Button
                     android:id="@+id/nut_xac_nhan"
+                    style="@style/NutChinh"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/xanh"
-                    android:text="@string/nut_xac_nhan"
-                    android:textColor="@color/chu" />
+                    android:text="@string/nut_xac_nhan" />
             </LinearLayout>
         </LinearLayout>
 
         <!-- Gần đây -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="@string/gan_day"
-            android:textColor="@color/chu_mo"
-            android:textSize="13sp" />
+            style="@style/Nhom"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/gan_day" />
 
         <LinearLayout
             android:id="@+id/ds_gan_day"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
             android:orientation="vertical" />
     </LinearLayout>
 </ScrollView>

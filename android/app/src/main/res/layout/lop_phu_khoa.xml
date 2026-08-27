@@ -1,119 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lớp phủ khoá. Nội dung neo lên trên chứ không căn giữa: bàn phím chiếm gần
+  nửa màn hình, căn giữa là ô nhập mã bị che mất. Cả khối nằm trong ScrollView
+  để khi bàn phím bật lên vẫn cuộn tới được ô đang gõ.
+-->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/cuon_khoa"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/nen"
-    android:fillViewport="true">
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:scrollbars="none">
 
     <LinearLayout
+        android:id="@+id/trong_khoa"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:minHeight="600dp"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:paddingLeft="20dp"
+        android:paddingTop="26dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="26dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:letterSpacing="0.08"
             android:text="@string/tieu_de_khoa"
-            android:textColor="#7DD3FC"
-            android:textSize="16sp"
+            android:textColor="@color/xanh"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/dong_ho_khoa"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:letterSpacing="-0.03"
+            android:text="--:--"
+            android:textColor="@color/chu"
+            android:textSize="44sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/huong_dan"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:gravity="center"
+            android:lineSpacingExtra="3dp"
             android:textColor="@color/chu_mo"
-            android:textSize="14sp" />
+            android:textSize="13sp" />
 
+        <!-- Bước 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:background="@color/nen_the"
+            android:layout_marginTop="13dp"
+            android:background="@drawable/the"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="13dp">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/buoc_1"
-                android:textColor="@color/chu"
-                android:textSize="13sp" />
+                style="@style/Nhom"
+                android:text="@string/buoc_1" />
 
             <EditText
                 android:id="@+id/o_ma_1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@color/nen_o"
-                android:importantForAutofill="no"
+                style="@style/O"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
                 android:inputType="textPassword"
-                android:padding="12dp"
-                android:textColor="@color/chu"
-                android:textSize="18sp" />
+                android:textSize="19sp" />
 
             <Button
                 android:id="@+id/nut_1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                style="@style/NutChinh"
                 android:layout_marginTop="10dp"
-                android:backgroundTint="@color/xanh"
-                android:text="@string/xac_nhan_lan_1"
-                android:textColor="@color/chu" />
+                android:text="@string/xac_nhan_lan_1" />
+        </LinearLayout>
+
+        <!-- Đếm ngược giữa hai lần nhập -->
+        <TextView
+            android:id="@+id/dem_nguoc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the_trong"
+            android:gravity="center"
+            android:paddingLeft="14dp"
+            android:paddingTop="14dp"
+            android:paddingRight="14dp"
+            android:paddingBottom="14dp"
+            android:text="@string/cho_sau_lan_1"
+            android:textColor="@color/chu_rat_mo"
+            android:textSize="14sp" />
+
+        <!-- Bước 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
+            android:orientation="vertical"
+            android:padding="13dp">
 
             <TextView
-                android:id="@+id/dem_nguoc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:background="#111C31"
-                android:gravity="center"
-                android:padding="12dp"
-                android:text="@string/cho_sau_lan_1"
-                android:textColor="@color/chu_rat_mo"
-                android:textSize="14sp" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:text="@string/buoc_2"
-                android:textColor="@color/chu_mo"
-                android:textSize="13sp" />
+                android:id="@+id/lbl_buoc_2"
+                style="@style/Nhom"
+                android:text="@string/buoc_2" />
 
             <EditText
                 android:id="@+id/o_ma_2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@color/nen_o"
-                android:importantForAutofill="no"
+                style="@style/O"
+                android:layout_marginTop="10dp"
+                android:enabled="false"
+                android:gravity="center"
                 android:inputType="textPassword"
-                android:padding="12dp"
-                android:textColor="@color/chu"
-                android:textSize="18sp" />
+                android:textSize="19sp" />
 
             <Button
                 android:id="@+id/nut_2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                style="@style/NutXanhLa"
                 android:layout_marginTop="10dp"
-                android:backgroundTint="@color/xanh_la"
-                android:text="@string/mo_khoa"
-                android:textColor="@color/chu" />
+                android:enabled="false"
+                android:text="@string/mo_khoa" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/trang_thai"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
+            android:layout_marginTop="9dp"
             android:gravity="center"
             android:textColor="@color/mau_do"
             android:textSize="14sp" />

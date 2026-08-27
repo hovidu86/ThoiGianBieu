@@ -1,21 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Khung ngoài. Phần đệm cho thanh trạng thái và thanh điều hướng của hệ thống
+  do ChinhActivity bơm vào lúc chạy (xem donInsets): từ Android 15, app nhắm
+  SDK 35 trở lên luôn vẽ tràn ra sau thanh trạng thái, không tự né được.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/goc"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/nen"
     android:orientation="vertical">
 
-    <!-- Đầu trang: tên app và tình trạng đồng bộ -->
+    <!-- Đầu trang -->
     <LinearLayout
+        android:id="@+id/dau_trang"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/nen_the"
+        android:background="@drawable/dau_trang"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingLeft="18dp"
-        android:paddingTop="14dp"
-        android:paddingRight="18dp"
-        android:paddingBottom="14dp">
+        android:paddingLeft="20dp"
+        android:paddingTop="16dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="16dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -26,16 +33,18 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:letterSpacing="-0.02"
                 android:text="@string/ten_day_du"
-                android:textColor="@color/chu"
-                android:textSize="19sp"
+                android:textColor="@color/xanh"
+                android:textSize="22sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/phu_de"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/chu_rat_mo"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/chu_mo"
                 android:textSize="12sp" />
         </LinearLayout>
 
@@ -43,14 +52,15 @@
             android:id="@+id/chip_dong_bo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/nen_o"
-            android:paddingLeft="10dp"
-            android:paddingTop="6dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="6dp"
+            android:background="@drawable/chip"
+            android:paddingLeft="12dp"
+            android:paddingTop="8dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="8dp"
             android:text="@string/chua_ket_noi"
             android:textColor="@color/chu_mo"
-            android:textSize="12sp" />
+            android:textSize="11sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
     <ViewFlipper
@@ -64,51 +74,98 @@
         <include layout="@layout/tab_cai_dat_ngu" />
     </ViewFlipper>
 
-    <!-- Thanh chuyển tab -->
+    <!-- Thanh điều hướng -->
     <LinearLayout
+        android:id="@+id/thanh_duoi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/nen_the"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/thanh_duoi"
         android:orientation="horizontal">
 
-        <Button
+        <LinearLayout
             android:id="@+id/tab_ghi"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:text="@string/tab_ghi_nhan"
-            android:textColor="@color/chu"
-            android:textSize="12sp" />
+            style="@style/MucTab">
 
-        <Button
+            <TextView
+                android:id="@+id/tab_ghi_hinh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hinh_ghi_nhan"
+                android:textSize="19sp" />
+
+            <TextView
+                android:id="@+id/tab_ghi_chu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/tab_ghi_nhan"
+                android:textColor="@color/chu_mo"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/tab_thong_ke"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:text="@string/tab_thong_ke"
-            android:textColor="@color/chu_mo"
-            android:textSize="12sp" />
+            style="@style/MucTab">
 
-        <Button
+            <TextView
+                android:id="@+id/tab_thong_ke_hinh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hinh_thong_ke"
+                android:textSize="19sp" />
+
+            <TextView
+                android:id="@+id/tab_thong_ke_chu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/tab_thong_ke"
+                android:textColor="@color/chu_mo"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/tab_cai_dat"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:text="@string/tab_cai_dat"
-            android:textColor="@color/chu_mo"
-            android:textSize="12sp" />
+            style="@style/MucTab">
 
-        <Button
+            <TextView
+                android:id="@+id/tab_cai_dat_hinh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hinh_cai_dat"
+                android:textSize="19sp" />
+
+            <TextView
+                android:id="@+id/tab_cai_dat_chu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/tab_cai_dat"
+                android:textColor="@color/chu_mo"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
             android:id="@+id/tab_may"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@android:color/transparent"
-            android:text="@string/tab_may"
-            android:textColor="@color/chu_mo"
-            android:textSize="12sp" />
+            style="@style/MucTab">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hinh_khoa_may"
+                android:textSize="19sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/tab_may"
+                android:textColor="@color/chu_mo"
+                android:textSize="11sp" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

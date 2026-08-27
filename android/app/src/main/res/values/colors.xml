@@ -1,15 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Lấy đúng bộ màu của bản PWA (css/style.css) để hai bản nhìn như một.
+  Thẻ trong PWA là rgba(30,41,59,.62) chồng lên nền #0b1121; Android không có
+  backdrop-filter nên tính sẵn màu đặc tương đương là #172031.
+-->
 <resources>
-    <color name="nen">#0B1220</color>
-    <color name="nen_the">#0F172A</color>
-    <color name="nen_o">#1E293B</color>
-    <color name="chu">#F8FAFC</color>
+    <color name="nen">#0B1121</color>
+    <color name="nen_dam">#070C18</color>
+    <color name="nen_the">#172031</color>
+    <color name="nen_the_nhat">#1C2941</color>
+    <color name="nen_o">#141D2E</color>
+    <color name="vach">#17FFFFFF</color>
+
+    <color name="chu">#F1F5F9</color>
     <color name="chu_mo">#94A3B8</color>
     <color name="chu_rat_mo">#64748B</color>
-    <color name="xanh">#2563EB</color>
-    <color name="xanh_la">#16A34A</color>
-    <color name="mau_do">#F87171</color>
+
+    <color name="xanh">#60A5FA</color>
+    <color name="xanh_dam">#3B82F6</color>
+    <color name="tim">#818CF8</color>
+    <color name="xanh_la">#34D399</color>
+    <color name="mau_do">#FB7185</color>
     <color name="vang">#FBBF24</color>
-    <color name="nen_canh_bao">#F21E293B</color>
+    <color name="cam">#FB923C</color>
+
+    <color name="tat">#1E293B</color>
+    <color name="chu_tat">#475569</color>
+
+    <color name="nen_canh_bao">#F2172031</color>
     <color name="nen_bieu_tuong">#0F172A</color>
 </resources>

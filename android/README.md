@@ -17,7 +17,7 @@ Bắt buộc phải là app gốc, dùng quyền quản trị thiết bị (`Dev
 
 ## Cài lên điện thoại
 
-APK dựng sẵn nằm ở `dist-apk/ThoiGianBieu.apk` (89 KB).
+APK dựng sẵn nằm ở `dist-apk/ThoiGianBieu.apk` (107 KB).
 
 1. Chép file APK sang điện thoại — qua cáp, Zalo, Google Drive, hoặc tải thẳng từ
    GitHub bằng trình duyệt trên máy.
@@ -126,9 +126,10 @@ nên hệ thống có giết dịch vụ rồi dựng lại thì vẫn đếm ti
 | `KhoiDongReceiver.java` | khởi động lại máy xong thì dựng lại lịch |
 | `CaiDatActivity.java` | màn hình cài đặt, cũng là màn hình chính |
 | `NhatKy.java` | ghi CSV mọi lần khoá / mở / nhập sai / né tránh |
+| `GiaoDien.java` | né thanh hệ thống, bảng chọn ngày giờ, chuẩn hoá giờ gõ tay |
 
 Java thuần, **không phụ thuộc thư viện ngoài nào** — không AndroidX, không
-Capacitor. Nhờ vậy APK chỉ 89 KB và dựng được mà không cần tải gì thêm.
+Capacitor. Nhờ vậy APK chỉ 107 KB và dựng được mà không cần tải gì thêm.
 
 Vì sao dùng lớp phủ chứ không dùng Activity: từ Android 10, app chạy nền không
 được tự mở Activity. Lớp phủ `TYPE_APPLICATION_OVERLAY` thì dựng lúc nào cũng

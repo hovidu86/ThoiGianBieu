@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nút chính. Trạng thái tắt phải NHÌN THẤY là tắt: bấm xong lần 1 mà nút
+     vẫn sáng nguyên thì người dùng bấm tiếp và tưởng app đơ. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/nut_chinh_tat" android:state_enabled="false" />
+    <item android:drawable="@drawable/nut_chinh_bat" />
+</selector>

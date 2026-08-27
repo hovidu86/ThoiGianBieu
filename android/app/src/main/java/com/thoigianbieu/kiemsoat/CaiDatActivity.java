@@ -24,9 +24,10 @@ import java.util.List;
 public class CaiDatActivity extends Activity {
 
     private CauHinh ch;
-    private EditText oGioKhoa, oGioKetThuc, oLapLai, oCanhBao, oKhoangCach, oMa, oMa2;
-    private EditText oNqPhutDung, oNqPhutNghi, oNqPhutReset, oNqCanhBao,
-            oNqTuGio, oNqDenGio, oNqKhanCap;
+    private EditText oLapLai, oCanhBao, oKhoangCach, oMa, oMa2;
+    private EditText oNqPhutDung, oNqPhutNghi, oNqPhutReset, oNqCanhBao, oNqKhanCap;
+    // Bốn ô giờ là TextView: bấm vào mở bảng chọn giờ của hệ thống.
+    private TextView oGioKhoa, oGioKetThuc, oNqTuGio, oNqDenGio;
     private CheckBox chkNqBat, chkNqKhongKhoaKhiGoi;
     private TextView tinhTrang;
 
@@ -70,6 +71,18 @@ public class CaiDatActivity extends Activity {
         oNqDenGio.setText(ch.nqDenGio());
         oNqKhanCap.setText(String.valueOf(ch.nqKhanCapMoiNgay()));
         chkNqKhongKhoaKhiGoi.setChecked(ch.nqKhongKhoaKhiGoi());
+
+        GiaoDien.chuaChoThanhHeThong(findViewById(R.id.goc),
+                findViewById(R.id.dau_trang), findViewById(R.id.cuon));
+
+        oGioKhoa.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oGioKhoa.getText().toString(), oGioKhoa::setText));
+        oGioKetThuc.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oGioKetThuc.getText().toString(), oGioKetThuc::setText));
+        oNqTuGio.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oNqTuGio.getText().toString(), oNqTuGio::setText));
+        oNqDenGio.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oNqDenGio.getText().toString(), oNqDenGio::setText));
 
         ((Button) findViewById(R.id.nut_luu)).setOnClickListener(v -> luu());
         ((Button) findViewById(R.id.nut_thong_ke)).setOnClickListener(v -> xemThongKe());

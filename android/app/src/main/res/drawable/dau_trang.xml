@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Đầu trang: chỉ bo hai góc dưới, giống header của PWA. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/nen_the" />
+    <corners android:bottomLeftRadius="26dp" android:bottomRightRadius="26dp" />
+</shape>

@@ -2,335 +2,313 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/nen">
+    android:clipToPadding="false"
+    android:paddingLeft="11dp"
+    android:paddingTop="10dp"
+    android:paddingRight="11dp"
+    android:paddingBottom="16dp"
+    android:scrollbars="none">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <!-- Google Sheets -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/dong_bo_google_sheets"
-            android:textColor="@color/chu"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/goi_y_url"
-            android:textColor="@color/chu_rat_mo"
-            android:textSize="12sp" />
-
-        <EditText
-            android:id="@+id/o_url"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:background="@color/nen_o"
-            android:hint="@string/mau_url"
-            android:importantForAutofill="no"
-            android:inputType="textUri"
-            android:padding="12dp"
-            android:textColor="@color/chu"
-            android:textColorHint="@color/chu_rat_mo"
-            android:textSize="12sp" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal">
+            android:background="@drawable/the"
+            android:orientation="vertical"
+            android:padding="13dp">
 
-            <Button
-                android:id="@+id/nut_kiem_tra_url"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/nen_o"
-                android:text="@string/nut_kiem_tra"
-                android:textColor="@color/chu"
-                android:textSize="13sp" />
+            <TextView
+                style="@style/Nhom"
+                android:text="@string/dong_bo_google_sheets" />
 
-            <Button
-                android:id="@+id/nut_luu_url"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:backgroundTint="@color/xanh"
-                android:text="@string/nut_luu_url"
-                android:textColor="@color/chu"
-                android:textSize="13sp" />
-        </LinearLayout>
+            <TextView
+                style="@style/Nhan"
+                android:layout_marginTop="9dp"
+                android:text="@string/nhan_url" />
 
-        <TextView
-            android:id="@+id/tin_ket_noi"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/chua_kiem_tra"
-            android:textColor="@color/chu_rat_mo"
-            android:textSize="12sp" />
-
-        <!-- Mốc giờ -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/nen_o" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/moc_thuong_phat"
-            android:textColor="@color/chu"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/goi_y_moc"
-            android:textColor="@color/chu_rat_mo"
-            android:textSize="12sp" />
-
-        <LinearLayout
-            android:id="@+id/ds_moc"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical" />
-
-        <Button
-            android:id="@+id/nut_them_moc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:backgroundTint="@color/nen_o"
-            android:text="@string/nut_them_moc"
-            android:textColor="@color/chu"
-            android:textSize="13sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/nhan_phat_moi_gio"
-            android:textColor="@color/chu_mo"
-            android:textSize="12sp" />
-
-        <EditText
-            android:id="@+id/o_phat_vuot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/nen_o"
-            android:importantForAutofill="no"
-            android:inputType="numberSigned"
-            android:padding="12dp"
-            android:textColor="@color/chu" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
+            <EditText
+                android:id="@+id/o_url"
+                style="@style/O"
+                android:hint="@string/mau_url"
+                android:inputType="textUri"
+                android:textSize="12sp" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/nut_kiem_tra_url"
+                    style="@style/NutPhu"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:text="@string/nut_kiem_tra" />
+
+                <Button
+                    android:id="@+id/nut_luu_url"
+                    style="@style/NutChinh"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:text="@string/nut_luu_url" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tin_ket_noi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/chua_kiem_tra"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Mốc thưởng phạt -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
+            android:orientation="vertical"
+            android:padding="13dp">
+
+            <TextView
+                style="@style/Nhom"
+                android:text="@string/moc_thuong_phat" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/goi_y_moc"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:orientation="horizontal">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/nhan_truoc_gio_nay"
-                    android:textColor="@color/chu_mo"
-                    android:textSize="12sp" />
+                    android:layout_weight="1.1"
+                    android:text="@string/cot_truoc"
+                    android:textColor="@color/chu_rat_mo"
+                    android:textSize="11sp" />
 
-                <EditText
-                    android:id="@+id/o_truoc_gio"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@color/nen_o"
-                    android:importantForAutofill="no"
-                    android:inputType="datetime"
-                    android:padding="12dp"
-                    android:textColor="@color/chu" />
+                    android:layout_weight="1.4"
+                    android:text="@string/cot_tien"
+                    android:textColor="@color/chu_rat_mo"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2.2"
+                    android:text="@string/cot_thong_diep"
+                    android:textColor="@color/chu_rat_mo"
+                    android:textSize="11sp" />
+
+                <View
+                    android:layout_width="44dp"
+                    android:layout_height="1dp" />
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/ds_moc"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="8dp"
+                android:orientation="vertical" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/nhan_mat_chuoi_sau"
-                    android:textColor="@color/chu_mo"
-                    android:textSize="12sp" />
+            <Button
+                android:id="@+id/nut_them_moc"
+                style="@style/NutPhu"
+                android:layout_marginTop="8dp"
+                android:text="@string/nut_them_moc" />
 
-                <EditText
-                    android:id="@+id/o_mat_chuoi"
-                    android:layout_width="match_parent"
+            <TextView
+                style="@style/Nhan"
+                android:layout_marginTop="16dp"
+                android:text="@string/nhan_phat_moi_gio" />
+
+            <EditText
+                android:id="@+id/o_phat_vuot"
+                style="@style/O"
+                android:inputType="numberSigned" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="11dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@color/nen_o"
-                    android:importantForAutofill="no"
-                    android:inputType="datetime"
-                    android:padding="12dp"
-                    android:textColor="@color/chu" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Nhan"
+                        android:text="@string/nhan_truoc_gio_nay" />
+
+                    <TextView
+                        android:id="@+id/o_truoc_gio"
+                        style="@style/O"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Nhan"
+                        android:text="@string/nhan_mat_chuoi_sau" />
+
+                    <TextView
+                        android:id="@+id/o_mat_chuoi"
+                        style="@style/O"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
         <!-- Mốc chuỗi -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/nen_o" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/thuong_moc_chuoi"
-            android:textColor="@color/chu"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
         <LinearLayout
-            android:id="@+id/ds_moc_chuoi"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical" />
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
+            android:orientation="vertical"
+            android:padding="13dp">
 
-        <Button
-            android:id="@+id/nut_them_moc_chuoi"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:backgroundTint="@color/nen_o"
-            android:text="@string/nut_them_moc_chuoi"
-            android:textColor="@color/chu"
-            android:textSize="13sp" />
+            <TextView
+                style="@style/Nhom"
+                android:text="@string/thuong_moc_chuoi" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/goi_y_moc_chuoi"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/ds_moc_chuoi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="9dp"
+                android:orientation="vertical" />
+
+            <Button
+                android:id="@+id/nut_them_moc_chuoi"
+                style="@style/NutPhu"
+                android:layout_marginTop="8dp"
+                android:text="@string/nut_them_moc_chuoi" />
+        </LinearLayout>
 
         <!-- Chuẩn bị ngủ -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="20dp"
-            android:background="@color/nen_o" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/cac_buoc_chuan_bi"
-            android:textColor="@color/chu"
-            android:textSize="17sp"
-            android:textStyle="bold" />
-
-        <LinearLayout
-            android:id="@+id/ds_buoc_sua"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="vertical" />
-
-        <Button
-            android:id="@+id/nut_them_buoc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:backgroundTint="@color/nen_o"
-            android:text="@string/nut_them_buoc"
-            android:textColor="@color/chu"
-            android:textSize="13sp" />
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:orientation="horizontal">
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
+            android:orientation="vertical"
+            android:padding="13dp">
+
+            <TextView
+                style="@style/Nhom"
+                android:text="@string/cac_buoc_chuan_bi" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/ds_buoc_sua"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="9dp"
+                android:orientation="vertical" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/nhan_thuong_thoi_quen"
-                    android:textColor="@color/chu_mo"
-                    android:textSize="12sp" />
-
-                <EditText
-                    android:id="@+id/o_thuong_thoi_quen"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@color/nen_o"
-                    android:importantForAutofill="no"
-                    android:inputType="number"
-                    android:padding="12dp"
-                    android:textColor="@color/chu" />
-            </LinearLayout>
+            <Button
+                android:id="@+id/nut_them_buoc"
+                style="@style/NutPhu"
+                android:layout_marginTop="8dp"
+                android:text="@string/nut_them_buoc" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="11dp"
+                android:orientation="horizontal">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/nhan_nhac_luc"
-                    android:textColor="@color/chu_mo"
-                    android:textSize="12sp" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <EditText
-                    android:id="@+id/o_nhac_luc"
-                    android:layout_width="match_parent"
+                    <TextView
+                        style="@style/Nhan"
+                        android:text="@string/nhan_thuong_thoi_quen" />
+
+                    <EditText
+                        android:id="@+id/o_thuong_thoi_quen"
+                        style="@style/O"
+                        android:inputType="number" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:background="@color/nen_o"
-                    android:importantForAutofill="no"
-                    android:inputType="datetime"
-                    android:padding="12dp"
-                    android:textColor="@color/chu" />
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Nhan"
+                        android:text="@string/nhan_nhac_luc" />
+
+                    <TextView
+                        android:id="@+id/o_nhac_luc"
+                        style="@style/O"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center" />
+                </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
         <Button
             android:id="@+id/nut_luu_ngu"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:backgroundTint="@color/xanh"
-            android:text="@string/nut_luu_cai_dat_ngu"
-            android:textColor="@color/chu" />
+            style="@style/NutChinh"
+            android:layout_marginTop="16dp"
+            android:text="@string/nut_luu_cai_dat_ngu" />
 
         <Button
             android:id="@+id/nut_quyen_thong_bao"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/NutPhu"
             android:layout_marginTop="10dp"
-            android:backgroundTint="@color/nen_o"
-            android:text="@string/nut_quyen_thong_bao"
-            android:textColor="@color/chu"
-            android:textSize="13sp" />
+            android:text="@string/nut_quyen_thong_bao" />
     </LinearLayout>
 </ScrollView>

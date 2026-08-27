@@ -53,23 +53,26 @@ public class ChinhActivity extends Activity {
     private boolean dangGui;
 
     private ViewFlipper trang;
-    private Button[] nutTab;
+    private LinearLayout[] nutTab;
+    private TextView[] hinhTab, chuTab;
     private TextView phuDe, chipDongBo;
 
     // Tab Ghi nhận
-    private TextView uiSoDu, uiChuoi, demNhan, demChinh, tieuDeBuoc, goiYBuoc,
+    private TextView uiSoDu, uiChuoi, demNhan, demChinh, demPhu, tieuDeBuoc, goiYBuoc,
             xemTruocLoi, xemTruocThem, xemTruocTien;
     private LinearLayout dsBuoc, dsGanDay;
-    private EditText oDem, oGioNgu, oGioDay;
+    // Ba ô này là TextView chứ không phải EditText: bấm vào mở bảng chọn của hệ
+    // thống. Gõ tay "1030" mà app không hiểu là lỗi đã gặp trên máy thật.
+    private TextView oDem, oGioNgu, oGioDay;
 
     // Tab Thống kê
     private BieuDo bieuDo;
-    private TextView tkThuong, tkPhat, tkChiTiet;
-    private LinearLayout dsLichSu;
+    private TextView tkThuong, tkPhat;
+    private LinearLayout dsChiSo, dsLichSu;
 
     // Tab Cài đặt
-    private EditText oUrl, oPhatVuot, oTruocGio, oMatChuoi, oThuongThoiQuen, oNhacLuc;
-    private TextView tinKetNoi;
+    private EditText oUrl, oPhatVuot, oThuongThoiQuen;
+    private TextView oTruocGio, oMatChuoi, oNhacLuc, tinKetNoi;
     private LinearLayout dsMoc, dsMocChuoi, dsBuocSua;
 
     private final List<HangMoc> hangMoc = new ArrayList<>();
@@ -85,6 +88,8 @@ public class ChinhActivity extends Activity {
         kho = KhoGiacNgu.cua(this);
 
         timView();
+        GiaoDien.chuaChoThanhHeThong(findViewById(R.id.goc),
+                findViewById(R.id.dau_trang), findViewById(R.id.thanh_duoi));
         gan();
         napCaiDatVaoO();
         veTatCa();
@@ -157,16 +162,27 @@ public class ChinhActivity extends Activity {
         trang = findViewById(R.id.trang);
         phuDe = findViewById(R.id.phu_de);
         chipDongBo = findViewById(R.id.chip_dong_bo);
-        nutTab = new Button[]{
+        nutTab = new LinearLayout[]{
                 findViewById(R.id.tab_ghi),
                 findViewById(R.id.tab_thong_ke),
                 findViewById(R.id.tab_cai_dat)
+        };
+        hinhTab = new TextView[]{
+                findViewById(R.id.tab_ghi_hinh),
+                findViewById(R.id.tab_thong_ke_hinh),
+                findViewById(R.id.tab_cai_dat_hinh)
+        };
+        chuTab = new TextView[]{
+                findViewById(R.id.tab_ghi_chu),
+                findViewById(R.id.tab_thong_ke_chu),
+                findViewById(R.id.tab_cai_dat_chu)
         };
 
         uiSoDu = findViewById(R.id.ui_so_du);
         uiChuoi = findViewById(R.id.ui_chuoi);
         demNhan = findViewById(R.id.dem_nhan);
         demChinh = findViewById(R.id.dem_chinh);
+        demPhu = findViewById(R.id.dem_phu);
         tieuDeBuoc = findViewById(R.id.tieu_de_buoc);
         goiYBuoc = findViewById(R.id.goi_y_buoc);
         xemTruocLoi = findViewById(R.id.xem_truoc_loi);
@@ -181,7 +197,7 @@ public class ChinhActivity extends Activity {
         bieuDo = findViewById(R.id.bieu_do);
         tkThuong = findViewById(R.id.tk_thuong);
         tkPhat = findViewById(R.id.tk_phat);
-        tkChiTiet = findViewById(R.id.tk_chi_tiet);
+        dsChiSo = findViewById(R.id.ds_chi_so);
         dsLichSu = findViewById(R.id.ds_lich_su);
 
         oUrl = findViewById(R.id.o_url);
@@ -225,6 +241,27 @@ public class ChinhActivity extends Activity {
         findViewById(R.id.nut_luu_ngu).setOnClickListener(v -> luuCaiDatNgu());
         findViewById(R.id.nut_quyen_thong_bao).setOnClickListener(v -> xinQuyenThongBao());
 
+        // Ba ô ngày giờ: bấm là mở bảng chọn của hệ thống, không bắt gõ tay.
+        oDem.setOnClickListener(v -> GiaoDien.chonNgay(this, oDem.getText().toString(), gt -> {
+            oDem.setText(gt);
+            veXemTruoc();
+        }));
+        oGioNgu.setOnClickListener(v -> GiaoDien.chonGio(this, oGioNgu.getText().toString(), gt -> {
+            oGioNgu.setText(gt);
+            veXemTruoc();
+        }));
+        oGioDay.setOnClickListener(v -> GiaoDien.chonGio(this, oGioDay.getText().toString(), gt -> {
+            oGioDay.setText(gt);
+            veXemTruoc();
+        }));
+
+        oTruocGio.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oTruocGio.getText().toString(), oTruocGio::setText));
+        oMatChuoi.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oMatChuoi.getText().toString(), oMatChuoi::setText));
+        oNhacLuc.setOnClickListener(v ->
+                GiaoDien.chonGio(this, oNhacLuc.getText().toString(), oNhacLuc::setText));
+
         TextWatcher doiGio = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
             @Override public void onTextChanged(CharSequence s, int a, int b, int c) { }
@@ -238,7 +275,9 @@ public class ChinhActivity extends Activity {
         if (i < 0 || i >= nutTab.length) return;
         trang.setDisplayedChild(i);
         for (int k = 0; k < nutTab.length; k++) {
-            nutTab[k].setTextColor(Color.parseColor(k == i ? "#F8FAFC" : "#94A3B8"));
+            int mau = Color.parseColor(k == i ? "#60A5FA" : "#94A3B8");
+            chuTab[k].setTextColor(mau);
+            hinhTab[k].setAlpha(k == i ? 1f : 0.5f);
         }
         if (i == TAB_THONG_KE) veThongKe();
     }
@@ -266,28 +305,38 @@ public class ChinhActivity extends Activity {
     }
 
     private void veDemNguoc() {
+        long bayGio = System.currentTimeMillis();
+
+        // Ban ngày thì cái đêm app đang tính là đêm VỪA QUA, gọi "đêm nay" là sai.
+        boolean dangDienRa = GiaoDien.demDangDienRa(bayGio);
+        demNhan.setText(dangDienRa ? R.string.dem_nay : R.string.dem_qua);
+
         DemNgu daCo = kho.timTheoNgay(kho.demNay);
         if (daCo != null) {
-            demNhan.setText(R.string.dem_nay);
-            demChinh.setText(getString(R.string.dem_nay_da_ghi, daCo.gio));
+            demChinh.setText(getString(R.string.da_ghi_luc, daCo.gio));
+            demChinh.setTextColor(Color.parseColor("#34D399"));
+            demPhu.setText(daCo.loi + "  ·  " + LuatGiacNgu.tienCoDau(daCo.tongTien));
             return;
         }
 
+        demChinh.setTextColor(Color.parseColor("#F1F5F9"));
+
         // Neo mốc mục tiêu vào chính đêm này. Nếu chỉ hỏi "lần tới của 22:30"
         // thì lúc 04:00 sáng sẽ ra "còn 18 giờ nữa" cho một đêm đã kết thúc.
-        long bayGio = System.currentTimeMillis();
         long moc = LuatGiacNgu.mocMucTieu(kho.demNay, kho.caiDat.truocGioNay);
         long conLai = moc - bayGio;
 
         if (conLai > 0) {
-            demNhan.setText(getString(R.string.con_den_gio,
-                    LuatGiacNgu.khoangCach(conLai), kho.caiDat.truocGioNay));
             demChinh.setText(LuatGiacNgu.khoangCach(conLai));
+            demPhu.setText(getString(R.string.nua_toi_gio, kho.caiDat.truocGioNay));
+        } else if (dangDienRa) {
+            demChinh.setText(getString(R.string.muon_bao_lau, LuatGiacNgu.khoangCach(-conLai)));
+            demChinh.setTextColor(Color.parseColor("#FB7185"));
+            demPhu.setText(getString(R.string.muon_hon_gio, kho.caiDat.truocGioNay));
         } else {
-            demNhan.setText(getString(R.string.da_qua_gio, kho.caiDat.truocGioNay,
-                    LuatGiacNgu.gioHienTai(bayGio)));
-            demChinh.setText(getString(R.string.muon_bao_lau,
-                    LuatGiacNgu.khoangCach(-conLai)));
+            demChinh.setText(R.string.chua_ghi);
+            demChinh.setTextColor(Color.parseColor("#FBBF24"));
+            demPhu.setText(R.string.ghi_bu_di);
         }
     }
 
@@ -304,9 +353,10 @@ public class ChinhActivity extends Activity {
             final int chiSo = i;
             CaiDatNgu.Buoc b = buoc.get(i);
             CheckBox o = new CheckBox(this);
-            o.setText(b.nhan + (b.phut > 0 ? "  (" + b.phut + "')" : ""));
-            o.setTextColor(Color.parseColor("#E2E8F0"));
-            o.setTextSize(14);
+            o.setText(b.nhan + (b.phut > 0 ? "   " + b.phut + "'" : ""));
+            o.setTextColor(Color.parseColor("#F1F5F9"));
+            o.setTextSize(15);
+            o.setPadding(dp(8), dp(7), 0, dp(7));
             o.setChecked(kho.daTich.contains(i));
             o.setOnCheckedChangeListener((v, tich) -> {
                 if (tich) kho.daTich.add(chiSo); else kho.daTich.remove(chiSo);
@@ -428,12 +478,19 @@ public class ChinhActivity extends Activity {
         String thoiLuongTB = demThoiLuong > 0
                 ? String.format(Locale.US, "%.1f giờ", tongThoiLuong / demThoiLuong) : "--";
 
-        tkChiTiet.setText(getString(R.string.tk_chi_tiet,
-                tong,
-                tong > 0 ? Math.round(dungGio * 100f / tong) : 0,
-                gioTB, thoiLuongTB,
-                kho.chuoiDaiNhat, kho.chuoiHienTai,
-                LuatGiacNgu.tien(kho.soDu())));
+        long soDu = kho.soDu();
+        dsChiSo.removeAllViews();
+        dsChiSo.addView(hangChiSo("Số đêm đã ghi", String.valueOf(tong), null));
+        dsChiSo.addView(hangChiSo("Tỉ lệ đúng giờ",
+                (tong > 0 ? Math.round(dungGio * 100f / tong) : 0) + "%", null));
+        dsChiSo.addView(hangChiSo("Giờ ngủ trung bình", gioTB, null));
+        dsChiSo.addView(hangChiSo("Thời lượng ngủ TB", thoiLuongTB, null));
+        dsChiSo.addView(hangChiSo("Chuỗi dài nhất",
+                getString(R.string.chuoi_ngay, kho.chuoiDaiNhat), null));
+        dsChiSo.addView(hangChiSo("Chuỗi hiện tại",
+                getString(R.string.chuoi_ngay, kho.chuoiHienTai), "#FBBF24"));
+        dsChiSo.addView(hangChiSo("Tổng quỹ", LuatGiacNgu.tien(soDu),
+                soDu >= 0 ? "#34D399" : "#FB7185"));
 
         dsLichSu.removeAllViews();
         if (kho.danhSach.isEmpty()) {
@@ -461,6 +518,30 @@ public class ChinhActivity extends Activity {
 
     /* ==================== THẺ MỘT ĐÊM ==================== */
 
+    /** Một dòng "nhãn ......... giá trị" trong bảng Tổng quan. */
+    private View hangChiSo(String nhan, String giaTri, String mau) {
+        LinearLayout h = new LinearLayout(this);
+        h.setOrientation(LinearLayout.HORIZONTAL);
+        h.setGravity(Gravity.CENTER_VERTICAL);
+        h.setPadding(0, dp(9), 0, dp(9));
+
+        TextView t = new TextView(this);
+        t.setText(nhan);
+        t.setTextColor(Color.parseColor("#94A3B8"));
+        t.setTextSize(14);
+        t.setLayoutParams(new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        h.addView(t);
+
+        TextView p = new TextView(this);
+        p.setText(giaTri);
+        p.setTextColor(Color.parseColor(mau == null ? "#F1F5F9" : mau));
+        p.setTextSize(15);
+        p.setTypeface(null, android.graphics.Typeface.BOLD);
+        h.addView(p);
+        return h;
+    }
+
     private TextView chuMo(String s) {
         TextView t = new TextView(this);
         t.setText(s);
@@ -473,31 +554,40 @@ public class ChinhActivity extends Activity {
     private View theDem(final DemNgu d) {
         LinearLayout the = new LinearLayout(this);
         the.setOrientation(LinearLayout.VERTICAL);
-        the.setBackgroundColor(Color.parseColor("#0F172A"));
-        the.setPadding(dp(12), dp(10), dp(12), dp(10));
+        // Vạch màu bên trái cho biết đêm đó đúng giờ hay trễ, giống bản PWA.
+        the.setBackgroundResource(d.tre ? R.drawable.vien_trai_do : R.drawable.vien_trai_xanh_la);
+        the.setPadding(dp(14), dp(11), dp(13), dp(11));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.bottomMargin = dp(8);
+        lp.bottomMargin = dp(7);
         the.setLayoutParams(lp);
 
         LinearLayout dong = new LinearLayout(this);
         dong.setOrientation(LinearLayout.HORIZONTAL);
         dong.setGravity(Gravity.CENTER_VERTICAL);
 
-        TextView trai = new TextView(this);
-        trai.setText(LuatGiacNgu.ngayNgan(d.ngay) + "  ·  " + d.gio
-                + (d.gioDay.isEmpty() ? "" : " → " + d.gioDay));
-        trai.setTextColor(Color.parseColor("#E2E8F0"));
-        trai.setTextSize(14);
-        trai.setLayoutParams(new LinearLayout.LayoutParams(0,
+        TextView gio = new TextView(this);
+        gio.setText(d.gio);
+        gio.setTextColor(Color.parseColor("#F1F5F9"));
+        gio.setTextSize(19);
+        gio.setTypeface(null, android.graphics.Typeface.BOLD);
+        dong.addView(gio);
+
+        TextView ngay = new TextView(this);
+        ngay.setText("  " + LuatGiacNgu.ngayNgan(d.ngay)
+                + (d.gioDay.isEmpty() ? "" : "  →  " + d.gioDay));
+        ngay.setTextColor(Color.parseColor("#64748B"));
+        ngay.setTextSize(13);
+        ngay.setLayoutParams(new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        dong.addView(trai);
+        dong.addView(ngay);
 
         TextView phai = new TextView(this);
         phai.setText(LuatGiacNgu.tienCoDau(d.tongTien));
         phai.setTextColor(Color.parseColor(
-                d.tongTien > 0 ? "#34D399" : d.tongTien < 0 ? "#F87171" : "#94A3B8"));
-        phai.setTextSize(15);
+                d.tongTien > 0 ? "#34D399" : d.tongTien < 0 ? "#FB7185" : "#94A3B8"));
+        phai.setTextSize(16);
+        phai.setTypeface(null, android.graphics.Typeface.BOLD);
         dong.addView(phai);
         the.addView(dong);
 
@@ -508,8 +598,9 @@ public class ChinhActivity extends Activity {
                 .append(String.format(Locale.US, "%.1f", d.thoiLuong)).append(" giờ");
         if (!d.daGui) s.append("  ·  chờ gửi");
         duoi.setText(s.toString());
-        duoi.setTextColor(Color.parseColor("#64748B"));
-        duoi.setTextSize(12);
+        duoi.setTextColor(Color.parseColor("#94A3B8"));
+        duoi.setTextSize(13);
+        duoi.setPadding(0, dp(3), 0, 0);
         the.addView(duoi);
 
         the.setOnClickListener(v -> {
@@ -532,8 +623,10 @@ public class ChinhActivity extends Activity {
 
     private void xacNhan() {
         final String dem = oDem.getText().toString().trim();
-        final String gio = oGioNgu.getText().toString().trim();
-        final String gioDay = oGioDay.getText().toString().trim();
+        // Bình thường giờ đến từ bảng chọn nên đã đúng dạng. Vẫn chuẩn hoá cho
+        // chắc, phòng khi giá trị đến từ nơi khác: "1030" cũng thành "10:30".
+        final String gio = GiaoDien.chuanHoaGio(oGioNgu.getText().toString());
+        final String gioDay = GiaoDien.chuanHoaGio(oGioDay.getText().toString());
 
         if (dem.isEmpty() || gio.isEmpty()) { bao(getString(R.string.thieu_du_lieu)); return; }
         if (!dem.matches("^\\d{4}-\\d{2}-\\d{2}$")) { bao(getString(R.string.dem_sai)); return; }
@@ -730,10 +823,11 @@ public class ChinhActivity extends Activity {
         EditText o = new EditText(this);
         o.setText(gtri);
         o.setInputType(kieu);
-        o.setTextSize(13);
-        o.setTextColor(Color.parseColor("#F8FAFC"));
-        o.setBackgroundColor(Color.parseColor("#1E293B"));
-        o.setPadding(dp(8), dp(8), dp(8), dp(8));
+        o.setTextSize(14);
+        o.setSingleLine(true);
+        o.setTextColor(Color.parseColor("#F1F5F9"));
+        o.setBackgroundResource(R.drawable.o_nhap);
+        o.setPadding(dp(10), dp(10), dp(10), dp(10));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.WRAP_CONTENT, can);
         lp.rightMargin = dp(6);
@@ -744,12 +838,14 @@ public class ChinhActivity extends Activity {
     private Button nutXoaHang() {
         Button b = new Button(this);
         b.setText("✕");
-        b.setTextSize(12);
-        b.setTextColor(Color.parseColor("#F87171"));
-        b.setBackgroundColor(Color.parseColor("#1E293B"));
+        b.setTextSize(13);
+        b.setAllCaps(false);
+        b.setTextColor(Color.parseColor("#FB7185"));
+        b.setBackgroundResource(R.drawable.nut_nguy);
+        b.setStateListAnimator(null);
         b.setPadding(0, 0, 0, 0);
-        b.setMinWidth(dp(44));
-        b.setMinimumWidth(dp(44));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(44), dp(42));
+        b.setLayoutParams(lp);
         return b;
     }
 

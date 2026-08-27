@@ -70,6 +70,7 @@ public class DichVuKhoa extends Service {
     private int buoc = 1;        // 1 = chờ lần 1, 2 = đang đếm ngược, 3 = chờ lần 2
     private int conLai = 0;
     private Runnable nhipDem;
+    private Runnable nhipDongHo;
     private Runnable canhGac;
     private Runnable nhipNgatQuang;
     private Runnable nhipNghi;
@@ -344,11 +345,15 @@ public class DichVuKhoa extends Service {
             }
         });
 
+        // KHÔNG dùng FLAG_LAYOUT_IN_SCREEN ở đây. Cờ đó ghim cửa sổ full màn
+        // hình nên bàn phím không co lại được, và ô nhập mã bị che mất hoàn
+        // toàn — đúng lỗi đã gặp trên máy thật. Bỏ cờ đi thì cửa sổ chừa chỗ
+        // cho bàn phím, cộng với ScrollView bên trong là ô nhập luôn thấy được.
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                0,
                 PixelFormat.OPAQUE);
         lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
                 | WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN;
@@ -358,7 +363,33 @@ public class DichVuKhoa extends Service {
             lopKhoa = khung;
         } catch (Exception e) {
             NhatKy.ghi(this, "loi-lop-khoa", String.valueOf(e.getMessage()));
+            return;
         }
+
+        // Bấm vào ô nào thì cuộn ô đó lên trên bàn phím.
+        final android.widget.ScrollView cuon = khung.findViewById(R.id.cuon_khoa);
+        View.OnFocusChangeListener khiNhanTieuDiem = (v, coTieuDiem) -> {
+            if (!coTieuDiem || cuon == null) return;
+            tay.postDelayed(() -> cuon.smoothScrollTo(0, Math.max(0, v.getTop() - dp(70))), 250);
+        };
+        o1.setOnFocusChangeListener(khiNhanTieuDiem);
+        o2.setOnFocusChangeListener(khiNhanTieuDiem);
+
+        // Đồng hồ chạy suốt lúc đang khoá, để biết mình đang thức muộn cỡ nào.
+        final TextView dongHo = khung.findViewById(R.id.dong_ho_khoa);
+        nhipDongHo = new Runnable() {
+            @Override
+            public void run() {
+                if (lopKhoa == null) return;
+                dongHo.setText(LuatGiacNgu.gioHienTai(System.currentTimeMillis()));
+                tay.postDelayed(this, 1000L);
+            }
+        };
+        tay.post(nhipDongHo);
+    }
+
+    private int dp(int v) {
+        return Math.round(v * getResources().getDisplayMetrics().density);
     }
 
     private void chayDemNguoc(final TextView dem, final EditText o2, final Button nut2) {
@@ -386,6 +417,7 @@ public class DichVuKhoa extends Service {
     private void moKhoa() {
         NhatKy.ghi(this, "mo-khoa", "nhập đúng mã hai lần");
         if (nhipDem != null) tay.removeCallbacks(nhipDem);
+        if (nhipDongHo != null) tay.removeCallbacks(nhipDongHo);
         if (canhGac != null) tay.removeCallbacks(canhGac);
         if (lopKhoa != null) {
             try { wm.removeView(lopKhoa); } catch (Exception ignore) { }
@@ -673,6 +705,7 @@ public class DichVuKhoa extends Service {
         goLopNghi();
         dungNhipNgatQuang();
         if (nhipDem != null) tay.removeCallbacks(nhipDem);
+        if (nhipDongHo != null) tay.removeCallbacks(nhipDongHo);
         if (canhGac != null) tay.removeCallbacks(canhGac);
         if (lopKhoa != null) {
             try { wm.removeView(lopKhoa); } catch (Exception ignore) { }
