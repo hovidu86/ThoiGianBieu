@@ -66,4 +66,41 @@
 
     <string name="nhat_ky">Nhật ký</string>
     <string name="nhat_ky_trong">Chưa có gì được ghi.</string>
+
+    <!-- ============ DÙNG NGẮT QUÃNG ============ -->
+
+    <string name="nq_tieu_de">Dùng ngắt quãng</string>
+    <string name="nq_giai_thich">Chỉ tính thời gian màn hình đang bật và máy đã mở khoá — tắt màn hình nghe nhạc thì không tính. Dùng đủ hạn mức thì bắt buộc nghỉ. Nghỉ đủ lâu giữa hai lần mở màn hình thì bộ đếm về 0.</string>
+    <string name="nq_bat">Bật dùng ngắt quãng</string>
+    <string name="ngat_quang_dang_bat">ngắt quãng %1$d/%2$d phút</string>
+
+    <string name="nhan_nq_phut_dung">Được dùng liên tục bao lâu mỗi đợt (phút)</string>
+    <string name="nhan_nq_phut_nghi">Nghỉ bắt buộc bao lâu (phút)</string>
+    <string name="nhan_nq_phut_reset">Nghỉ bao lâu thì bộ đếm về 0 (phút)</string>
+    <string name="nhan_nq_canh_bao">Cảnh báo trước khi hết đợt (phút)</string>
+    <string name="nhan_nq_khung_gio">Khung giờ áp dụng — để hai ô giống nhau nghĩa là cả ngày</string>
+    <string name="nhan_nq_tu_gio">Từ giờ (HH:mm)</string>
+    <string name="nhan_nq_den_gio">Đến giờ (HH:mm)</string>
+    <string name="nhan_nq_khan_cap">Số lần được thoát khẩn cấp mỗi ngày (0 = không cho)</string>
+    <string name="nq_khong_khoa_khi_goi">Không tắt màn hình khi đang gọi điện</string>
+
+    <string name="nghi_bat_buoc">ĐANG NGHỈ BẮT BUỘC</string>
+    <string name="nq_loi_nhac">Đứng dậy đi lại, uống nước, nhìn ra xa 20 giây.\nHết giờ màn hình này tự tan.</string>
+    <string name="nq_thong_ke">Hôm nay đã dùng %1$s, qua %2$d đợt nghỉ</string>
+    <string name="thoat_khan_cap">Thoát khẩn cấp</string>
+    <string name="thoat_khan_cap_con">Thoát khẩn cấp (còn %1$d lượt)</string>
+    <string name="xac_nhan_khan_cap">Bấm lần nữa để xác nhận</string>
+    <string name="nq_sap_het">Sắp hết đợt dùng</string>
+    <string name="nq_sap_het_noi">Còn %1$d phút nữa là phải nghỉ %2$d phút. Kết thúc việc đang làm đi.</string>
+
+    <string name="nut_thong_ke">Xem thống kê hôm nay</string>
+    <string name="thong_ke">Thống kê hôm nay</string>
+    <string name="thong_ke_noi">Tổng thời gian dùng: %1$s\nSố đợt nghỉ bắt buộc: %2$d\nSố lần thoát khẩn cấp: %3$d\n\nĐợt hiện tại đã dùng: %4$s / %5$d phút</string>
+
+    <string name="loi_nq_phut_dung">Thời lượng mỗi đợt phải là số phút từ 1 trở lên.</string>
+    <string name="loi_nq_phut_nghi">Thời gian nghỉ phải là số phút từ 1 trở lên.</string>
+    <string name="loi_nq_phut_reset">Ngưỡng nghỉ để reset phải là số phút từ 1 trở lên.</string>
+    <string name="loi_nq_canh_bao">Mốc cảnh báo phải là số phút từ 0 trở lên và nhỏ hơn thời lượng mỗi đợt.</string>
+    <string name="loi_nq_gio">Khung giờ áp dụng phải đúng dạng HH:mm.</string>
+    <string name="loi_nq_khan_cap">Số lần thoát khẩn cấp phải là số từ 0 trở lên.</string>
 </resources>

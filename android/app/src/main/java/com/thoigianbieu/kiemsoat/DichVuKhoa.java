@@ -1,18 +1,23 @@
 package com.thoigianbieu.kiemsoat;
 
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.graphics.PixelFormat;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
@@ -25,7 +30,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 /**
- * Dịch vụ nền giữ lịch và dựng lớp phủ khoá.
+ * Dịch vụ nền giữ lịch và dựng mọi lớp phủ. Lo hai việc:
+ *   - Khoá theo giờ ban đêm: tới giờ thì tắt màn hình, đòi mã hai lần.
+ *   - Dùng ngắt quãng ban ngày: đếm thời gian màn hình bật, hết hạn mức thì
+ *     bắt nghỉ.
  *
  * Vì sao dùng lớp phủ chứ không dùng Activity: từ Android 10, app chạy nền
  * không được tự mở Activity. Lớp phủ (SYSTEM_ALERT_WINDOW) thì dựng lúc nào
@@ -41,28 +49,46 @@ public class DichVuKhoa extends Service {
     private static final String KENH_CANH_BAO = "canh_bao";
     private static final int ID_THONG_BAO_NEN = 1;
     private static final int ID_THONG_BAO_CANH_BAO = 2;
+    private static final int ID_THONG_BAO_NGAT_QUANG = 3;
 
     /** Chưa mở khoá được sau chừng này thì tắt màn hình lần nữa. */
     private static final long CHU_KY_KHOA_LAI = 120_000L;
+    /** Nhịp soát hạn mức dùng ngắt quãng. */
+    private static final long CHU_KY_SOAT_NQ = 20_000L;
 
     private CauHinh ch;
+    private NgatQuang nq;
     private WindowManager wm;
     private final Handler tay = new Handler(Looper.getMainLooper());
 
     private View lopKhoa;
     private View lopCanhBao;
+    private View lopNghi;
 
     private int buoc = 1;        // 1 = chờ lần 1, 2 = đang đếm ngược, 3 = chờ lần 2
     private int conLai = 0;
     private Runnable nhipDem;
     private Runnable canhGac;
+    private Runnable nhipNgatQuang;
+    private Runnable nhipNghi;
+    private boolean daCanhBaoDot;
+    private boolean khanCapChoXacNhan;
+
+    private BroadcastReceiver batTatManHinh;
 
     @Override
     public void onCreate() {
         super.onCreate();
         ch = new CauHinh(this);
+        nq = new NgatQuang(ch);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
         taoKenh();
+        dangKyManHinh();
+
+        // Dịch vụ vừa dựng lại giữa lúc màn hình đang bật thì phải đếm tiếp ngay.
+        if (manHinhDangBat() && !mayDangKhoa()) {
+            manHinhVaoDung(System.currentTimeMillis());
+        }
     }
 
     @Override
@@ -92,7 +118,8 @@ public class DichVuKhoa extends Service {
      * ngay, còn không thì chỉ dựng lại lịch.
      */
     private void soatLaiLich() {
-        if (!ch.daDatMa() || lopKhoa != null) return;
+        if (lopKhoa != null) return;
+        if (!ch.daDatMa()) return;
 
         long bayGio = System.currentTimeMillis();
         if (ch.mocKhoa() > 0 && bayGio >= ch.mocKhoa() && ch.trongKhoangKhoa(bayGio)) {
@@ -125,13 +152,20 @@ public class DichVuKhoa extends Service {
                 new Intent(this, CaiDatActivity.class),
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        String phu = ch.daDatMa() && ch.mocKhoa() > 0
-                ? getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()))
-                : getString(R.string.chua_dat_ma);
+        String phu;
+        if (!ch.daDatMa()) {
+            phu = getString(R.string.chua_dat_ma);
+        } else if (ch.ngatQuangBat()) {
+            phu = getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()))
+                    + " · " + getString(R.string.ngat_quang_dang_bat, ch.nqPhutDung(), ch.nqPhutNghi());
+        } else {
+            phu = getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()));
+        }
 
         Notification tb = new Notification.Builder(this, KENH_NEN)
                 .setContentTitle(getString(R.string.ten_app))
                 .setContentText(phu)
+                .setStyle(new Notification.BigTextStyle().bigText(phu))
                 .setSmallIcon(R.drawable.bieu_tuong)
                 .setContentIntent(moApp)
                 .setOngoing(true)
@@ -144,32 +178,40 @@ public class DichVuKhoa extends Service {
         }
     }
 
-    /* ==================== CẢNH BÁO ==================== */
+    private void baoNhanh(int idThongBao, String tieuDe, String noiDung) {
+        NotificationManager nm = getSystemService(NotificationManager.class);
+        if (nm == null) return;
+        nm.notify(idThongBao, new Notification.Builder(this, KENH_CANH_BAO)
+                .setContentTitle(tieuDe)
+                .setContentText(noiDung)
+                .setStyle(new Notification.BigTextStyle().bigText(noiDung))
+                .setSmallIcon(R.drawable.bieu_tuong)
+                .setAutoCancel(true)
+                .build());
+    }
+
+    /* ==================== CẢNH BÁO SẮP KHOÁ ==================== */
 
     private void hienCanhBao(int soPhut) {
         String noi = soPhut <= 1
                 ? getString(R.string.canh_bao_mot_phut)
                 : getString(R.string.canh_bao_nhieu_phut, soPhut, ch.khoangCachGiay());
 
-        NotificationManager nm = getSystemService(NotificationManager.class);
-        if (nm != null) {
-            nm.notify(ID_THONG_BAO_CANH_BAO, new Notification.Builder(this, KENH_CANH_BAO)
-                    .setContentTitle(getString(R.string.sap_khoa, soPhut))
-                    .setContentText(noi)
-                    .setStyle(new Notification.BigTextStyle().bigText(noi))
-                    .setSmallIcon(R.drawable.bieu_tuong)
-                    .setAutoCancel(true)
-                    .build());
-        }
+        baoNhanh(ID_THONG_BAO_CANH_BAO, getString(R.string.sap_khoa, soPhut), noi);
         rung(300);
         NhatKy.ghi(this, "canh-bao", soPhut + " phút");
 
-        if (!Settings.canDrawOverlays(this) || lopKhoa != null) return;
+        hienDaiCanhBao(getString(R.string.sap_khoa, soPhut), noi);
+    }
+
+    /** Dải cảnh báo màu vàng bám trên đỉnh màn hình, tự biến mất sau 12 giây. */
+    private void hienDaiCanhBao(String tieuDe, String noiDung) {
+        if (!Settings.canDrawOverlays(this) || lopKhoa != null || lopNghi != null) return;
 
         goLopCanhBao();
         View v = LayoutInflater.from(this).inflate(R.layout.lop_phu_canh_bao, null);
-        ((TextView) v.findViewById(R.id.tieu_de)).setText(getString(R.string.sap_khoa, soPhut));
-        ((TextView) v.findViewById(R.id.noi_dung)).setText(noi);
+        ((TextView) v.findViewById(R.id.tieu_de)).setText(tieuDe);
+        ((TextView) v.findViewById(R.id.noi_dung)).setText(noiDung);
 
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -195,35 +237,44 @@ public class DichVuKhoa extends Service {
         lopCanhBao = null;
     }
 
-    /* ==================== KHOÁ ==================== */
+    /* ==================== KHOÁ THEO GIỜ ==================== */
 
     private void khoa() {
         if (lopKhoa != null) {
-            QuanTriReceiver.khoaNgay(this);
+            khoaManHinhNeuDuoc();
             return;
         }
         if (!ch.daDatMa()) return;
 
+        // Đang gọi điện thì hoãn lại, nhịp soát sau sẽ khoá bù.
+        if (ch.nqKhongKhoaKhiGoi() && dangGoiDien()) {
+            NhatKy.ghi(this, "hoan-khoa", "đang gọi điện");
+            ch.datMocKhoa(System.currentTimeMillis() + 60_000L);
+            LenLich.datLai(this);
+            return;
+        }
+
         goLopCanhBao();
+        goLopNghi();
         NhatKy.ghi(this, "khoa", "mốc " + LenLich.gioPhut(ch.mocKhoa()));
 
         if (!Settings.canDrawOverlays(this)) {
             // Không có quyền lớp phủ thì vẫn tắt màn hình, chỉ là không đòi được mã.
             NhatKy.ghi(this, "thieu-quyen", "chưa cho phép hiển thị trên ứng dụng khác");
-            QuanTriReceiver.khoaNgay(this);
+            khoaManHinhNeuDuoc();
             datMocSauKhiMo();
             return;
         }
 
         dungLopKhoa();
-        QuanTriReceiver.khoaNgay(this);
+        khoaManHinhNeuDuoc();
 
         canhGac = new Runnable() {
             @Override
             public void run() {
                 if (lopKhoa == null) return;
                 NhatKy.ghi(DichVuKhoa.this, "khoa-lai", "vẫn chưa nhập đúng mã");
-                QuanTriReceiver.khoaNgay(DichVuKhoa.this);
+                khoaManHinhNeuDuoc();
                 tay.postDelayed(this, CHU_KY_KHOA_LAI);
             }
         };
@@ -344,7 +395,227 @@ public class DichVuKhoa extends Service {
         chayNen();
     }
 
+    /* ==================== DÙNG NGẮT QUÃNG ==================== */
+
+    /**
+     * Bật/tắt màn hình chỉ đăng ký được lúc chạy, không khai trong manifest
+     * được. Đó cũng là lý do dịch vụ này phải sống thường trực.
+     */
+    private void dangKyManHinh() {
+        batTatManHinh = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context ctx, Intent intent) {
+                long bayGio = System.currentTimeMillis();
+                String viec = intent.getAction();
+                if (Intent.ACTION_SCREEN_OFF.equals(viec)) {
+                    manHinhRoiDung(bayGio);
+                } else if (Intent.ACTION_USER_PRESENT.equals(viec)) {
+                    manHinhVaoDung(bayGio);
+                } else if (Intent.ACTION_SCREEN_ON.equals(viec)) {
+                    // Máy không đặt khoá màn hình thì không có USER_PRESENT.
+                    if (!mayDangKhoa()) manHinhVaoDung(bayGio);
+                }
+            }
+        };
+        IntentFilter loc = new IntentFilter();
+        loc.addAction(Intent.ACTION_SCREEN_ON);
+        loc.addAction(Intent.ACTION_SCREEN_OFF);
+        loc.addAction(Intent.ACTION_USER_PRESENT);
+        registerReceiver(batTatManHinh, loc, Context.RECEIVER_NOT_EXPORTED);
+    }
+
+    private void manHinhVaoDung(long bayGio) {
+        if (!nq.dangApDung(bayGio)) return;
+        if (lopKhoa != null) return;   // đang khoá đêm, chuyện khác
+
+        if (nq.dangNghi(bayGio)) {
+            hienLopNghi();
+            khoaManHinhNeuDuoc();
+            return;
+        }
+        nq.batDauDung(bayGio);
+        daCanhBaoDot = false;
+        batNhipNgatQuang();
+    }
+
+    private void manHinhRoiDung(long bayGio) {
+        nq.dungDem(bayGio);
+        dungNhipNgatQuang();
+        goLopNghi();   // màn hình tắt rồi thì lớp phủ để đó vô nghĩa
+    }
+
+    private void batNhipNgatQuang() {
+        dungNhipNgatQuang();
+        nhipNgatQuang = new Runnable() {
+            @Override
+            public void run() {
+                soatNgatQuang();
+                tay.postDelayed(this, CHU_KY_SOAT_NQ);
+            }
+        };
+        tay.postDelayed(nhipNgatQuang, CHU_KY_SOAT_NQ);
+    }
+
+    private void dungNhipNgatQuang() {
+        if (nhipNgatQuang != null) tay.removeCallbacks(nhipNgatQuang);
+        nhipNgatQuang = null;
+    }
+
+    private void soatNgatQuang() {
+        long bayGio = System.currentTimeMillis();
+        if (lopKhoa != null) return;
+        if (!nq.dangApDung(bayGio)) return;
+
+        if (nq.dangNghi(bayGio)) {
+            hienLopNghi();
+            return;
+        }
+
+        long con = nq.conLai(bayGio);
+        if (con <= 0) {
+            vaoNghi(bayGio);
+            return;
+        }
+        if (!daCanhBaoDot && con <= ch.nqCanhBaoPhut() * 60_000L) {
+            daCanhBaoDot = true;
+            int phut = (int) Math.max(1, Math.round(con / 60_000.0));
+            String noi = getString(R.string.nq_sap_het_noi, phut, ch.nqPhutNghi());
+            baoNhanh(ID_THONG_BAO_NGAT_QUANG, getString(R.string.nq_sap_het), noi);
+            hienDaiCanhBao(getString(R.string.nq_sap_het), noi);
+            rung(250);
+        }
+    }
+
+    private void vaoNghi(long bayGio) {
+        if (ch.nqKhongKhoaKhiGoi() && dangGoiDien()) {
+            NhatKy.ghi(this, "hoan-nghi", "đang gọi điện");
+            return;
+        }
+        nq.batDauNghi(bayGio);
+        daCanhBaoDot = false;
+        dungNhipNgatQuang();
+        NhatKy.ghi(this, "ngat-quang", "hết hạn mức " + ch.nqPhutDung()
+                + " phút, nghỉ " + ch.nqPhutNghi() + " phút");
+        hienLopNghi();
+        khoaManHinhNeuDuoc();
+    }
+
+    /** Lớp phủ nghỉ: chỉ có đồng hồ đếm ngược, không đòi mã. Hết giờ tự tan. */
+    private void hienLopNghi() {
+        if (lopNghi != null) return;
+        if (!Settings.canDrawOverlays(this)) return;
+
+        goLopCanhBao();
+        khanCapChoXacNhan = false;
+
+        KhungPhu khung = new KhungPhu(this);
+        LayoutInflater.from(this).inflate(R.layout.lop_phu_nghi, khung, true);
+
+        final TextView dem = khung.findViewById(R.id.dem_nghi);
+        final TextView loiNhac = khung.findViewById(R.id.loi_nhac);
+        final TextView thongKe = khung.findViewById(R.id.thong_ke_nghi);
+        final Button nutKhanCap = khung.findViewById(R.id.nut_khan_cap);
+
+        loiNhac.setText(R.string.nq_loi_nhac);
+        thongKe.setText(getString(R.string.nq_thong_ke,
+                CauHinh.doDai(ch.nqTongHomNay()), ch.nqSoDotHomNay()));
+
+        if (nq.conLuotKhanCap()) {
+            nutKhanCap.setVisibility(View.VISIBLE);
+            nutKhanCap.setText(getString(R.string.thoat_khan_cap_con, nq.luotKhanCapConLai()));
+            nutKhanCap.setOnClickListener(v -> {
+                if (!khanCapChoXacNhan) {
+                    // Một cú chạm là quá dễ. Bắt bấm lần thứ hai trong 5 giây.
+                    khanCapChoXacNhan = true;
+                    nutKhanCap.setText(R.string.xac_nhan_khan_cap);
+                    tay.postDelayed(() -> {
+                        khanCapChoXacNhan = false;
+                        if (lopNghi != null) {
+                            nutKhanCap.setText(getString(R.string.thoat_khan_cap_con,
+                                    nq.luotKhanCapConLai()));
+                        }
+                    }, 5000L);
+                    return;
+                }
+                ch.nqTangSoKhanCap();
+                NhatKy.ghi(this, "khan-cap", "thoát quãng nghỉ sớm");
+                nq.ketThucNghi(System.currentTimeMillis());
+                goLopNghi();
+                batNhipNgatQuang();
+            });
+        } else {
+            nutKhanCap.setVisibility(View.GONE);
+        }
+
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                        | WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.OPAQUE);
+
+        try {
+            wm.addView(khung, lp);
+            lopNghi = khung;
+        } catch (Exception e) {
+            NhatKy.ghi(this, "loi-lop-nghi", String.valueOf(e.getMessage()));
+            return;
+        }
+
+        nhipNghi = new Runnable() {
+            @Override
+            public void run() {
+                long conMs = nq.conNghi(System.currentTimeMillis());
+                if (conMs <= 0) {
+                    NhatKy.ghi(DichVuKhoa.this, "het-nghi", "được dùng tiếp");
+                    nq.ketThucNghi(System.currentTimeMillis());
+                    goLopNghi();
+                    if (manHinhDangBat()) batNhipNgatQuang();
+                    return;
+                }
+                long giay = conMs / 1000;
+                dem.setText(String.format(java.util.Locale.US, "%d:%02d", giay / 60, giay % 60));
+                tay.postDelayed(this, 1000L);
+            }
+        };
+        tay.post(nhipNghi);
+    }
+
+    private void goLopNghi() {
+        if (nhipNghi != null) tay.removeCallbacks(nhipNghi);
+        nhipNghi = null;
+        if (lopNghi == null) return;
+        try { wm.removeView(lopNghi); } catch (Exception ignore) { }
+        lopNghi = null;
+    }
+
     /* ==================== LẶT VẶT ==================== */
+
+    private void khoaManHinhNeuDuoc() {
+        if (ch.nqKhongKhoaKhiGoi() && dangGoiDien()) return;
+        QuanTriReceiver.khoaNgay(this);
+    }
+
+    /** Đang gọi điện thì đừng tắt màn hình giữa cuộc gọi. */
+    private boolean dangGoiDien() {
+        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (am == null) return false;
+        int che = am.getMode();
+        return che == AudioManager.MODE_IN_CALL
+                || che == AudioManager.MODE_IN_COMMUNICATION
+                || che == AudioManager.MODE_RINGTONE;
+    }
+
+    private boolean manHinhDangBat() {
+        PowerManager pm = getSystemService(PowerManager.class);
+        return pm != null && pm.isInteractive();
+    }
+
+    private boolean mayDangKhoa() {
+        KeyguardManager km = getSystemService(KeyguardManager.class);
+        return km != null && km.isKeyguardLocked();
+    }
 
     private void rung(int mili) {
         Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -354,7 +625,17 @@ public class DichVuKhoa extends Service {
 
     @Override
     public void onDestroy() {
+        if (batTatManHinh != null) {
+            try { unregisterReceiver(batTatManHinh); } catch (Exception ignore) { }
+            batTatManHinh = null;
+        }
+        // Chốt nốt quãng đang dùng dở, đừng để mất thời gian đã đếm.
+        if (ch != null && ch.nqBatDauPhien() > 0) {
+            nq.dungDem(System.currentTimeMillis());
+        }
         goLopCanhBao();
+        goLopNghi();
+        dungNhipNgatQuang();
         if (nhipDem != null) tay.removeCallbacks(nhipDem);
         if (canhGac != null) tay.removeCallbacks(canhGac);
         if (lopKhoa != null) {

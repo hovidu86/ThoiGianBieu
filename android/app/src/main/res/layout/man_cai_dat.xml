@@ -170,7 +170,187 @@
             android:padding="12dp"
             android:textColor="@color/chu" />
 
+        <!-- ============ DÙNG NGẮT QUÃNG ============ -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="26dp"
+            android:background="@color/nen_o" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/nq_tieu_de"
+            android:textColor="@color/chu"
+            android:textSize="19sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/nq_giai_thich"
+            android:textColor="@color/chu_rat_mo"
+            android:textSize="12sp" />
+
+        <CheckBox
+            android:id="@+id/chk_nq_bat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/nq_bat"
+            android:textColor="@color/chu"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/nhan_nq_phut_dung"
+            android:textColor="@color/chu_mo"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/o_nq_phut_dung"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/nen_o"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/chu" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/nhan_nq_phut_nghi"
+            android:textColor="@color/chu_mo"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/o_nq_phut_nghi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/nen_o"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/chu" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/nhan_nq_phut_reset"
+            android:textColor="@color/chu_mo"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/o_nq_phut_reset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/nen_o"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/chu" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/nhan_nq_canh_bao"
+            android:textColor="@color/chu_mo"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/o_nq_canh_bao"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/nen_o"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/chu" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/nhan_nq_khung_gio"
+            android:textColor="@color/chu_mo"
+            android:textSize="13sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/o_nq_tu_gio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/nen_o"
+                android:hint="@string/nhan_nq_tu_gio"
+                android:importantForAutofill="no"
+                android:inputType="datetime"
+                android:padding="12dp"
+                android:textColor="@color/chu"
+                android:textColorHint="@color/chu_rat_mo" />
+
+            <EditText
+                android:id="@+id/o_nq_den_gio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:background="@color/nen_o"
+                android:hint="@string/nhan_nq_den_gio"
+                android:importantForAutofill="no"
+                android:inputType="datetime"
+                android:padding="12dp"
+                android:textColor="@color/chu"
+                android:textColorHint="@color/chu_rat_mo" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/nhan_nq_khan_cap"
+            android:textColor="@color/chu_mo"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/o_nq_khan_cap"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/nen_o"
+            android:importantForAutofill="no"
+            android:inputType="number"
+            android:padding="12dp"
+            android:textColor="@color/chu" />
+
+        <CheckBox
+            android:id="@+id/chk_nq_khong_khoa_khi_goi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/nq_khong_khoa_khi_goi"
+            android:textColor="@color/chu"
+            android:textSize="14sp" />
+
         <!-- Mã -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="26dp"
+            android:background="@color/nen_o" />
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -224,6 +404,14 @@
             android:layout_marginTop="14dp"
             android:backgroundTint="@color/nen_o"
             android:text="@string/nut_khoa_thu"
+            android:textColor="@color/chu" />
+
+        <Button
+            android:id="@+id/nut_thong_ke"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/nen_o"
+            android:text="@string/nut_thong_ke"
             android:textColor="@color/chu" />
 
         <Button

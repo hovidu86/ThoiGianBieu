@@ -46,10 +46,17 @@ public class LenLich {
         if (am == null) return;
 
         dat(ctx, am, MA_KHOA, moc, VIEC_KHOA, 0);
+
+        // Nhớ lại đúng những mốc đã đặt, để lần sau huỷ cho sạch.
+        java.util.List<Integer> daDat = new java.util.ArrayList<>();
         for (int phut : ch.mocCanhBao()) {
             long luc = moc - phut * 60_000L;
-            if (luc > bayGio) dat(ctx, am, MA_CANH_BAO + phut, luc, VIEC_CANH_BAO, phut);
+            if (luc > bayGio) {
+                dat(ctx, am, MA_CANH_BAO + phut, luc, VIEC_CANH_BAO, phut);
+                daDat.add(phut);
+            }
         }
+        ch.luuMocCanhBaoDaDat(daDat);
         datNhip(ctx, am, bayGio);
 
         NhatKy.ghi(ctx, "len-lich", "khoá lúc " + gioPhut(moc));
@@ -84,8 +91,10 @@ public class LenLich {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
         am.cancel(taoY(ctx, MA_KHOA, VIEC_KHOA, 0));
-        // Huỷ rộng tay: mọi mốc cảnh báo có thể có, kể cả mốc vừa bị người dùng xoá.
-        for (int phut = 1; phut <= 180; phut++) {
+        // Huỷ đúng những mốc đã đặt lần trước. Quét mù một dải cố định sẽ bỏ
+        // sót mốc lớn hơn dải đó và để lại báo thức ma nổ ra cảnh báo vô nghĩa
+        // sau khi người dùng sửa danh sách.
+        for (int phut : ch.mocCanhBaoDaDat()) {
             am.cancel(taoY(ctx, MA_CANH_BAO + phut, VIEC_CANH_BAO, phut));
         }
     }

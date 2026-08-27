@@ -18,7 +18,12 @@
 param(
   [switch]$Go,
   [string]$Ten = 'ThoiGianBieu-KiemSoatMay',
-  [switch]$ChiKiemTra   # đăng ký, kiểm tra, xoá lại - không khởi động app
+  [switch]$ChiKiemTra,  # đăng ký, kiểm tra, xoá lại - không khởi động app
+  # Tài khoản sẽ chạy tác vụ. Cai-dat.cmd bắt tên NGƯỜI DÙNG THẬT trước khi
+  # nâng quyền rồi truyền vào đây. Nếu đọc $env:USERNAME sau khi nâng quyền,
+  # trên máy dùng tài khoản thường sẽ ra tên người quản trị vừa bấm Yes ở hộp
+  # thoại UAC, và tác vụ không bao giờ chạy cho người dùng thật.
+  [string]$NguoiDung = ''
 )
 
 $TenTacVu = $Ten
@@ -41,7 +46,8 @@ if (-not (Test-Path $Vbs)) {
   exit 1
 }
 
-$nguoiDung = "$env:USERDOMAIN\$env:USERNAME"
+$nguoiDung = if ($NguoiDung -ne '') { $NguoiDung } else { "$env:USERDOMAIN\$env:USERNAME" }
+Write-Host ('  Tac vu se chay duoi tai khoan: ' + $nguoiDung)
 
 # Dựng thẳng XML thay vì dùng dòng lệnh schtasks: chỉ XML mới đặt được
 # các tuỳ chọn pin và giới hạn thời gian chạy.

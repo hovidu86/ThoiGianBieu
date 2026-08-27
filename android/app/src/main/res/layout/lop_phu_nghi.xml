@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/nen"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="28dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nghi_bat_buoc"
+        android:textColor="#7DD3FC"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/dem_nghi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:text="--:--"
+        android:textColor="@color/chu"
+        android:textSize="72sp" />
+
+    <TextView
+        android:id="@+id/loi_nhac"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:gravity="center"
+        android:textColor="@color/chu_mo"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/thong_ke_nghi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="26dp"
+        android:background="@color/nen_the"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:padding="14dp"
+        android:textColor="@color/chu_rat_mo"
+        android:textSize="13sp" />
+
+    <Button
+        android:id="@+id/nut_khan_cap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="26dp"
+        android:backgroundTint="@color/nen_o"
+        android:text="@string/thoat_khan_cap"
+        android:textColor="@color/chu_mo"
+        android:textSize="13sp"
+        android:visibility="gone" />
+</LinearLayout>

@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +25,9 @@ public class CaiDatActivity extends Activity {
 
     private CauHinh ch;
     private EditText oGioKhoa, oGioKetThuc, oLapLai, oCanhBao, oKhoangCach, oMa, oMa2;
+    private EditText oNqPhutDung, oNqPhutNghi, oNqPhutReset, oNqCanhBao,
+            oNqTuGio, oNqDenGio, oNqKhanCap;
+    private CheckBox chkNqBat, chkNqKhongKhoaKhiGoi;
     private TextView tinhTrang;
 
     @Override
@@ -41,13 +45,34 @@ public class CaiDatActivity extends Activity {
         oMa2 = findViewById(R.id.o_ma_2);
         tinhTrang = findViewById(R.id.tinh_trang);
 
+        oNqPhutDung = findViewById(R.id.o_nq_phut_dung);
+        oNqPhutNghi = findViewById(R.id.o_nq_phut_nghi);
+        oNqPhutReset = findViewById(R.id.o_nq_phut_reset);
+        oNqCanhBao = findViewById(R.id.o_nq_canh_bao);
+        oNqTuGio = findViewById(R.id.o_nq_tu_gio);
+        oNqDenGio = findViewById(R.id.o_nq_den_gio);
+        oNqKhanCap = findViewById(R.id.o_nq_khan_cap);
+        chkNqBat = findViewById(R.id.chk_nq_bat);
+        chkNqKhongKhoaKhiGoi = findViewById(R.id.chk_nq_khong_khoa_khi_goi);
+
         oGioKhoa.setText(ch.gioKhoa());
         oGioKetThuc.setText(ch.gioKetThuc());
         oLapLai.setText(String.valueOf(ch.lapLaiPhut()));
         oCanhBao.setText(ch.canhBaoPhut());
         oKhoangCach.setText(String.valueOf(ch.khoangCachGiay()));
 
+        chkNqBat.setChecked(ch.ngatQuangBat());
+        oNqPhutDung.setText(String.valueOf(ch.nqPhutDung()));
+        oNqPhutNghi.setText(String.valueOf(ch.nqPhutNghi()));
+        oNqPhutReset.setText(String.valueOf(ch.nqPhutReset()));
+        oNqCanhBao.setText(String.valueOf(ch.nqCanhBaoPhut()));
+        oNqTuGio.setText(ch.nqTuGio());
+        oNqDenGio.setText(ch.nqDenGio());
+        oNqKhanCap.setText(String.valueOf(ch.nqKhanCapMoiNgay()));
+        chkNqKhongKhoaKhiGoi.setChecked(ch.nqKhongKhoaKhiGoi());
+
         ((Button) findViewById(R.id.nut_luu)).setOnClickListener(v -> luu());
+        ((Button) findViewById(R.id.nut_thong_ke)).setOnClickListener(v -> xemThongKe());
         ((Button) findViewById(R.id.nut_quyen_quan_tri)).setOnClickListener(v -> xinQuyenQuanTri());
         ((Button) findViewById(R.id.nut_quyen_lop_phu)).setOnClickListener(v -> xinQuyenLopPhu());
         ((Button) findViewById(R.id.nut_quyen_pin)).setOnClickListener(v -> xinBoToiUuPin());
@@ -82,6 +107,26 @@ public class CaiDatActivity extends Activity {
         if (!laSoDuong(khoang)) loi.add(getString(R.string.loi_khoang_cach));
         if (!canhBao.matches("^[0-9]+( *, *[0-9]+)*$")) loi.add(getString(R.string.loi_canh_bao));
 
+        // --- dùng ngắt quãng ---
+        String nqDung = oNqPhutDung.getText().toString().trim();
+        String nqNghi = oNqPhutNghi.getText().toString().trim();
+        String nqReset = oNqPhutReset.getText().toString().trim();
+        String nqCanhBao = oNqCanhBao.getText().toString().trim();
+        String nqTu = oNqTuGio.getText().toString().trim();
+        String nqDen = oNqDenGio.getText().toString().trim();
+        String nqKhanCap = oNqKhanCap.getText().toString().trim();
+
+        if (!laSoDuong(nqDung)) loi.add(getString(R.string.loi_nq_phut_dung));
+        if (!laSoDuong(nqNghi)) loi.add(getString(R.string.loi_nq_phut_nghi));
+        if (!laSoDuong(nqReset)) loi.add(getString(R.string.loi_nq_phut_reset));
+        if (!CauHinh.laGio(nqTu) || !CauHinh.laGio(nqDen)) loi.add(getString(R.string.loi_nq_gio));
+        if (!laSoKhongAm(nqKhanCap)) loi.add(getString(R.string.loi_nq_khan_cap));
+        // Cảnh báo phải nằm trong đợt, nếu không thì cảnh báo nổ ngay lúc bắt đầu.
+        if (!laSoKhongAm(nqCanhBao)
+                || (laSoDuong(nqDung) && Integer.parseInt(nqCanhBao) >= Integer.parseInt(nqDung))) {
+            loi.add(getString(R.string.loi_nq_canh_bao));
+        }
+
         boolean doiMa = !ma.isEmpty() || !ma2.isEmpty() || !ch.daDatMa();
         if (doiMa) {
             if (ma.length() < CauHinh.DO_DAI_MA_TOI_THIEU) {
@@ -101,6 +146,10 @@ public class CaiDatActivity extends Activity {
         }
 
         ch.luu(gioKhoa, gioKet, Integer.parseInt(lapLai), canhBao, Integer.parseInt(khoang));
+        ch.luuNgatQuang(chkNqBat.isChecked(),
+                Integer.parseInt(nqDung), Integer.parseInt(nqNghi), Integer.parseInt(nqReset),
+                Integer.parseInt(nqCanhBao), nqTu, nqDen,
+                Integer.parseInt(nqKhanCap), chkNqKhongKhoaKhiGoi.isChecked());
         if (doiMa) {
             ch.datMa(ma);
             oMa.setText("");
@@ -121,6 +170,14 @@ public class CaiDatActivity extends Activity {
     private boolean laSoDuong(String s) {
         try {
             return Integer.parseInt(s) >= 1;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private boolean laSoKhongAm(String s) {
+        try {
+            return Integer.parseInt(s) >= 0;
         } catch (NumberFormatException e) {
             return false;
         }
@@ -187,10 +244,27 @@ public class CaiDatActivity extends Activity {
     }
 
     private void xemNhatKy() {
-        String noi = NhatKy.doc(this);
+        // Mới nhất lên đầu: cái vừa xảy ra mới là cái cần xem.
+        String noi = NhatKy.docMoiNhatTruoc(this, 120);
         new AlertDialog.Builder(this)
                 .setTitle(R.string.nhat_ky)
                 .setMessage(noi.isEmpty() ? getString(R.string.nhat_ky_trong) : noi)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private void xemThongKe() {
+        NgatQuang nq = new NgatQuang(ch);
+        long bayGio = System.currentTimeMillis();
+        String noi = getString(R.string.thong_ke_noi,
+                CauHinh.doDai(ch.nqTongHomNay()),
+                ch.nqSoDotHomNay(),
+                ch.nqSoKhanCapHomNay(),
+                CauHinh.doDai(nq.daDung(bayGio)),
+                ch.nqPhutDung());
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.thong_ke)
+                .setMessage(noi)
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
     }
@@ -217,6 +291,10 @@ public class CaiDatActivity extends Activity {
 
         if (ch.daDatMa() && ch.mocKhoa() > 0) {
             sb.append('\n').append(getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa())));
+        }
+        if (ch.ngatQuangBat()) {
+            sb.append('\n').append(getString(R.string.ngat_quang_dang_bat,
+                    ch.nqPhutDung(), ch.nqPhutNghi()));
         }
         tinhTrang.setText(sb.toString());
     }

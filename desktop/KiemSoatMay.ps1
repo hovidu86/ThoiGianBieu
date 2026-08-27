@@ -128,6 +128,14 @@ function Moc-KhoaDauTien([datetime]$tu) {
 function Dat-MocKhoa([datetime]$moc) {
   $script:MocKhoa = $moc
   $script:DaCanhBao = @{}
+
+  # Mốc cảnh báo nào đã nằm trong quá khứ ngay lúc lên lịch thì coi như đã bắn.
+  # Thiếu bước này, mở khoá lúc 23:00 với lịch lặp 15 phút sẽ nổ liền một lúc
+  # cả ba cảnh báo 15, 5 và 1 phút cho lần khoá chỉ còn 15 phút nữa.
+  $bayGio = Get-Date
+  foreach ($m in $script:CH.canhBaoPhut) {
+    if ($bayGio -ge $moc.AddMinutes(-$m)) { $script:DaCanhBao['w' + $m] = $true }
+  }
   if ($script:Tray) {
     $script:Tray.Text = 'Thời gian biểu - khoá lúc ' + $moc.ToString('HH:mm')
   }
@@ -254,17 +262,36 @@ $script:XamlPhu = @'
         Background="#050810" WindowStartupLocation="Manual"/>
 '@
 
-<# Che nốt các màn hình phụ bằng cửa sổ đen. #>
-function Che-ManHinhPhu {
+<#
+  Che nốt các màn hình phụ bằng cửa sổ đen.
+
+  Screen.Bounds đo bằng pixel vật lý, còn WPF đặt cửa sổ theo DIP. Ở mức phóng
+  to 150% mà gán thẳng số này thì cửa sổ che lệch chỗ và lòi ra một mảng màn
+  hình vẫn dùng được. Phải quy đổi qua ma trận của chính cửa sổ khoá.
+#>
+function Che-ManHinhPhu($cuaSoGoc) {
   $script:CuaSoPhu = @()
+
+  $doi = $null
+  try {
+    $nguon = [System.Windows.PresentationSource]::FromVisual($cuaSoGoc)
+    if ($nguon) { $doi = $nguon.CompositionTarget.TransformFromDevice }
+  } catch { }
+
   foreach ($man in [System.Windows.Forms.Screen]::AllScreens) {
     if ($man.Primary) { continue }
     try {
       $w = [System.Windows.Markup.XamlReader]::Parse($script:XamlPhu)
-      $w.Left   = $man.Bounds.Left
-      $w.Top    = $man.Bounds.Top
-      $w.Width  = $man.Bounds.Width
-      $w.Height = $man.Bounds.Height
+      $tren = New-Object System.Windows.Point($man.Bounds.Left, $man.Bounds.Top)
+      $duoi = New-Object System.Windows.Point($man.Bounds.Right, $man.Bounds.Bottom)
+      if ($doi) {
+        $tren = $doi.Transform($tren)
+        $duoi = $doi.Transform($duoi)
+      }
+      $w.Left   = $tren.X
+      $w.Top    = $tren.Y
+      $w.Width  = $duoi.X - $tren.X
+      $w.Height = $duoi.Y - $tren.Y
       $w.Show()
       $script:CuaSoPhu += $w
     } catch { }
@@ -274,10 +301,20 @@ function Che-ManHinhPhu {
 function Khoa-May {
   if ($script:DangKhoa) { return }
   if ($script:CH.maBam -eq '') { return }
-  $script:DangKhoa = $true
   Ghi-NhatKy 'khoa' ('mốc ' + $script:MocKhoa.ToString('HH:mm'))
 
-  $win = [System.Windows.Markup.XamlReader]::Parse($script:XamlKhoa)
+  # Dựng cửa sổ trước, dựng cờ DangKhoa sau. Đặt cờ sớm rồi giữa chừng hỏng là
+  # app thôi khoá vĩnh viễn trong im lặng, vì mọi lần Khoa-May sau đó đều thoát
+  # ngay ở dòng đầu. Hỏng thì vẫn phải tắt màn hình, chỉ mất phần đòi mã.
+  try {
+    $win = [System.Windows.Markup.XamlReader]::Parse($script:XamlKhoa)
+  } catch {
+    Ghi-NhatKy 'loi-khoa' ('không dựng được cửa sổ khoá: ' + $_.Exception.Message)
+    Tat-ManHinh
+    if ($script:CH.khoaWindows) { try { [void][TGB.Win]::LockWorkStation() } catch { } }
+    Dat-MocKhoa ((Get-Date).AddMinutes([int]$script:CH.lapLaiPhut))
+    return
+  }
   $script:CuaSoKhoa = $win
 
   $pw1  = $win.FindName('pw1');  $pw2  = $win.FindName('pw2')
@@ -386,8 +423,9 @@ function Khoa-May {
     }
   })
 
-  Che-ManHinhPhu
+  $script:DangKhoa = $true
   $win.Show()
+  Che-ManHinhPhu $win
   $win.Activate() | Out-Null
   $pw1.Focus() | Out-Null
   $txtDongHo.Text = (Get-Date).ToString('HH:mm')
@@ -632,6 +670,19 @@ function Mo-CaiDat([bool]$batBuocDatMa) {
     $w.Close()
   }.GetNewClosure())
 
+  # Nút Đóng đã chặn khi chưa có mã, nhưng dấu X trên thanh tiêu đề thì không.
+  # Bấm X lúc đó là app thành vô dụng mà không ai nhắc lấy một câu.
+  $w.Add_Closing({
+    if ($script:CH.maBam -eq '') {
+      [System.Windows.Forms.MessageBox]::Show(
+        'Chưa đặt mã mở khoá, nên app sẽ KHÔNG khoá gì cả.' + "`r`n`r`n" +
+        'Mở lại bất cứ lúc nào: chuột phải icon hình khiên ở khay hệ thống, chọn Cài đặt.',
+        'Kiểm soát máy',
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Warning) | Out-Null
+    }
+  })
+
   $w.Add_Closed({ $script:CuaSoCaiDat = $null })
   $w.Show()
   $w.Activate() | Out-Null
@@ -705,6 +756,13 @@ function Nhip-Chinh {
     # đừng để im lặng như thể đang hoạt động bình thường.
     if ($script:MucTrangThai) { $script:MucTrangThai.Text = 'CHƯA ĐẶT MÃ - app chưa khoá gì cả' }
     if ($script:Tray) { $script:Tray.Text = 'Kiểm soát máy - CHƯA ĐẶT MÃ' }
+
+    # Nhắc lại mỗi 10 phút, nếu không thì đóng cửa sổ Cài đặt một lần là quên luôn.
+    if ($null -eq $script:LanNhacCuoi -or
+        ((Get-Date) - $script:LanNhacCuoi).TotalMinutes -ge 10) {
+      $script:LanNhacCuoi = Get-Date
+      Bao-Khay 'Chưa đặt mã mở khoá' 'App chưa khoá gì cả. Chuột phải icon khiên rồi chọn Cài đặt.'
+    }
     return
   }
 
