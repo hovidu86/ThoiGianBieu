@@ -1,5 +1,6 @@
 package com.thoigianbieu.kiemsoat;
 
+import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -115,7 +116,7 @@ public class DichVuKhoa extends Service {
         } else if (HANH_DONG_KHOA.equals(hanhDong)) {
             khoa();
         } else {
-            soatLaiLich();
+            soatLaiToanBo();
         }
         return START_STICKY;
     }
@@ -126,9 +127,69 @@ public class DichVuKhoa extends Service {
     }
 
     /**
-     * Nhịp nửa tiếng gọi vào đây. Nếu mốc khoá đã trôi qua mà không có gì xảy
-     * ra — hệ thống dọn mất báo thức, hoặc máy tắt ngang qua mốc đó — thì khoá
-     * ngay, còn không thì chỉ dựng lại lịch.
+     * Vuốt app khỏi danh sách ứng dụng gần đây.
+     *
+     * Mặc định Android gọi hàm này rồi có thể giết luôn tiến trình — nghĩa là
+     * chỉ một cú vuốt là tắt được phần gác giờ. Không chấp nhận được với một
+     * app mà cả tác dụng nằm ở chỗ nó luôn chạy. Đặt hẹn giờ dựng lại dịch vụ
+     * sau 2 giây; báo thức là một trong số ít đường được phép dựng dịch vụ
+     * tiền cảnh từ nền.
+     */
+    @Override
+    public void onTaskRemoved(Intent y) {
+        NhatKy.ghi(this, "vuot-khoi-gan-day", "hẹn dựng lại dịch vụ sau 2 giây");
+        try {
+            AlarmManager am = (AlarmManager) getSystemService(ALARM_SERVICE);
+            Intent i = new Intent(this, DichVuKhoa.class);
+            i.setAction(HANH_DONG_CANH_GIU);
+            PendingIntent pi = PendingIntent.getForegroundService(this, 9100, i,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+            if (am != null) {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+                        System.currentTimeMillis() + 2000, pi);
+            }
+        } catch (Exception e) {
+            NhatKy.ghi(this, "loi-dung-lai", String.valueOf(e.getMessage()));
+        }
+        super.onTaskRemoved(y);
+    }
+
+    /**
+     * Soát lại cả lịch khoá lẫn bộ đếm ngắt quãng.
+     *
+     * Bộ đếm ngắt quãng vốn chỉ khởi động khi có tin BẬT MÀN HÌNH. Bật tính
+     * năng trong Cài đặt rồi dùng máy tiếp mà không tắt màn hình lần nào thì
+     * không có tin đó, và bộ đếm nằm im vĩnh viễn — đúng lỗi user gặp: bật
+     * ngắt quãng xong xem YouTube 15 phút không thấy cảnh báo nào.
+     */
+    private void soatLaiToanBo() {
+        soatLaiLich();
+
+        long bayGio = System.currentTimeMillis();
+        if (nq.dangApDung(bayGio) && manHinhDangBat() && !mayDangKhoa() && lopKhoa == null) {
+            manHinhVaoDung(bayGio);
+        }
+        ghiTrangThaiNgatQuang();
+    }
+
+    /** Một dòng nhật ký đủ để chẩn đoán từ xa, khỏi phải đoán mò. */
+    private void ghiTrangThaiNgatQuang() {
+        if (!ch.ngatQuangBat()) {
+            NhatKy.ghi(this, "nq-tat", "tính năng dùng ngắt quãng đang tắt");
+            return;
+        }
+        long bayGio = System.currentTimeMillis();
+        NhatKy.ghi(this, "nq-trang-thai",
+                "đã dùng " + (nq.daDung(bayGio) / 60_000) + "/" + ch.nqPhutDung() + " phút"
+                        + (nq.dangNghi(bayGio) ? ", đang nghỉ" : "")
+                        + (nq.dangApDung(bayGio) ? "" : ", NGOÀI khung giờ")
+                        + (manHinhDangBat() ? ", màn hình bật" : ", màn hình tắt")
+                        + (nhipNgatQuang != null ? ", nhịp đang chạy" : ", NHỊP CHƯA CHẠY"));
+    }
+
+    /**
+     * Mốc khoá đã trôi qua mà không có gì xảy ra — hệ thống dọn mất báo thức,
+     * hoặc máy tắt ngang qua mốc đó — thì khoá bù, còn không thì dựng lại lịch.
      */
     private void soatLaiLich() {
         if (lopKhoa != null) return;
@@ -533,7 +594,10 @@ public class DichVuKhoa extends Service {
     private void batNhipNgatQuang() {
         dungNhipNgatQuang();
         // Tính năng đang tắt hoặc ngoài khung giờ thì không đếm nhịp nào cả.
-        if (!nq.dangApDung(System.currentTimeMillis())) return;
+        long bayGio = System.currentTimeMillis();
+        if (!nq.dangApDung(bayGio)) return;
+        NhatKy.ghi(this, "nq-bat-nhip",
+                "đã dùng " + (nq.daDung(bayGio) / 60_000) + "/" + ch.nqPhutDung() + " phút");
 
         nhipNgatQuang = new Runnable() {
             @Override

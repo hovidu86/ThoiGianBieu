@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "2.3",
+  "versionCode": 9,
+  "versionName": "2.4",
   "apk": "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-  "ghiChu": "Tab Khoá máy nằm chung thanh tab. Bàn phím không còn che ô nhập mã. Tự cập nhật trong app. Chạy nền tiết kiệm pin hơn."
+  "ghiChu": "Sửa lỗi dùng ngắt quãng không đếm giờ. App không tắt được bằng cách vuốt khỏi danh sách gần đây."
 }

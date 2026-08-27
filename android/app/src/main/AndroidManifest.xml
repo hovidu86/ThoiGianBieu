@@ -45,10 +45,14 @@
                 android:resource="@xml/loi_tat" />
         </activity>
 
+        <!-- stopWithTask=false: vuốt app khỏi danh sách gần đây thì dịch vụ
+             gác giờ vẫn phải sống. Cùng với onTaskRemoved dựng lại, app không
+             bị tắt bằng một cú vuốt. -->
         <service
             android:name=".DichVuKhoa"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse"
+            android:stopWithTask="false">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Khoa man hinh theo thoi gian bieu da hen" />
