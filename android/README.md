@@ -17,15 +17,31 @@ Bắt buộc phải là app gốc, dùng quyền quản trị thiết bị (`Dev
 
 ## Cài lên điện thoại
 
-APK dựng sẵn nằm ở `dist-apk/ThoiGianBieu.apk` (107 KB).
+APK dựng sẵn nằm ở `dist-apk/ThoiGianBieu.apk` (114 KB).
 
 1. Chép file APK sang điện thoại — qua cáp, Zalo, Google Drive, hoặc tải thẳng từ
    GitHub bằng trình duyệt trên máy.
 2. Mở file → Android hỏi *"Cài ứng dụng không rõ nguồn gốc"* → cho phép nguồn đó.
 3. Mở app **Kiểm soát máy**.
 
-Cần dựng lại APK sau khi sửa mã: nhấn đúp `Dung-apk.cmd`, hoặc chạy
-`gradlew assembleRelease`.
+Cần dựng lại APK sau khi sửa mã: nhấn đúp `Dung-apk.cmd`. File này dựng APK,
+chép vào `dist-apk/`, và sinh lại `version.json` theo đúng `build.gradle`.
+
+## Tự cập nhật
+
+Từ bản 2.3, app tự dòm bản mới (nhiều nhất 6 tiếng một lần) bằng cách đọc
+`android/version.json` trên GitHub. Có bản mới thì tab **Cài đặt** hiện nút
+*Tải và cài bản x.y*: app tải APK về rồi mở thẳng trình cài đặt.
+
+Android **không cho** ứng dụng tự cài đè chính nó mà không hỏi — trừ khi máy đã
+root hoặc app là chủ sở hữu thiết bị. Nên đây là mức gần nhất có thể: một chạm,
+không phải chép tay APK qua điện thoại nữa.
+
+Lần đầu, Android sẽ hỏi cho phép app này cài ứng dụng — bật một lần rồi thôi.
+
+Quy trình phát hành: tăng `versionCode` trong `app/build.gradle`, sửa `ghiChu`
+trong `version.json`, chạy `Dung-apk.cmd`, rồi commit và push cả APK lẫn
+`version.json`.
 
 ## Ba quyền bắt buộc
 
@@ -126,10 +142,13 @@ nên hệ thống có giết dịch vụ rồi dựng lại thì vẫn đếm ti
 | `KhoiDongReceiver.java` | khởi động lại máy xong thì dựng lại lịch |
 | `CaiDatActivity.java` | màn hình cài đặt, cũng là màn hình chính |
 | `NhatKy.java` | ghi CSV mọi lần khoá / mở / nhập sai / né tránh |
-| `GiaoDien.java` | né thanh hệ thống, bảng chọn ngày giờ, chuẩn hoá giờ gõ tay |
+| `GiaoDien.java` | né thanh hệ thống, đo bàn phím, bảng chọn ngày giờ, chuẩn hoá giờ gõ tay |
+| `ManKiemSoat.java` | điều khiển tab Khoá máy — trước là Activity riêng, nay là tab thứ tư |
+| `CapNhat.java` | tự tìm bản mới, tải, mở trình cài đặt |
+| `NhaCungCapApk.java` | cấp tệp APK cho trình cài đặt, thay cho FileProvider của AndroidX |
 
 Java thuần, **không phụ thuộc thư viện ngoài nào** — không AndroidX, không
-Capacitor. Nhờ vậy APK chỉ 107 KB và dựng được mà không cần tải gì thêm.
+Capacitor. Nhờ vậy APK chỉ 114 KB và dựng được mà không cần tải gì thêm.
 
 Vì sao dùng lớp phủ chứ không dùng Activity: từ Android 10, app chạy nền không
 được tự mở Activity. Lớp phủ `TYPE_APPLICATION_OVERLAY` thì dựng lúc nào cũng

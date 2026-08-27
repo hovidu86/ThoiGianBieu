@@ -8,9 +8,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -20,9 +20,17 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Màn hình cài đặt, cũng là màn hình chính của app. */
-public class CaiDatActivity extends Activity {
+/**
+ * Điều khiển tab Khoá máy.
+ *
+ * Trước đây đây là một Activity riêng, nên bấm vào là mất thanh tab dưới cùng
+ * và không chuyển nhanh sang tab khác được. Nay nó chỉ là một lớp thường gắn
+ * vào trang thứ tư của ViewFlipper trong ChinhActivity.
+ */
+public class ManKiemSoat {
 
+    private final Activity ac;
+    private final View goc;
     private CauHinh ch;
     private EditText oLapLai, oCanhBao, oKhoangCach, oMa, oMa2;
     private EditText oNqPhutDung, oNqPhutNghi, oNqPhutReset, oNqCanhBao, oNqKhanCap;
@@ -31,30 +39,29 @@ public class CaiDatActivity extends Activity {
     private CheckBox chkNqBat, chkNqKhongKhoaKhiGoi;
     private TextView tinhTrang;
 
-    @Override
-    protected void onCreate(Bundle luuTruoc) {
-        super.onCreate(luuTruoc);
-        setContentView(R.layout.man_cai_dat);
-        ch = new CauHinh(this);
+    public ManKiemSoat(Activity ac, View goc) {
+        this.ac = ac;
+        this.goc = goc;
+        ch = new CauHinh(ac);
 
-        oGioKhoa = findViewById(R.id.o_gio_khoa);
-        oGioKetThuc = findViewById(R.id.o_gio_ket_thuc);
-        oLapLai = findViewById(R.id.o_lap_lai);
-        oCanhBao = findViewById(R.id.o_canh_bao);
-        oKhoangCach = findViewById(R.id.o_khoang_cach);
-        oMa = findViewById(R.id.o_ma);
-        oMa2 = findViewById(R.id.o_ma_2);
-        tinhTrang = findViewById(R.id.tinh_trang);
+        oGioKhoa = goc.findViewById(R.id.o_gio_khoa);
+        oGioKetThuc = goc.findViewById(R.id.o_gio_ket_thuc);
+        oLapLai = goc.findViewById(R.id.o_lap_lai);
+        oCanhBao = goc.findViewById(R.id.o_canh_bao);
+        oKhoangCach = goc.findViewById(R.id.o_khoang_cach);
+        oMa = goc.findViewById(R.id.o_ma);
+        oMa2 = goc.findViewById(R.id.o_ma_2);
+        tinhTrang = goc.findViewById(R.id.tinh_trang);
 
-        oNqPhutDung = findViewById(R.id.o_nq_phut_dung);
-        oNqPhutNghi = findViewById(R.id.o_nq_phut_nghi);
-        oNqPhutReset = findViewById(R.id.o_nq_phut_reset);
-        oNqCanhBao = findViewById(R.id.o_nq_canh_bao);
-        oNqTuGio = findViewById(R.id.o_nq_tu_gio);
-        oNqDenGio = findViewById(R.id.o_nq_den_gio);
-        oNqKhanCap = findViewById(R.id.o_nq_khan_cap);
-        chkNqBat = findViewById(R.id.chk_nq_bat);
-        chkNqKhongKhoaKhiGoi = findViewById(R.id.chk_nq_khong_khoa_khi_goi);
+        oNqPhutDung = goc.findViewById(R.id.o_nq_phut_dung);
+        oNqPhutNghi = goc.findViewById(R.id.o_nq_phut_nghi);
+        oNqPhutReset = goc.findViewById(R.id.o_nq_phut_reset);
+        oNqCanhBao = goc.findViewById(R.id.o_nq_canh_bao);
+        oNqTuGio = goc.findViewById(R.id.o_nq_tu_gio);
+        oNqDenGio = goc.findViewById(R.id.o_nq_den_gio);
+        oNqKhanCap = goc.findViewById(R.id.o_nq_khan_cap);
+        chkNqBat = goc.findViewById(R.id.chk_nq_bat);
+        chkNqKhongKhoaKhiGoi = goc.findViewById(R.id.chk_nq_khong_khoa_khi_goi);
 
         oGioKhoa.setText(ch.gioKhoa());
         oGioKetThuc.setText(ch.gioKetThuc());
@@ -72,32 +79,28 @@ public class CaiDatActivity extends Activity {
         oNqKhanCap.setText(String.valueOf(ch.nqKhanCapMoiNgay()));
         chkNqKhongKhoaKhiGoi.setChecked(ch.nqKhongKhoaKhiGoi());
 
-        GiaoDien.chuaChoThanhHeThong(findViewById(R.id.goc),
-                findViewById(R.id.dau_trang), findViewById(R.id.cuon));
-
         oGioKhoa.setOnClickListener(v ->
-                GiaoDien.chonGio(this, oGioKhoa.getText().toString(), oGioKhoa::setText));
+                GiaoDien.chonGio(ac, oGioKhoa.getText().toString(), oGioKhoa::setText));
         oGioKetThuc.setOnClickListener(v ->
-                GiaoDien.chonGio(this, oGioKetThuc.getText().toString(), oGioKetThuc::setText));
+                GiaoDien.chonGio(ac, oGioKetThuc.getText().toString(), oGioKetThuc::setText));
         oNqTuGio.setOnClickListener(v ->
-                GiaoDien.chonGio(this, oNqTuGio.getText().toString(), oNqTuGio::setText));
+                GiaoDien.chonGio(ac, oNqTuGio.getText().toString(), oNqTuGio::setText));
         oNqDenGio.setOnClickListener(v ->
-                GiaoDien.chonGio(this, oNqDenGio.getText().toString(), oNqDenGio::setText));
+                GiaoDien.chonGio(ac, oNqDenGio.getText().toString(), oNqDenGio::setText));
 
-        ((Button) findViewById(R.id.nut_luu)).setOnClickListener(v -> luu());
-        ((Button) findViewById(R.id.nut_thong_ke)).setOnClickListener(v -> xemThongKe());
-        ((Button) findViewById(R.id.nut_quyen_quan_tri)).setOnClickListener(v -> xinQuyenQuanTri());
-        ((Button) findViewById(R.id.nut_quyen_lop_phu)).setOnClickListener(v -> xinQuyenLopPhu());
-        ((Button) findViewById(R.id.nut_quyen_pin)).setOnClickListener(v -> xinBoToiUuPin());
-        ((Button) findViewById(R.id.nut_khoa_thu)).setOnClickListener(v -> khoaThu());
-        ((Button) findViewById(R.id.nut_nhat_ky)).setOnClickListener(v -> xemNhatKy());
+        ((Button) goc.findViewById(R.id.nut_luu)).setOnClickListener(v -> luu());
+        ((Button) goc.findViewById(R.id.nut_thong_ke)).setOnClickListener(v -> xemThongKe());
+        ((Button) goc.findViewById(R.id.nut_quyen_quan_tri)).setOnClickListener(v -> xinQuyenQuanTri());
+        ((Button) goc.findViewById(R.id.nut_quyen_lop_phu)).setOnClickListener(v -> xinQuyenLopPhu());
+        ((Button) goc.findViewById(R.id.nut_quyen_pin)).setOnClickListener(v -> xinBoToiUuPin());
+        ((Button) goc.findViewById(R.id.nut_khoa_thu)).setOnClickListener(v -> khoaThu());
+        ((Button) goc.findViewById(R.id.nut_nhat_ky)).setOnClickListener(v -> xemNhatKy());
 
         xinQuyenThongBao();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    /** ChinhActivity gọi lại mỗi lần quay lại app, để soát lại quyền. */
+    public void capNhat() {
         capNhatTinhTrang();
     }
 
@@ -114,11 +117,11 @@ public class CaiDatActivity extends Activity {
         String ma = oMa.getText().toString();
         String ma2 = oMa2.getText().toString();
 
-        if (!CauHinh.laGio(gioKhoa)) loi.add(getString(R.string.loi_gio_khoa));
-        if (!CauHinh.laGio(gioKet)) loi.add(getString(R.string.loi_gio_ket_thuc));
-        if (!laSoDuong(lapLai)) loi.add(getString(R.string.loi_lap_lai));
-        if (!laSoDuong(khoang)) loi.add(getString(R.string.loi_khoang_cach));
-        if (!canhBao.matches("^[0-9]+( *, *[0-9]+)*$")) loi.add(getString(R.string.loi_canh_bao));
+        if (!CauHinh.laGio(gioKhoa)) loi.add(ac.getString(R.string.loi_gio_khoa));
+        if (!CauHinh.laGio(gioKet)) loi.add(ac.getString(R.string.loi_gio_ket_thuc));
+        if (!laSoDuong(lapLai)) loi.add(ac.getString(R.string.loi_lap_lai));
+        if (!laSoDuong(khoang)) loi.add(ac.getString(R.string.loi_khoang_cach));
+        if (!canhBao.matches("^[0-9]+( *, *[0-9]+)*$")) loi.add(ac.getString(R.string.loi_canh_bao));
 
         // --- dùng ngắt quãng ---
         String nqDung = oNqPhutDung.getText().toString().trim();
@@ -129,28 +132,28 @@ public class CaiDatActivity extends Activity {
         String nqDen = oNqDenGio.getText().toString().trim();
         String nqKhanCap = oNqKhanCap.getText().toString().trim();
 
-        if (!laSoDuong(nqDung)) loi.add(getString(R.string.loi_nq_phut_dung));
-        if (!laSoDuong(nqNghi)) loi.add(getString(R.string.loi_nq_phut_nghi));
-        if (!laSoDuong(nqReset)) loi.add(getString(R.string.loi_nq_phut_reset));
-        if (!CauHinh.laGio(nqTu) || !CauHinh.laGio(nqDen)) loi.add(getString(R.string.loi_nq_gio));
-        if (!laSoKhongAm(nqKhanCap)) loi.add(getString(R.string.loi_nq_khan_cap));
+        if (!laSoDuong(nqDung)) loi.add(ac.getString(R.string.loi_nq_phut_dung));
+        if (!laSoDuong(nqNghi)) loi.add(ac.getString(R.string.loi_nq_phut_nghi));
+        if (!laSoDuong(nqReset)) loi.add(ac.getString(R.string.loi_nq_phut_reset));
+        if (!CauHinh.laGio(nqTu) || !CauHinh.laGio(nqDen)) loi.add(ac.getString(R.string.loi_nq_gio));
+        if (!laSoKhongAm(nqKhanCap)) loi.add(ac.getString(R.string.loi_nq_khan_cap));
         // Cảnh báo phải nằm trong đợt, nếu không thì cảnh báo nổ ngay lúc bắt đầu.
         if (!laSoKhongAm(nqCanhBao)
                 || (laSoDuong(nqDung) && Integer.parseInt(nqCanhBao) >= Integer.parseInt(nqDung))) {
-            loi.add(getString(R.string.loi_nq_canh_bao));
+            loi.add(ac.getString(R.string.loi_nq_canh_bao));
         }
 
         boolean doiMa = !ma.isEmpty() || !ma2.isEmpty() || !ch.daDatMa();
         if (doiMa) {
             if (ma.length() < CauHinh.DO_DAI_MA_TOI_THIEU) {
-                loi.add(getString(R.string.loi_ma_ngan, CauHinh.DO_DAI_MA_TOI_THIEU));
+                loi.add(ac.getString(R.string.loi_ma_ngan, CauHinh.DO_DAI_MA_TOI_THIEU));
             } else if (!ma.equals(ma2)) {
-                loi.add(getString(R.string.loi_ma_khong_khop));
+                loi.add(ac.getString(R.string.loi_ma_khong_khop));
             }
         }
 
         if (!loi.isEmpty()) {
-            new AlertDialog.Builder(this)
+            new AlertDialog.Builder(ac)
                     .setTitle(R.string.chua_luu_duoc)
                     .setMessage(String.join("\n\n", loi))
                     .setPositiveButton(android.R.string.ok, null)
@@ -172,10 +175,10 @@ public class CaiDatActivity extends Activity {
         // Lịch cũ không còn đúng nữa, tính lại từ đầu.
         long bayGio = System.currentTimeMillis();
         ch.datMocKhoa(ch.trongKhoangKhoa(bayGio) ? bayGio + 60_000L : ch.mocKhoaDauTien(bayGio));
-        LenLich.datLai(this);
+        LenLich.datLai(ac);
         khoiDongDichVu();
 
-        Toast.makeText(this, getString(R.string.da_luu, LenLich.gioPhut(ch.mocKhoa())),
+        Toast.makeText(ac, ac.getString(R.string.da_luu, LenLich.gioPhut(ch.mocKhoa())),
                 Toast.LENGTH_LONG).show();
         capNhatTinhTrang();
     }
@@ -199,44 +202,44 @@ public class CaiDatActivity extends Activity {
     /* ==================== QUYỀN ==================== */
 
     private void xinQuyenQuanTri() {
-        if (QuanTriReceiver.daBat(this)) {
-            Toast.makeText(this, R.string.quyen_da_co, Toast.LENGTH_SHORT).show();
+        if (QuanTriReceiver.daBat(ac)) {
+            Toast.makeText(ac, R.string.quyen_da_co, Toast.LENGTH_SHORT).show();
             return;
         }
         Intent i = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-        i.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, QuanTriReceiver.thanhPhan(this));
-        i.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, getString(R.string.giai_thich_quan_tri));
-        startActivity(i);
+        i.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, QuanTriReceiver.thanhPhan(ac));
+        i.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, ac.getString(R.string.giai_thich_quan_tri));
+        ac.startActivity(i);
     }
 
     private void xinQuyenLopPhu() {
-        if (Settings.canDrawOverlays(this)) {
-            Toast.makeText(this, R.string.quyen_da_co, Toast.LENGTH_SHORT).show();
+        if (Settings.canDrawOverlays(ac)) {
+            Toast.makeText(ac, R.string.quyen_da_co, Toast.LENGTH_SHORT).show();
             return;
         }
-        startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:" + getPackageName())));
+        ac.startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + ac.getPackageName())));
     }
 
     private void xinBoToiUuPin() {
-        PowerManager pm = getSystemService(PowerManager.class);
-        if (pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())) {
-            Toast.makeText(this, R.string.quyen_da_co, Toast.LENGTH_SHORT).show();
+        PowerManager pm = ac.getSystemService(PowerManager.class);
+        if (pm != null && pm.isIgnoringBatteryOptimizations(ac.getPackageName())) {
+            Toast.makeText(ac, R.string.quyen_da_co, Toast.LENGTH_SHORT).show();
             return;
         }
         try {
-            startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                    Uri.parse("package:" + getPackageName())));
+            ac.startActivity(new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:" + ac.getPackageName())));
         } catch (Exception e) {
-            startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+            ac.startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
         }
     }
 
     private void xinQuyenThongBao() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                && ac.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
                 != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+            ac.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
         }
     }
 
@@ -244,24 +247,24 @@ public class CaiDatActivity extends Activity {
 
     private void khoaThu() {
         if (!ch.daDatMa()) {
-            Toast.makeText(this, R.string.chua_dat_ma, Toast.LENGTH_LONG).show();
+            Toast.makeText(ac, R.string.chua_dat_ma, Toast.LENGTH_LONG).show();
             return;
         }
-        if (!Settings.canDrawOverlays(this) || !QuanTriReceiver.daBat(this)) {
-            Toast.makeText(this, R.string.thieu_quyen, Toast.LENGTH_LONG).show();
+        if (!Settings.canDrawOverlays(ac) || !QuanTriReceiver.daBat(ac)) {
+            Toast.makeText(ac, R.string.thieu_quyen, Toast.LENGTH_LONG).show();
             return;
         }
-        Intent i = new Intent(this, DichVuKhoa.class);
+        Intent i = new Intent(ac, DichVuKhoa.class);
         i.setAction(DichVuKhoa.HANH_DONG_KHOA);
-        startForegroundService(i);
+        ac.startForegroundService(i);
     }
 
     private void xemNhatKy() {
         // Mới nhất lên đầu: cái vừa xảy ra mới là cái cần xem.
-        String noi = NhatKy.docMoiNhatTruoc(this, 120);
-        new AlertDialog.Builder(this)
+        String noi = NhatKy.docMoiNhatTruoc(ac, 120);
+        new AlertDialog.Builder(ac)
                 .setTitle(R.string.nhat_ky)
-                .setMessage(noi.isEmpty() ? getString(R.string.nhat_ky_trong) : noi)
+                .setMessage(noi.isEmpty() ? ac.getString(R.string.nhat_ky_trong) : noi)
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
     }
@@ -269,13 +272,13 @@ public class CaiDatActivity extends Activity {
     private void xemThongKe() {
         NgatQuang nq = new NgatQuang(ch);
         long bayGio = System.currentTimeMillis();
-        String noi = getString(R.string.thong_ke_noi,
+        String noi = ac.getString(R.string.thong_ke_noi,
                 CauHinh.doDai(ch.nqTongHomNay()),
                 ch.nqSoDotHomNay(),
                 ch.nqSoKhanCapHomNay(),
                 CauHinh.doDai(nq.daDung(bayGio)),
                 ch.nqPhutDung());
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(ac)
                 .setTitle(R.string.thong_ke)
                 .setMessage(noi)
                 .setPositiveButton(android.R.string.ok, null)
@@ -283,30 +286,30 @@ public class CaiDatActivity extends Activity {
     }
 
     private void khoiDongDichVu() {
-        Intent i = new Intent(this, DichVuKhoa.class);
+        Intent i = new Intent(ac, DichVuKhoa.class);
         i.setAction(DichVuKhoa.HANH_DONG_CANH_GIU);
-        startForegroundService(i);
+        ac.startForegroundService(i);
     }
 
     private void capNhatTinhTrang() {
         StringBuilder sb = new StringBuilder();
-        sb.append(danhDau(QuanTriReceiver.daBat(this))).append(' ')
-                .append(getString(R.string.tt_quan_tri)).append('\n');
-        sb.append(danhDau(Settings.canDrawOverlays(this))).append(' ')
-                .append(getString(R.string.tt_lop_phu)).append('\n');
+        sb.append(danhDau(QuanTriReceiver.daBat(ac))).append(' ')
+                .append(ac.getString(R.string.tt_quan_tri)).append('\n');
+        sb.append(danhDau(Settings.canDrawOverlays(ac))).append(' ')
+                .append(ac.getString(R.string.tt_lop_phu)).append('\n');
 
-        PowerManager pm = getSystemService(PowerManager.class);
-        sb.append(danhDau(pm != null && pm.isIgnoringBatteryOptimizations(getPackageName())))
-                .append(' ').append(getString(R.string.tt_pin)).append('\n');
+        PowerManager pm = ac.getSystemService(PowerManager.class);
+        sb.append(danhDau(pm != null && pm.isIgnoringBatteryOptimizations(ac.getPackageName())))
+                .append(' ').append(ac.getString(R.string.tt_pin)).append('\n');
 
         sb.append(danhDau(ch.daDatMa())).append(' ')
-                .append(getString(R.string.tt_ma)).append('\n');
+                .append(ac.getString(R.string.tt_ma)).append('\n');
 
         if (ch.daDatMa() && ch.mocKhoa() > 0) {
-            sb.append('\n').append(getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa())));
+            sb.append('\n').append(ac.getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa())));
         }
         if (ch.ngatQuangBat()) {
-            sb.append('\n').append(getString(R.string.ngat_quang_dang_bat,
+            sb.append('\n').append(ac.getString(R.string.ngat_quang_dang_bat,
                     ch.nqPhutDung(), ch.nqPhutNghi()));
         }
         tinhTrang.setText(sb.toString());

@@ -237,4 +237,16 @@
     <string name="chon_gio_len_giuong">Chọn giờ lên giường</string>
     <string name="chon_gio_thuc_day">Chọn giờ thức dậy</string>
     <string name="chon_dem">Chọn đêm</string>
+
+    <!-- Tự cập nhật -->
+    <string name="nhom_cap_nhat">Phiên bản và cập nhật</string>
+    <string name="phien_ban_dang_dung">Đang dùng bản %1$s</string>
+    <string name="nut_kiem_tra_cap_nhat">Kiểm tra bản mới</string>
+    <string name="dang_kiem_tra_cn">Đang kiểm tra…</string>
+    <string name="da_moi_nhat">Đang dùng bản mới nhất.</string>
+    <string name="co_ban_moi">Có bản %1$s. %2$s</string>
+    <string name="nut_tai_cai">Tải và cài bản %1$s</string>
+    <string name="dang_tai_cn">Đang tải… %1$d%%</string>
+    <string name="loi_cap_nhat">Không kiểm tra được: %1$s</string>
+    <string name="goi_y_cap_nhat">Android không cho ứng dụng tự cài đè chính nó, nên app chỉ tải sẵn rồi mở trình cài đặt — bạn bấm Cài đặt một lần là xong.</string>
 </resources>

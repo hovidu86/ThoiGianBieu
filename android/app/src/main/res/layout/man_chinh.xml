@@ -72,6 +72,7 @@
         <include layout="@layout/tab_ghi_nhan" />
         <include layout="@layout/tab_thong_ke" />
         <include layout="@layout/tab_cai_dat_ngu" />
+        <include layout="@layout/tab_kiem_soat" />
     </ViewFlipper>
 
     <!-- Thanh điều hướng -->
@@ -154,12 +155,14 @@
             style="@style/MucTab">
 
             <TextView
+                android:id="@+id/tab_may_hinh"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/hinh_khoa_may"
                 android:textSize="19sp" />
 
             <TextView
+                android:id="@+id/tab_may_chu"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"

@@ -310,5 +310,42 @@
             style="@style/NutPhu"
             android:layout_marginTop="10dp"
             android:text="@string/nut_quyen_thong_bao" />
+
+        <!-- Phiên bản và cập nhật -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/the"
+            android:orientation="vertical"
+            android:padding="13dp">
+
+            <TextView
+                style="@style/Nhom"
+                android:text="@string/nhom_cap_nhat" />
+
+            <TextView
+                android:id="@+id/tin_cap_nhat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:lineSpacingExtra="2dp"
+                android:textColor="@color/chu"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/goi_y_cap_nhat"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="12sp" />
+
+            <Button
+                android:id="@+id/nut_cap_nhat"
+                style="@style/NutPhu"
+                android:layout_marginTop="10dp"
+                android:text="@string/nut_kiem_tra_cap_nhat" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

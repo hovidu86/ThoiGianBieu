@@ -46,8 +46,10 @@ public class ChinhActivity extends Activity {
     public static final int TAB_GHI_NHAN = 0;
     public static final int TAB_THONG_KE = 1;
     public static final int TAB_CAI_DAT = 2;
+    public static final int TAB_MAY = 3;
 
     private KhoGiacNgu kho;
+    private ManKiemSoat manMay;
     private final Handler tay = new Handler(Looper.getMainLooper());
     private Runnable nhip;
     private boolean dangGui;
@@ -72,8 +74,10 @@ public class ChinhActivity extends Activity {
 
     // Tab Cài đặt
     private EditText oUrl, oPhatVuot, oThuongThoiQuen;
-    private TextView oTruocGio, oMatChuoi, oNhacLuc, tinKetNoi;
+    private TextView oTruocGio, oMatChuoi, oNhacLuc, tinKetNoi, tinCapNhat;
+    private Button nutCapNhat;
     private LinearLayout dsMoc, dsMocChuoi, dsBuocSua;
+    private CapNhat.BanMoi banMoiDangCho;
 
     private final List<HangMoc> hangMoc = new ArrayList<>();
     private final List<HangMocChuoi> hangMocChuoi = new ArrayList<>();
@@ -90,6 +94,8 @@ public class ChinhActivity extends Activity {
         timView();
         GiaoDien.chuaChoThanhHeThong(findViewById(R.id.goc),
                 findViewById(R.id.dau_trang), findViewById(R.id.thanh_duoi));
+        // Tab Khoá máy dùng chung khung này nên thanh tab luôn còn đó.
+        manMay = new ManKiemSoat(this, findViewById(R.id.cuon_may));
         gan();
         napCaiDatVaoO();
         veTatCa();
@@ -98,9 +104,17 @@ public class ChinhActivity extends Activity {
         NhacNgu.datLai(this);
         khoiDongDichVuKhoa();
 
+        tinCapNhat.setText(getString(R.string.phien_ban_dang_dung,
+                CapNhat.tenPhienBanHienTai(this)));
+
         xuLyYDinh(getIntent());
         tay.postDelayed(new Runnable() {
-            @Override public void run() { dayNhungCaiChuaGui(true); }
+            @Override
+            public void run() {
+                dayNhungCaiChuaGui(true);
+                // Tự dòm bản mới, nhiều nhất 6 tiếng một lần.
+                if (CapNhat.toiLucTuKiemTra(ChinhActivity.this)) kiemTraBanMoi(true);
+            }
         }, 1200);
     }
 
@@ -130,6 +144,7 @@ public class ChinhActivity extends Activity {
         super.onResume();
         if (kho.doiDemNeuCan()) sangDemMoi();
         veDemNguoc();
+        if (manMay != null) manMay.capNhat();
         nhip = new Runnable() {
             @Override
             public void run() {
@@ -165,17 +180,20 @@ public class ChinhActivity extends Activity {
         nutTab = new LinearLayout[]{
                 findViewById(R.id.tab_ghi),
                 findViewById(R.id.tab_thong_ke),
-                findViewById(R.id.tab_cai_dat)
+                findViewById(R.id.tab_cai_dat),
+                findViewById(R.id.tab_may)
         };
         hinhTab = new TextView[]{
                 findViewById(R.id.tab_ghi_hinh),
                 findViewById(R.id.tab_thong_ke_hinh),
-                findViewById(R.id.tab_cai_dat_hinh)
+                findViewById(R.id.tab_cai_dat_hinh),
+                findViewById(R.id.tab_may_hinh)
         };
         chuTab = new TextView[]{
                 findViewById(R.id.tab_ghi_chu),
                 findViewById(R.id.tab_thong_ke_chu),
-                findViewById(R.id.tab_cai_dat_chu)
+                findViewById(R.id.tab_cai_dat_chu),
+                findViewById(R.id.tab_may_chu)
         };
 
         uiSoDu = findViewById(R.id.ui_so_du);
@@ -207,6 +225,8 @@ public class ChinhActivity extends Activity {
         oThuongThoiQuen = findViewById(R.id.o_thuong_thoi_quen);
         oNhacLuc = findViewById(R.id.o_nhac_luc);
         tinKetNoi = findViewById(R.id.tin_ket_noi);
+        tinCapNhat = findViewById(R.id.tin_cap_nhat);
+        nutCapNhat = findViewById(R.id.nut_cap_nhat);
         dsMoc = findViewById(R.id.ds_moc);
         dsMocChuoi = findViewById(R.id.ds_moc_chuoi);
         dsBuocSua = findViewById(R.id.ds_buoc_sua);
@@ -216,8 +236,7 @@ public class ChinhActivity extends Activity {
         nutTab[0].setOnClickListener(v -> chuyenTab(TAB_GHI_NHAN));
         nutTab[1].setOnClickListener(v -> chuyenTab(TAB_THONG_KE));
         nutTab[2].setOnClickListener(v -> chuyenTab(TAB_CAI_DAT));
-        findViewById(R.id.tab_may).setOnClickListener(
-                v -> startActivity(new Intent(this, CaiDatActivity.class)));
+        nutTab[3].setOnClickListener(v -> chuyenTab(TAB_MAY));
 
         chipDongBo.setOnClickListener(v -> dayNhungCaiChuaGui(false));
 
@@ -240,6 +259,10 @@ public class ChinhActivity extends Activity {
         });
         findViewById(R.id.nut_luu_ngu).setOnClickListener(v -> luuCaiDatNgu());
         findViewById(R.id.nut_quyen_thong_bao).setOnClickListener(v -> xinQuyenThongBao());
+        nutCapNhat.setOnClickListener(v -> {
+            if (banMoiDangCho != null) taiBanMoi();
+            else kiemTraBanMoi(false);
+        });
 
         // Ba ô ngày giờ: bấm là mở bảng chọn của hệ thống, không bắt gõ tay.
         oDem.setOnClickListener(v -> GiaoDien.chonNgay(this, oDem.getText().toString(), gt -> {
@@ -280,6 +303,7 @@ public class ChinhActivity extends Activity {
             hinhTab[k].setAlpha(k == i ? 1f : 0.5f);
         }
         if (i == TAB_THONG_KE) veThongKe();
+        if (i == TAB_MAY && manMay != null) manMay.capNhat();
     }
 
     /* ==================== VẼ ==================== */
@@ -984,6 +1008,54 @@ public class ChinhActivity extends Activity {
         } catch (NumberFormatException e) {
             return macDinh;
         }
+    }
+
+    /* ==================== TỰ CẬP NHẬT ==================== */
+
+    private void kiemTraBanMoi(final boolean lang) {
+        if (!lang) tinCapNhat.setText(R.string.dang_kiem_tra_cn);
+        CapNhat.kiemTra(this, new CapNhat.Xong() {
+            @Override
+            public void xong(CapNhat.BanMoi b) {
+                banMoiDangCho = b;
+                if (b == null) {
+                    tinCapNhat.setText(getString(R.string.phien_ban_dang_dung,
+                            CapNhat.tenPhienBanHienTai(ChinhActivity.this))
+                            + "  ·  " + getString(R.string.da_moi_nhat));
+                    nutCapNhat.setText(R.string.nut_kiem_tra_cap_nhat);
+                    return;
+                }
+                tinCapNhat.setText(getString(R.string.co_ban_moi, b.tenPhienBan, b.ghiChu));
+                nutCapNhat.setText(getString(R.string.nut_tai_cai, b.tenPhienBan));
+                if (lang) bao(getString(R.string.co_ban_moi, b.tenPhienBan, ""));
+            }
+
+            @Override
+            public void hong(String loi) {
+                if (!lang) tinCapNhat.setText(getString(R.string.loi_cap_nhat, loi));
+            }
+        });
+    }
+
+    private void taiBanMoi() {
+        if (banMoiDangCho == null) return;
+        nutCapNhat.setEnabled(false);
+        CapNhat.taiVaCai(this, banMoiDangCho,
+                p -> tinCapNhat.setText(getString(R.string.dang_tai_cn, p)),
+                new CapNhat.Xong() {
+                    @Override
+                    public void xong(CapNhat.BanMoi b) {
+                        nutCapNhat.setEnabled(true);
+                        tinCapNhat.setText(getString(R.string.co_ban_moi,
+                                b.tenPhienBan, b.ghiChu));
+                    }
+
+                    @Override
+                    public void hong(String loi) {
+                        nutCapNhat.setEnabled(true);
+                        tinCapNhat.setText(getString(R.string.loi_cap_nhat, loi));
+                    }
+                });
     }
 
     /* ==================== LẶT VẶT ==================== */

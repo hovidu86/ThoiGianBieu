@@ -53,8 +53,15 @@ public class DichVuKhoa extends Service {
 
     /** Chưa mở khoá được sau chừng này thì tắt màn hình lần nữa. */
     private static final long CHU_KY_KHOA_LAI = 120_000L;
-    /** Nhịp soát hạn mức dùng ngắt quãng. */
-    private static final long CHU_KY_SOAT_NQ = 20_000L;
+    /**
+     * Nhịp soát hạn mức dùng ngắt quãng. Soát dày khi sắp hết đợt, thưa khi còn
+     * xa — cùng một kết quả nhưng ít đánh thức CPU hơn hẳn. Màn hình tắt là
+     * ngừng hẳn, không có nhịp nào chạy.
+     */
+    private static final long SOAT_NQ_DAY = 10_000L;
+    private static final long SOAT_NQ_THUA = 90_000L;
+    /** Soát lại lịch khi bật màn hình, nhưng đừng làm quá dày. */
+    private static final long GIAN_CACH_SOAT_LICH = 5L * 60 * 1000;
     /** Hoãn khoá vì đang gọi điện lâu nhất chừng này rồi thôi. */
     private static final long HOAN_TOI_DA = 20 * 60_000L;
 
@@ -78,6 +85,7 @@ public class DichVuKhoa extends Service {
     private boolean khanCapChoXacNhan;
     /** Lúc bắt đầu hoãn khoá vì đang gọi điện. 0 = không hoãn. */
     private long hoanTuLuc;
+    private long lanSoatLichCuoi;
 
     private BroadcastReceiver batTatManHinh;
 
@@ -153,8 +161,9 @@ public class DichVuKhoa extends Service {
     }
 
     private void chayNen() {
-        PendingIntent moApp = PendingIntent.getActivity(this, 0,
-                new Intent(this, CaiDatActivity.class),
+        Intent yMoApp = new Intent(this, ChinhActivity.class);
+        yMoApp.putExtra(ChinhActivity.MO_TAB, ChinhActivity.TAB_MAY);
+        PendingIntent moApp = PendingIntent.getActivity(this, 0, yMoApp,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         String phu;
@@ -345,17 +354,17 @@ public class DichVuKhoa extends Service {
             }
         });
 
-        // KHÔNG dùng FLAG_LAYOUT_IN_SCREEN ở đây. Cờ đó ghim cửa sổ full màn
-        // hình nên bàn phím không co lại được, và ô nhập mã bị che mất hoàn
-        // toàn — đúng lỗi đã gặp trên máy thật. Bỏ cờ đi thì cửa sổ chừa chỗ
-        // cho bàn phím, cộng với ScrollView bên trong là ô nhập luôn thấy được.
+        // Giữ FLAG_LAYOUT_IN_SCREEN để lớp phủ che kín cả thanh trạng thái —
+        // bỏ cờ này đi là kéo được thanh thông báo xuống, thủng tác dụng khoá.
+        // Đổi lại cửa sổ không tự co cho bàn phím, nên bên dưới tự đo bàn phím
+        // rồi tự chừa chỗ và đẩy ô nhập lên.
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                0,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.OPAQUE);
-        lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+        lp.softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
                 | WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN;
 
         try {
@@ -366,11 +375,19 @@ public class DichVuKhoa extends Service {
             return;
         }
 
-        // Bấm vào ô nào thì cuộn ô đó lên trên bàn phím.
         final android.widget.ScrollView cuon = khung.findViewById(R.id.cuon_khoa);
+        final int demDuoiGoc = cuon.getPaddingBottom();
+
+        GiaoDien.theoDoiBanPhim(khung, caoBanPhim -> {
+            cuon.setPadding(cuon.getPaddingLeft(), cuon.getPaddingTop(),
+                    cuon.getPaddingRight(), demDuoiGoc + caoBanPhim);
+            if (caoBanPhim > 0) cuonToiODangGo(cuon, o1, o2);
+        });
+
+        // Bấm vào ô nào thì cuộn ô đó lên trên bàn phím.
         View.OnFocusChangeListener khiNhanTieuDiem = (v, coTieuDiem) -> {
-            if (!coTieuDiem || cuon == null) return;
-            tay.postDelayed(() -> cuon.smoothScrollTo(0, Math.max(0, v.getTop() - dp(70))), 250);
+            if (!coTieuDiem) return;
+            tay.postDelayed(() -> cuonToiODangGo(cuon, o1, o2), 250);
         };
         o1.setOnFocusChangeListener(khiNhanTieuDiem);
         o2.setOnFocusChangeListener(khiNhanTieuDiem);
@@ -390,6 +407,20 @@ public class DichVuKhoa extends Service {
 
     private int dp(int v) {
         return Math.round(v * getResources().getDisplayMetrics().density);
+    }
+
+    /** Cuộn sao cho ô đang gõ nằm gần đỉnh, chắc chắn nằm trên bàn phím. */
+    private void cuonToiODangGo(android.widget.ScrollView cuon, View o1, View o2) {
+        View dangGo = o2.hasFocus() ? o2 : o1;
+        int y = 0;
+        View v = dangGo;
+        while (v != null && v != cuon) {
+            y += v.getTop();
+            if (!(v.getParent() instanceof View)) break;
+            v = (View) v.getParent();
+        }
+        final int dich = Math.max(0, y - dp(24));
+        cuon.post(() -> cuon.smoothScrollTo(0, dich));
     }
 
     private void chayDemNguoc(final TextView dem, final EditText o2, final Button nut2) {
@@ -452,8 +483,10 @@ public class DichVuKhoa extends Service {
                 if (Intent.ACTION_SCREEN_OFF.equals(viec)) {
                     manHinhRoiDung(bayGio);
                 } else if (Intent.ACTION_USER_PRESENT.equals(viec)) {
+                    soatLichKhiThucDay(bayGio);
                     manHinhVaoDung(bayGio);
                 } else if (Intent.ACTION_SCREEN_ON.equals(viec)) {
+                    soatLichKhiThucDay(bayGio);
                     // Máy không đặt khoá màn hình thì không có USER_PRESENT.
                     if (!mayDangKhoa()) manHinhVaoDung(bayGio);
                 }
@@ -464,6 +497,17 @@ public class DichVuKhoa extends Service {
         loc.addAction(Intent.ACTION_SCREEN_OFF);
         loc.addAction(Intent.ACTION_USER_PRESENT);
         registerReceiver(batTatManHinh, loc, Context.RECEIVER_NOT_EXPORTED);
+    }
+
+    /**
+     * Bật màn hình là dịp soát lại lịch gần như miễn phí: máy đang thức sẵn.
+     * Nhờ vậy nhịp báo thức nền mới thưa xuống được còn hai tiếng một lần mà
+     * vẫn tự hồi phục nhanh.
+     */
+    private void soatLichKhiThucDay(long bayGio) {
+        if (bayGio - lanSoatLichCuoi < GIAN_CACH_SOAT_LICH) return;
+        lanSoatLichCuoi = bayGio;
+        soatLaiLich();
     }
 
     private void manHinhVaoDung(long bayGio) {
@@ -488,14 +532,18 @@ public class DichVuKhoa extends Service {
 
     private void batNhipNgatQuang() {
         dungNhipNgatQuang();
+        // Tính năng đang tắt hoặc ngoài khung giờ thì không đếm nhịp nào cả.
+        if (!nq.dangApDung(System.currentTimeMillis())) return;
+
         nhipNgatQuang = new Runnable() {
             @Override
             public void run() {
-                soatNgatQuang();
-                tay.postDelayed(this, CHU_KY_SOAT_NQ);
+                long cho = soatNgatQuang();
+                if (cho > 0) tay.postDelayed(this, cho);
+                else nhipNgatQuang = null;
             }
         };
-        tay.postDelayed(nhipNgatQuang, CHU_KY_SOAT_NQ);
+        tay.postDelayed(nhipNgatQuang, SOAT_NQ_DAY);
     }
 
     private void dungNhipNgatQuang() {
@@ -503,20 +551,21 @@ public class DichVuKhoa extends Service {
         nhipNgatQuang = null;
     }
 
-    private void soatNgatQuang() {
+    /** Trả về số mili giây tới lần soát kế tiếp. 0 nghĩa là thôi soát. */
+    private long soatNgatQuang() {
         long bayGio = System.currentTimeMillis();
-        if (lopKhoa != null) return;
-        if (!nq.dangApDung(bayGio)) return;
+        if (lopKhoa != null) return SOAT_NQ_THUA;
+        if (!nq.dangApDung(bayGio)) return 0;
 
         if (nq.dangNghi(bayGio)) {
             hienLopNghi();
-            return;
+            return 0;   // đồng hồ đếm ngược của lớp nghỉ lo tiếp
         }
 
         long con = nq.conLai(bayGio);
         if (con <= 0) {
             vaoNghi(bayGio);
-            return;
+            return 0;
         }
         if (!daCanhBaoDot && con <= ch.nqCanhBaoPhut() * 60_000L) {
             daCanhBaoDot = true;
@@ -526,6 +575,9 @@ public class DichVuKhoa extends Service {
             hienDaiCanhBao(getString(R.string.nq_sap_het), noi);
             rung(250);
         }
+
+        // Còn xa thì soát thưa, sắp hết thì soát dày.
+        return Math.max(SOAT_NQ_DAY, Math.min(SOAT_NQ_THUA, con / 3));
     }
 
     private void vaoNghi(long bayGio) {
@@ -536,7 +588,6 @@ public class DichVuKhoa extends Service {
         hoanTuLuc = 0;
         nq.batDauNghi(bayGio);
         daCanhBaoDot = false;
-        dungNhipNgatQuang();
         NhatKy.ghi(this, "ngat-quang", "hết hạn mức " + ch.nqPhutDung()
                 + " phút, nghỉ " + ch.nqPhutNghi() + " phút");
         hienLopNghi();

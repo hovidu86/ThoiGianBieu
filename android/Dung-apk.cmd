@@ -10,7 +10,11 @@ if errorlevel 1 (
   exit /b 1
 )
 copy /Y "app\build\outputs\apk\release\app-release.apk" "dist-apk\ThoiGianBieu.apk" >nul
+
+rem Cap nhat version.json theo dung build.gradle. App doc tep nay de biet co ban
+rem moi hay khong, quen sua la nguoi dung khong bao gio thay ban moi.
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Ghi-version-json.ps1"
+
 echo   Xong: dist-apk\ThoiGianBieu.apk
-echo   NHO tang versionCode trong app\build.gradle truoc moi lan phat hanh,
-echo   neu khong Android coi la cung mot ban va co the khong cap nhat.
+echo   NHO tang versionCode trong app\build.gradle truoc moi lan phat hanh.
 pause

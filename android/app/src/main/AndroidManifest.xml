@@ -19,6 +19,10 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- Tự tải và mở trình cài đặt khi có bản mới. Android không cho app tự cài
+         đè im lặng, nên đây là mức gần nhất: người dùng chỉ bấm Cài đặt một lần. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
@@ -41,13 +45,6 @@
                 android:resource="@xml/loi_tat" />
         </activity>
 
-        <activity
-            android:name=".CaiDatActivity"
-            android:exported="false"
-            android:label="@string/ten_app"
-            android:parentActivityName=".ChinhActivity"
-            android:windowSoftInputMode="adjustResize" />
-
         <service
             android:name=".DichVuKhoa"
             android:exported="false"
@@ -56,6 +53,14 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Khoa man hinh theo thoi gian bieu da hen" />
         </service>
+
+        <!-- Cấp tệp APK vừa tải cho trình cài đặt. Tự viết thay vì dùng
+             FileProvider của AndroidX, để app không phụ thuộc thư viện ngoài. -->
+        <provider
+            android:name=".NhaCungCapApk"
+            android:authorities="com.thoigianbieu.kiemsoat.tep"
+            android:exported="false"
+            android:grantUriPermissions="true" />
 
         <receiver
             android:name=".BaoThucReceiver"

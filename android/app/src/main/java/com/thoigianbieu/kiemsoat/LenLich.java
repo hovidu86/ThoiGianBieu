@@ -26,8 +26,12 @@ public class LenLich {
     private static final int MA_CANH_BAO = 2000;   // + số phút
     private static final int MA_NHIP = 3000;
 
-    /** Nhịp tự hồi phục: nửa tiếng một lần, giống lịch 30 phút bên Windows. */
-    private static final long CHU_KY_NHIP = 30L * 60 * 1000;
+    /**
+     * Nhịp tự hồi phục. Hai tiếng một lần là đủ: mỗi lần bật màn hình dịch vụ
+     * cũng tự soát lại lịch, mà lúc đó máy đang thức nên không tốn thêm gì.
+     * Nhịp này chỉ để lo trường hợp máy nằm im cả buổi.
+     */
+    private static final long CHU_KY_NHIP = 2L * 60 * 60 * 1000;
 
     /** Tính lại mốc khoá kế tiếp nếu cần rồi đặt toàn bộ báo thức. */
     public static void datLai(Context ctx) {

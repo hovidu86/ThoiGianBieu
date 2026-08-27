@@ -31,10 +31,14 @@ public class GiaoDien {
         goc.setOnApplyWindowInsetsListener(new View.OnApplyWindowInsetsListener() {
             @Override
             public WindowInsets onApplyWindowInsets(View v, WindowInsets ins) {
-                int cao = 0, thap = 0;
+                int cao, thap;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    Insets i = ins.getInsets(
-                            WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                    Insets i = ins.getInsets(WindowInsets.Type.systemBars()
+                            | WindowInsets.Type.displayCutout()
+                            // Tính cả bàn phím: cửa sổ vẽ tràn viền thì hệ thống
+                            // không tự co nữa, không cộng vào đây là bàn phím che
+                            // mất ô nhập ở cuối trang.
+                            | WindowInsets.Type.ime());
                     cao = i.top;
                     thap = i.bottom;
                 } else {
@@ -48,11 +52,72 @@ public class GiaoDien {
                 if (duoi != null) {
                     duoi.setPadding(duoi.getPaddingLeft(), duoi.getPaddingTop(),
                             duoi.getPaddingRight(), demDuoi + thap);
+                    cuonToiODangGo(duoi);
                 }
                 return ins;
             }
         });
         goc.requestApplyInsets();
+    }
+
+    /** Kéo ô đang gõ lên trên bàn phím, nếu vùng cuộn có ô nào đang gõ. */
+    private static void cuonToiODangGo(View vung) {
+        if (!(vung instanceof android.widget.ScrollView)) return;
+        final android.widget.ScrollView cuon = (android.widget.ScrollView) vung;
+        final View dangGo = cuon.findFocus();
+        if (dangGo == null) return;
+        cuon.post(new Runnable() {
+            @Override
+            public void run() {
+                android.graphics.Rect r = new android.graphics.Rect();
+                dangGo.getDrawingRect(r);
+                cuon.offsetDescendantRectToMyCoords(dangGo, r);
+                r.bottom += (int) (24 * cuon.getResources().getDisplayMetrics().density);
+                cuon.requestChildRectangleOnScreen(dangGo, r, false);
+            }
+        });
+    }
+
+    public interface NhanSo {
+        void nhan(int giaTri);
+    }
+
+    /**
+     * Theo dõi chiều cao bàn phím cho một cửa sổ KHÔNG tự co lại được.
+     *
+     * Lớp phủ khoá phải giữ cờ FLAG_LAYOUT_IN_SCREEN để che kín cả thanh trạng
+     * thái — bỏ cờ đó đi là kéo được thanh thông báo xuống, thủng luôn tác dụng
+     * của việc khoá. Nhưng cửa sổ đã ghim full màn hình thì bàn phím không đẩy
+     * nó lên, nên phải tự đo lấy chiều cao bàn phím rồi tự chừa chỗ.
+     */
+    public static void theoDoiBanPhim(final View goc, final NhanSo khiDoi) {
+        goc.getViewTreeObserver().addOnGlobalLayoutListener(
+                new android.view.ViewTreeObserver.OnGlobalLayoutListener() {
+                    private int truoc = -1;
+
+                    @Override
+                    public void onGlobalLayout() {
+                        int cao = caoBanPhim(goc);
+                        if (cao == truoc) return;
+                        truoc = cao;
+                        khiDoi.nhan(cao);
+                    }
+                });
+    }
+
+    private static int caoBanPhim(View goc) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            WindowInsets ins = goc.getRootWindowInsets();
+            if (ins != null) return ins.getInsets(WindowInsets.Type.ime()).bottom;
+        }
+        // Máy cũ: so khung nhìn thấy được với chiều cao màn hình. Phần khuyết ở
+        // đáy chính là bàn phím, miễn là nó đủ lớn để không nhầm với thanh
+        // điều hướng.
+        android.graphics.Rect r = new android.graphics.Rect();
+        goc.getWindowVisibleDisplayFrame(r);
+        int caoMan = goc.getRootView().getHeight();
+        int duoi = caoMan - r.bottom;
+        return duoi > caoMan * 0.15 ? duoi : 0;
     }
 
     /**
