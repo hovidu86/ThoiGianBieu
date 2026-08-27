@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kỷ Luật Giấc Ngủ Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --bg-color: #0b1121;
+            --glass-bg: rgba(30, 41, 59, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .tab-content.active { display: block; opacity: 1; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus {
+            border-color: #3b82f6;
+            box-shadow: var(--accent-glow);
+            outline: none;
+        }
+
+        .nav-active {
+            color: #60a5fa !important;
+            text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        /* Floating animation for icons */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+        .icon-float { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden pb-safe">
+
+    <!-- Header -->
+    <header class="pt-10 pb-5 px-6 glass-panel z-10 sticky top-0 rounded-b-3xl">
+        <div class="flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-400 to-emerald-400">
+                    Sleep Master
+                </h1>
+                <p class="text-xs text-slate-400 mt-1 font-medium flex items-center">
+                    <i class="fas fa-moon text-indigo-400 mr-1"></i> Hệ thống Kỷ luật AI
+                </p>
+            </div>
+            <div id="sync-status" class="w-10 h-10 rounded-full glass-panel flex items-center justify-center border-emerald-500/30 text-emerald-400 relative">
+                <i class="fas fa-cloud-check text-lg"></i>
+                <span class="absolute top-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#0b1121] rounded-full animate-pulse hidden" id="sync-dot"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-5 pb-28 relative">
+        
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <div id="tab-dashboard" class="tab-content active space-y-6">
+            
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel rounded-3xl p-5 flex flex-col relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
+                    <div class="absolute -right-4 -bottom-4 text-emerald-500/10 text-7xl transition-transform group-hover:scale-110"><i class="fas fa-sack-dollar"></i></div>
+                    <span class="text-slate-400 text-xs uppercase tracking-wider font-semibold z-10 mb-1">Quỹ Thưởng</span>
+                    <span id="ui-balance" class="text-2xl sm:text-3xl font-black text-emerald-400 z-10">0đ</span>
+                </div>
+                <div class="glass-panel rounded-3xl p-5 flex flex-col relative overflow-hidden group hover:border-orange-500/30 transition-colors">
+                    <div class="absolute -right-4 -bottom-4 text-orange-500/10 text-7xl transition-transform group-hover:scale-110"><i class="fas fa-fire-flame-curved"></i></div>
+                    <span class="text-slate-400 text-xs uppercase tracking-wider font-semibold z-10 mb-1">Chuỗi Kỷ Luật</span>
+                    <div class="flex items-baseline z-10">
+                        <span id="ui-streak" class="text-2xl sm:text-3xl font-black text-orange-400">0</span>
+                        <span class="text-sm text-orange-400/70 ml-1 font-semibold">Ngày</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Section -->
+            <div class="glass-panel rounded-3xl p-6 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500"></div>
+                <h2 class="text-xl font-bold mb-5 flex items-center text-white">
+                    <i class="fas fa-bed text-blue-400 mr-3 icon-float"></i> Nhập Giờ Ngủ
+                </h2>
+                
+                <div class="space-y-5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2 font-medium">Ngày lên giường</label>
+                            <input type="date" id="input-date" class="w-full glass-input rounded-2xl px-4 py-3.5 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-2 font-medium">Thời điểm thực tế</label>
+                            <input type="time" id="input-time" class="w-full glass-input rounded-2xl px-4 py-3.5 text-lg text-center font-bold font-mono" value="22:00">
+                        </div>
+                    </div>
+                    <button onclick="logSleep()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-4 px-4 rounded-2xl shadow-lg transform transition active:scale-95 flex items-center justify-center space-x-2">
+                        <i class="fas fa-check-circle text-lg"></i>
+                        <span>Xác Nhận & Đồng Bộ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- This Month Summary -->
+            <div class="glass-panel rounded-3xl p-6">
+                <h3 class="text-xs font-bold text-slate-400 mb-4 uppercase tracking-widest">Tổng kết tháng này</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                        <span class="text-emerald-300/80 text-sm font-medium flex items-center"><i class="fas fa-arrow-trend-up mr-2"></i>Tổng tiền thưởng</span>
+                        <span id="ui-month-reward" class="text-emerald-400 font-bold text-lg">+0đ</span>
+                    </div>
+                    <div class="flex justify-between items-center bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
+                        <span class="text-rose-300/80 text-sm font-medium flex items-center"><i class="fas fa-arrow-trend-down mr-2"></i>Tổng tiền phạt</span>
+                        <span id="ui-month-penalty" class="text-rose-400 font-bold text-lg">-0đ</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: HISTORY ================= -->
+        <div id="tab-history" class="tab-content">
+            <div class="flex justify-between items-end mb-6 px-1">
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Lịch Sử</h2>
+                    <p class="text-xs text-slate-400 mt-1">Các dữ liệu đã được ghi nhận</p>
+                </div>
+                <button onclick="clearData()" class="text-xs text-rose-400 hover:text-white hover:bg-rose-500/20 px-4 py-2 border border-rose-400/30 rounded-xl transition-colors font-medium">
+                    Reset App
+                </button>
+            </div>
+            
+            <div id="history-list" class="space-y-4">
+                <!-- History items will be injected here via JS -->
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: RULES ================= -->
+        <div id="tab-rules" class="tab-content space-y-6">
+            <h2 class="text-2xl font-bold px-1">Khung Thưởng Phạt</h2>
+
+            <div class="glass-panel rounded-3xl p-5 border-l-4 border-l-emerald-500 relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
+                <h3 class="text-emerald-400 font-bold mb-4 text-lg flex items-center"><i class="fas fa-award mr-2"></i>Mức Thưởng</h3>
+                <ul class="text-sm space-y-3 text-slate-300 font-medium relative z-10">
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span class="text-white flex items-center"><i class="far fa-clock text-emerald-500/50 mr-2"></i>Trước 22:00</span> <span class="text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg">+50.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span class="text-white flex items-center"><i class="far fa-clock text-emerald-500/50 mr-2"></i>22:00 - 22:30</span> <span class="text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-lg">+30.000đ</span></li>
+                    <li class="flex justify-between items-center"><span class="text-white flex items-center"><i class="far fa-clock text-slate-500/50 mr-2"></i>22:30 - 23:00</span> <span class="text-slate-400 bg-slate-500/10 px-3 py-1 rounded-lg">0đ (An toàn)</span></li>
+                </ul>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-5 border-l-4 border-l-orange-500 relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl"></div>
+                <h3 class="text-orange-400 font-bold mb-2 text-lg flex items-center"><i class="fas fa-fire mr-2"></i>Thưởng Chuỗi (Streak)</h3>
+                <p class="text-xs text-slate-400 mb-4 bg-black/20 p-2 rounded-lg">Chỉ tính khi ngủ <b>Trước 22:30</b>. Ngủ sau 23:30 sẽ Reset chuỗi. Nằm trong 22:30-23:30 thì giữ nguyên chuỗi.</p>
+                <ul class="text-sm space-y-3 text-slate-300 font-medium relative z-10">
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>Đạt 3 ngày</span> <span class="text-orange-400 bg-orange-500/10 px-3 py-1 rounded-lg">+100.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>Đạt 7 ngày</span> <span class="text-orange-400 bg-orange-500/10 px-3 py-1 rounded-lg">+300.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>Đạt 14 ngày</span> <span class="text-orange-400 bg-orange-500/10 px-3 py-1 rounded-lg">+700.000đ</span></li>
+                    <li class="flex justify-between items-center"><span>Đạt 30 ngày</span> <span class="text-orange-400 bg-orange-500/10 px-3 py-1 rounded-lg">+2.000.000đ</span></li>
+                </ul>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-5 border-l-4 border-l-rose-500 relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-rose-500/5 rounded-full blur-2xl"></div>
+                <h3 class="text-rose-400 font-bold mb-4 text-lg flex items-center"><i class="fas fa-gavel mr-2"></i>Mức Phạt</h3>
+                <ul class="text-sm space-y-3 text-slate-300 font-medium relative z-10">
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>23:00 - 23:30</span> <span class="text-rose-400 bg-rose-500/10 px-3 py-1 rounded-lg">-20.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>23:30 - 00:00</span> <span class="text-rose-400 bg-rose-500/10 px-3 py-1 rounded-lg">-50.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>00:00 - 01:00</span> <span class="text-rose-400 bg-rose-500/10 px-3 py-1 rounded-lg">-100.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>01:00 - 02:00</span> <span class="text-rose-400 bg-rose-500/10 px-3 py-1 rounded-lg">-150.000đ</span></li>
+                    <li class="flex justify-between items-center border-b border-white/5 pb-2"><span>02:00 - 03:00</span> <span class="text-rose-400 bg-rose-500/10 px-3 py-1 rounded-lg">-250.000đ</span></li>
+                    <li class="flex justify-between items-center"><span>Sau 03:00</span> <span class="text-rose-500 font-bold bg-rose-500/20 px-3 py-1 rounded-lg">+100.000đ/giờ</span></li>
+                </ul>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-6 bg-gradient-to-br from-indigo-900/50 to-slate-900/50">
+                <h3 class="text-indigo-400 font-bold mb-5 text-lg flex items-center"><i class="fas fa-power-off mr-2"></i>Quy Trình Wind-down</h3>
+                <div class="relative border-l-2 border-indigo-500/30 ml-3 space-y-6 pb-2">
+                    <div class="relative pl-6">
+                        <div class="absolute w-4 h-4 bg-indigo-500 rounded-full -left-[9px] top-0.5 border-4 border-[#0b1121]"></div>
+                        <h4 class="font-bold text-sm text-white">21:50 - Báo thức 1: Chuẩn bị chốt sổ</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Ghi chú lại chính xác dòng code/ý tưởng đang dở dang để mai làm tiếp. Không bắt đầu task mới.</p>
+                    </div>
+                    <div class="relative pl-6">
+                        <div class="absolute w-4 h-4 bg-blue-500 rounded-full -left-[9px] top-0.5 border-4 border-[#0b1121]"></div>
+                        <h4 class="font-bold text-sm text-white">22:10 - Báo thức 2: Giới nghiêm Digital</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Lưu Code. Đóng AI. Tắt màn hình máy tính. Để điện thoại sạc xa tầm với của giường.</p>
+                    </div>
+                    <div class="relative pl-6">
+                        <div class="absolute w-4 h-4 bg-emerald-500 rounded-full -left-[9px] top-0.5 border-4 border-[#0b1121]"></div>
+                        <h4 class="font-bold text-sm text-white">22:20 - Báo thức 3: Hạ nhiệt cơ thể</h4>
+                        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Ngồi ghế massage, giãn cơ nhẹ nhàng, vệ sinh cá nhân. Cảnh báo: Còn 10 phút nữa là mất 30.000đ!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: SETTINGS (Google Sheets) ================= -->
+        <div id="tab-settings" class="tab-content space-y-6">
+            <h2 class="text-2xl font-bold px-1">Cài Đặt Kết Nối</h2>
+            
+            <div class="glass-panel rounded-3xl p-6 border-t-4 border-t-emerald-500">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-xl">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Google Sheets Sync</h3>
+                        <p class="text-xs text-slate-400">Tự động đẩy dữ liệu lên file Excel của bạn</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-2">Google Apps Script Web App URL:</label>
+                        <textarea id="input-script-url" rows="3" placeholder="Dán đường dẫn (URL) của Apps Script vào đây... Bắt đầu bằng https://script.google.com/..." class="w-full glass-input rounded-xl px-4 py-3 text-xs font-mono"></textarea>
+                    </div>
+                    <button onclick="saveSettings()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition">
+                        Lưu Cấu Hình
+                    </button>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-slate-700/50">
+                    <h4 class="text-sm font-bold text-slate-300 mb-2"><i class="fas fa-info-circle text-blue-400 mr-1"></i> Cách lấy Link (URL):</h4>
+                    <ol class="list-decimal list-inside text-xs text-slate-400 space-y-2 leading-relaxed">
+                        <li>Mở Google Sheets tạo 1 file mới tên "Sleep Tracker".</li>
+                        <li>Vào <b class="text-slate-200">Tiện ích mở rộng > Apps Script</b>.</li>
+                        <li>Dán đoạn Code Google Script (được cung cấp riêng) vào.</li>
+                        <li>Bấm <b class="text-slate-200">Triển khai (Deploy) > Tùy chọn triển khai mới</b>.</li>
+                        <li>Chọn loại: <b class="text-slate-200">Ứng dụng web</b>. Quyền truy cập: <b class="text-slate-200">Bất kỳ ai</b>.</li>
+                        <li>Copy URL được tạo ra và dán vào ô bên trên.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="glass-panel border-t-0 rounded-t-3xl flex justify-around p-2 pb-safe fixed bottom-0 w-full z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn nav-active text-slate-500 flex flex-col items-center p-3 flex-1 transition-all duration-300 relative group">
+            <div class="absolute inset-0 bg-blue-500/10 rounded-2xl scale-0 group-hover:scale-100 transition-transform"></div>
+            <i class="fas fa-home text-xl mb-1 relative z-10"></i>
+            <span class="text-[10px] font-bold relative z-10">Ghi Nhận</span>
+        </button>
+        <button onclick="switchTab('history')" id="nav-history" class="nav-btn text-slate-500 hover:text-slate-300 flex flex-col items-center p-3 flex-1 transition-all duration-300 relative group">
+            <div class="absolute inset-0 bg-blue-500/10 rounded-2xl scale-0 group-hover:scale-100 transition-transform"></div>
+            <i class="fas fa-clock-rotate-left text-xl mb-1 relative z-10"></i>
+            <span class="text-[10px] font-bold relative z-10">Lịch Sử</span>
+        </button>
+        <button onclick="switchTab('rules')" id="nav-rules" class="nav-btn text-slate-500 hover:text-slate-300 flex flex-col items-center p-3 flex-1 transition-all duration-300 relative group">
+            <div class="absolute inset-0 bg-blue-500/10 rounded-2xl scale-0 group-hover:scale-100 transition-transform"></div>
+            <i class="fas fa-book-open text-xl mb-1 relative z-10"></i>
+            <span class="text-[10px] font-bold relative z-10">Quy Định</span>
+        </button>
+        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn text-slate-500 hover:text-slate-300 flex flex-col items-center p-3 flex-1 transition-all duration-300 relative group">
+            <div class="absolute inset-0 bg-blue-500/10 rounded-2xl scale-0 group-hover:scale-100 transition-transform"></div>
+            <i class="fas fa-gear text-xl mb-1 relative z-10"></i>
+            <span class="text-[10px] font-bold relative z-10">Cài Đặt</span>
+        </button>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 glass-panel text-white px-6 py-4 rounded-2xl shadow-2xl transition-all duration-500 opacity-0 -translate-y-10 z-50 flex items-center border border-white/10 pointer-events-none w-[90%] max-w-sm">
+        <div id="toast-icon-container" class="w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0 bg-emerald-500/20 text-emerald-400">
+            <i id="toast-icon" class="fas fa-check"></i>
+        </div>
+        <div>
+            <h4 id="toast-title" class="font-bold text-sm">Thành công!</h4>
+            <p id="toast-msg" class="text-xs text-slate-300 mt-0.5">Dữ liệu đã được lưu.</p>
+        </div>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- State Management ---
+        let appData = {
+            balance: 0,
+            streak: 0,
+            scriptUrl: "",
+            logs: [] 
+        };
+
+        function loadData() {
+            const saved = localStorage.getItem('sleepTrackerProData');
+            if (saved) {
+                appData = JSON.parse(saved);
+                // Ensure new fields exist
+                if (typeof appData.scriptUrl === 'undefined') appData.scriptUrl = "";
+            }
+            document.getElementById('input-script-url').value = appData.scriptUrl;
+            checkSyncStatus();
+            updateUI();
+        }
+
+        function saveData() {
+            localStorage.setItem('sleepTrackerProData', JSON.stringify(appData));
+            updateUI();
+        }
+
+        function saveSettings() {
+            appData.scriptUrl = document.getElementById('input-script-url').value.trim();
+            saveData();
+            checkSyncStatus();
+            showToast('Đã lưu cấu hình', 'Hệ thống sẽ đồng bộ với Google Sheets', 'success');
+        }
+
+        function checkSyncStatus() {
+            const syncIcon = document.getElementById('sync-status');
+            if (appData.scriptUrl && appData.scriptUrl.startsWith('https://script.google.com/')) {
+                syncIcon.innerHTML = '<i class="fas fa-cloud-check text-lg"></i><span class="absolute top-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#0b1121] rounded-full" id="sync-dot"></span>';
+                syncIcon.className = "w-10 h-10 rounded-full glass-panel flex items-center justify-center border-emerald-500/50 text-emerald-400 relative shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+            } else {
+                syncIcon.innerHTML = '<i class="fas fa-cloud-xmark text-lg"></i>';
+                syncIcon.className = "w-10 h-10 rounded-full glass-panel flex items-center justify-center border-slate-700 text-slate-500 relative";
+            }
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            today.setDate(today.getDate() - 1); // Yesterday
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById('input-date').value = `${yyyy}-${mm}-${dd}`;
+            
+            loadData();
+        });
+
+        // --- Core Logic: Updated rules based on the prompt ---
+        function processSleepTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            let timeVal = hours + minutes / 60;
+            if (timeVal < 18) { timeVal += 24; }
+
+            let amount = 0;
+            let type = '';
+            let msg = '';
+            let streakAction = 'keep'; // 'add', 'keep', 'reset'
+
+            if (timeVal < 22) { // < 22:00
+                amount = 50000; type = 'reward'; msg = 'Tuyệt vời! Ngủ rất sớm.'; streakAction = 'add';
+            } else if (timeVal <= 22.5) { // 22:00 - 22:30
+                amount = 30000; type = 'reward'; msg = 'Tốt! Đạt mục tiêu.'; streakAction = 'add';
+            } else if (timeVal <= 23) { // 22:30 - 23:00
+                amount = 0; type = 'neutral'; msg = 'An toàn. Không thưởng phạt.'; streakAction = 'keep';
+            } else if (timeVal <= 23.5) { // 23:00 - 23:30
+                amount = -20000; type = 'penalty'; msg = 'Hơi trễ. Bị phạt nhẹ.'; streakAction = 'keep';
+            } else if (timeVal <= 24) { // 23:30 - 00:00
+                amount = -50000; type = 'penalty'; msg = 'Trễ! Phạt nặng & Mất chuỗi.'; streakAction = 'reset';
+            } else if (timeVal <= 25) { // 00:00 - 01:00
+                amount = -100000; type = 'penalty'; msg = 'Quá trễ. Phạt 100k.'; streakAction = 'reset';
+            } else if (timeVal <= 26) { // 01:00 - 02:00 
+                amount = -150000; type = 'penalty'; msg = 'Cú đêm. Phạt 150k.'; streakAction = 'reset';
+            } else if (timeVal <= 27) { // 02:00 - 03:00
+                amount = -250000; type = 'penalty'; msg = 'Rất nguy hại! Phạt 250k.'; streakAction = 'reset';
+            } else { // Sau 03:00
+                // Mỗi giờ thêm 100k
+                const extraHours = Math.floor(timeVal - 27);
+                amount = -250000 - (extraHours * 100000) - 100000; // -250k base + extra
+                type = 'penalty'; msg = 'Kịch khung phạt phá hủy sức khỏe!'; streakAction = 'reset';
+            }
+
+            return { amount, type, msg, streakAction };
+        }
+
+        function calculateStreakBonus(newStreak) {
+            if (newStreak === 3) return { amount: 100000, msg: "Thưởng Chuỗi 3 ngày!" };
+            if (newStreak === 7) return { amount: 300000, msg: "Thưởng Chuỗi 7 ngày!" };
+            if (newStreak === 14) return { amount: 700000, msg: "Thưởng Chuỗi 14 ngày!" };
+            if (newStreak === 30) return { amount: 2000000, msg: "Thưởng Chuỗi 30 ngày!" };
+            return { amount: 0, msg: "" };
+        }
+
+        // --- Event Handlers ---
+        async function logSleep() {
+            const dateStr = document.getElementById('input-date').value;
+            const timeStr = document.getElementById('input-time').value;
+
+            if(!dateStr || !timeStr) {
+                showToast('Lỗi nhập liệu', 'Vui lòng chọn ngày và giờ.', 'error');
+                return;
+            }
+
+            if (appData.logs.some(log => log.date === dateStr)) {
+                if(!confirm('Ngày này đã có dữ liệu. Bạn muốn ghi đè?')) return;
+                appData.logs = appData.logs.filter(log => log.date !== dateStr);
+            }
+
+            const result = processSleepTime(timeStr);
+            
+            let streakBonusAmount = 0;
+            let streakBonusMsg = "";
+
+            if (result.streakAction === 'add') {
+                appData.streak += 1;
+                const bonus = calculateStreakBonus(appData.streak);
+                streakBonusAmount = bonus.amount;
+                streakBonusMsg = bonus.msg;
+            } else if (result.streakAction === 'reset') {
+                appData.streak = 0;
+            }
+
+            const totalEarned = result.amount + streakBonusAmount;
+
+            const logEntry = {
+                id: Date.now(),
+                date: dateStr,
+                time: timeStr,
+                baseAmount: result.amount,
+                streakBonus: streakBonusAmount,
+                totalAmount: totalEarned,
+                type: result.type,
+                msg: result.msg,
+                streakMsg: streakBonusMsg,
+                resultingStreak: appData.streak
+            };
+
+            appData.logs.push(logEntry);
+            appData.logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            recalculateBalance();
+            saveData();
+            
+            let toastTitle = totalEarned >= 0 ? 'Thành công!' : 'Thất bại!';
+            let toastMsg = totalEarned >= 0 ? `Đã cộng ${formatMoney(totalEarned)}` : `Bị phạt ${formatMoney(Math.abs(totalEarned))}`;
+            showToast(toastTitle, toastMsg, totalEarned >= 0 ? 'success' : 'error');
+
+            // --- SYNC TO GOOGLE SHEETS ---
+            if (appData.scriptUrl) {
+                try {
+                    // Hiển thị hiệu ứng sync
+                    const syncDot = document.getElementById('sync-dot');
+                    if(syncDot) syncDot.classList.remove('hidden');
+
+                    const formData = new URLSearchParams();
+                    formData.append('date', logEntry.date);
+                    formData.append('time', logEntry.time);
+                    formData.append('totalAmount', logEntry.totalAmount);
+                    formData.append('resultingStreak', logEntry.resultingStreak);
+                    formData.append('msg', logEntry.msg);
+                    formData.append('streakMsg', logEntry.streakMsg);
+
+                    // Gửi request bằng no-cors để tránh lỗi CORS policy khi chỉ cần ghi dữ liệu
+                    await fetch(appData.scriptUrl, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors'
+                    });
+
+                    setTimeout(() => {
+                        if(syncDot) syncDot.classList.add('hidden');
+                        showToast('Đồng bộ thành công', 'Dữ liệu đã lên Google Sheets', 'success');
+                    }, 1000);
+
+                } catch (error) {
+                    console.error('Lỗi đồng bộ:', error);
+                    showToast('Lỗi đồng bộ', 'Không thể gửi tới Google Sheets', 'error');
+                }
+            }
+        }
+
+        function recalculateBalance() {
+            let total = 0;
+            appData.logs.forEach(log => { total += log.totalAmount; });
+            appData.balance = total;
+        }
+
+        function clearData() {
+            if(confirm('Xóa sạch dữ liệu trên thiết bị này? (Dữ liệu trên Google Sheets sẽ không bị xóa)')) {
+                let keepUrl = appData.scriptUrl;
+                appData = { balance: 0, streak: 0, scriptUrl: keepUrl, logs: [] };
+                saveData();
+                showToast('Đã Reset', 'Dữ liệu thiết bị đã trống.', 'success');
+            }
+        }
+
+        // --- UI Updates ---
+        function updateUI() {
+            document.getElementById('ui-balance').textContent = formatMoney(appData.balance);
+            document.getElementById('ui-balance').className = `text-2xl sm:text-3xl font-black z-10 ${appData.balance >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            document.getElementById('ui-streak').textContent = appData.streak;
+
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            let monthReward = 0;
+            let monthPenalty = 0;
+
+            appData.logs.forEach(log => {
+                const logDate = new Date(log.date);
+                if (logDate.getMonth() === currentMonth && logDate.getFullYear() === currentYear) {
+                    if (log.totalAmount > 0) monthReward += log.totalAmount;
+                    if (log.totalAmount < 0) monthPenalty += Math.abs(log.totalAmount);
+                }
+            });
+
+            document.getElementById('ui-month-reward').textContent = `+${formatMoney(monthReward)}`;
+            document.getElementById('ui-month-penalty').textContent = `-${formatMoney(monthPenalty)}`;
+
+            const historyContainer = document.getElementById('history-list');
+            historyContainer.innerHTML = '';
+
+            if(appData.logs.length === 0) {
+                historyContainer.innerHTML = `
+                    <div class="text-center p-10 border border-dashed border-slate-700 rounded-3xl mt-5">
+                        <div class="text-slate-600 text-5xl mb-3"><i class="fas fa-bed"></i></div>
+                        <p class="text-slate-400 text-sm">Chưa có dữ liệu nào.<br>Hãy đi ngủ sớm và ghi nhận ngay!</p>
+                    </div>`;
+                return;
+            }
+
+            appData.logs.forEach(log => {
+                const isPositive = log.totalAmount >= 0;
+                const dateObj = new Date(log.date);
+                const displayDate = `${dateObj.getDate().toString().padStart(2,'0')}/${(dateObj.getMonth()+1).toString().padStart(2,'0')}`;
+                
+                const card = document.createElement('div');
+                card.className = `glass-panel rounded-2xl p-4 flex justify-between items-center border-l-4 transition-all hover:scale-[1.02] ${isPositive ? 'border-l-emerald-500' : 'border-l-rose-500'}`;
+                
+                let bonusHtml = '';
+                if(log.streakBonus > 0) {
+                    bonusHtml = `<div class="inline-flex items-center mt-2 px-2 py-1 bg-orange-500/10 rounded-md border border-orange-500/20"><i class="fas fa-fire text-orange-400 text-xs mr-1"></i><span class="text-[10px] text-orange-400 font-bold">${log.streakMsg} (+${formatMoney(log.streakBonus)})</span></div>`;
+                }
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-end space-x-2">
+                            <h4 class="font-bold text-white text-xl leading-none">${log.time}</h4>
+                            <span class="text-xs text-slate-400 font-medium mb-0.5">${displayDate}</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-1.5">${log.msg}</p>
+                        ${bonusHtml}
+                    </div>
+                    <div class="text-right flex flex-col justify-between h-full">
+                        <span class="font-black text-lg ${isPositive ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${log.totalAmount > 0 ? '+' : ''}${log.totalAmount === 0 ? '0đ' : formatMoney(log.totalAmount)}
+                        </span>
+                        <div class="text-[10px] font-semibold text-slate-500 mt-1 bg-slate-800/50 px-2 py-0.5 rounded-full inline-block ml-auto">Chuỗi: ${log.resultingStreak}</div>
+                    </div>
+                `;
+                historyContainer.appendChild(card);
+            });
+        }
+
+        // --- Helpers ---
+        function formatMoney(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "đ";
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('nav-active'));
+
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`nav-${tabId}`).classList.add('nav-active');
+        }
+
+        let toastTimeout;
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const titleEl = document.getElementById('toast-title');
+            const msgEl = document.getElementById('toast-msg');
+            const iconContainer = document.getElementById('toast-icon-container');
+            const iconEl = document.getElementById('toast-icon');
+
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            
+            if(type === 'success') {
+                iconContainer.className = 'w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]';
+                iconEl.className = 'fas fa-check';
+                toast.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+            } else {
+                iconContainer.className = 'w-10 h-10 rounded-full flex items-center justify-center mr-3 shrink-0 bg-rose-500/20 text-rose-400 border border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.2)]';
+                iconEl.className = 'fas fa-xmark';
+                toast.style.borderColor = 'rgba(244, 63, 94, 0.3)';
+            }
+
+            toast.classList.remove('opacity-0', '-translate-y-10');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-10');
+            }, 3500);
+        }
+    </script>
+</body>
+</html>

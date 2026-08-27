@@ -1,0 +1,12 @@
+# Không đưa cấu hình cá nhân / URL Web App lên repo công khai
+config.local.js
+*.local
+
+# Rác hệ thống
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
