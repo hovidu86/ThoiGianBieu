@@ -1,6 +1,6 @@
 {
-  "versionCode": 14,
-  "versionName": "2.9",
+  "versionCode": 15,
+  "versionName": "3.0",
   "apk": "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-  "ghiChu": "Gỡ quyền lớp phủ giữa quãng nghỉ không còn là đường thoát: màn hình sẽ tự tắt cho tới hết giờ nghỉ."
+  "ghiChu": "Gỡ quyền hiển thị giữa lúc bị chặn không còn thoát được: app phát hiện lớp phủ bị hệ thống lấy đi và chuyển sang tắt màn hình."
 }

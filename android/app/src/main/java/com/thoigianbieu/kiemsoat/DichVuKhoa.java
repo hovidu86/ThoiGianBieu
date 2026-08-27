@@ -102,6 +102,7 @@ public class DichVuKhoa extends Service {
     /** Lúc bắt đầu hoãn khoá vì đang gọi điện. 0 = không hoãn. */
     private long hoanTuLuc;
     private long lanSoatLichCuoi;
+    private long lanKhoaLaiCuoi;
 
     private BroadcastReceiver batTatManHinh;
 
@@ -361,9 +362,14 @@ public class DichVuKhoa extends Service {
     /* ==================== KHOÁ THEO GIỜ ==================== */
 
     private void khoa() {
-        if (lopKhoa != null) {
+        if (conTrenManHinh(lopKhoa)) {
             khoaManHinhNeuDuoc();
             return;
+        }
+        if (lopKhoa != null) {
+            NhatKy.ghi(this, "loi-lop-khoa", "tham chiếu cũ đã chết, dọn đi");
+            try { wm.removeView(lopKhoa); } catch (Exception ignore) { }
+            lopKhoa = null;
         }
         if (!ch.daDatMa()) return;
 
@@ -392,16 +398,40 @@ public class DichVuKhoa extends Service {
         dungLopKhoa();
         khoaManHinhNeuDuoc();
 
+        // Canh gác lớp khoá đêm: soát mỗi 5 giây, nhưng chỉ tắt màn hình lại
+        // mỗi CHU_KY_KHOA_LAI. Soát dày để bắt kịp lúc lớp phủ bị gỡ mất.
+        lanKhoaLaiCuoi = System.currentTimeMillis();
         canhGac = new Runnable() {
             @Override
             public void run() {
-                if (lopKhoa == null) return;
-                NhatKy.ghi(DichVuKhoa.this, "khoa-lai", "vẫn chưa nhập đúng mã");
-                khoaManHinhNeuDuoc();
-                tay.postDelayed(this, CHU_KY_KHOA_LAI);
+                if (lopKhoa == null) return;   // đã nhập đúng mã, xong việc
+                long bayGio = System.currentTimeMillis();
+
+                if (!conTrenManHinh(lopKhoa)) {
+                    // Gỡ quyền hiển thị giữa lúc đang khoá. Dựng lại nếu được,
+                    // không được thì tắt màn hình cho tới khi bật lại quyền.
+                    if (Settings.canDrawOverlays(DichVuKhoa.this)) {
+                        NhatKy.ghi(DichVuKhoa.this, "khoa-dung-lai",
+                                "lớp phủ khoá đã bị gỡ, dựng lại");
+                        lopKhoa = null;
+                        dungLopKhoa();
+                    } else {
+                        ch.nqTangSoNeTranh();
+                        NhatKy.ghi(DichVuKhoa.this, "ne-tranh",
+                                "gỡ quyền lớp phủ giữa lúc khoá, chuyển sang tắt màn hình");
+                        baoMatQuyenLopPhu();
+                        khoaManHinhNeuDuoc();
+                        lanKhoaLaiCuoi = bayGio;
+                    }
+                } else if (bayGio - lanKhoaLaiCuoi >= CHU_KY_KHOA_LAI) {
+                    NhatKy.ghi(DichVuKhoa.this, "khoa-lai", "vẫn chưa nhập đúng mã");
+                    khoaManHinhNeuDuoc();
+                    lanKhoaLaiCuoi = bayGio;
+                }
+                tay.postDelayed(this, 5000);
             }
         };
-        tay.postDelayed(canhGac, CHU_KY_KHOA_LAI);
+        tay.postDelayed(canhGac, 5000);
     }
 
     private void dungLopKhoa() {
@@ -755,7 +785,12 @@ public class DichVuKhoa extends Service {
                     return;
                 }
 
-                if (lopKhoa == null && lopNghi == null
+                // Phải hỏi "cửa sổ CÓ CÒN TRÊN MÀN HÌNH không", chứ không phải
+                // "biến tham chiếu có khác null không". Gỡ quyền giữa chừng thì
+                // hệ thống lấy mất cửa sổ mà app không hề được báo — biến vẫn
+                // trỏ vào một cái xác, và vòng canh gác tưởng màn chắn còn đó
+                // nên không làm gì. Đúng lỗi user vừa gặp.
+                if (lopKhoa == null && !conTrenManHinh(lopNghi)
                         && manHinhDangBat() && !mayDangKhoa()) {
                     if (Settings.canDrawOverlays(DichVuKhoa.this)) {
                         NhatKy.ghi(DichVuKhoa.this, "nq-canh-gac",
@@ -806,9 +841,13 @@ public class DichVuKhoa extends Service {
 
     /** Lớp phủ nghỉ: chỉ có đồng hồ đếm ngược, không đòi mã. Hết giờ tự tan. */
     private void hienLopNghi() {
+        if (conTrenManHinh(lopNghi)) return;   // đang hiện thật thì thôi
+
+        // Có tham chiếu nhưng cửa sổ không còn trên màn hình: hệ thống đã lấy
+        // đi khi người dùng gỡ quyền. Dọn cái xác đó đi rồi mới dựng lại được.
         if (lopNghi != null) {
-            NhatKy.ghi(this, "nq-lop-nghi", "đã hiện sẵn rồi, bỏ qua");
-            return;
+            NhatKy.ghi(this, "nq-lop-nghi", "tham chiếu cũ đã chết, dọn đi");
+            goLopNghi();
         }
         if (!Settings.canDrawOverlays(this)) {
             NhatKy.ghi(this, "nq-lop-nghi", "KHÔNG dựng được: thiếu quyền lớp phủ");
@@ -892,6 +931,17 @@ public class DichVuKhoa extends Service {
             }
         };
         tay.post(nhipNghi);
+    }
+
+    /**
+     * Cửa sổ này còn thật sự nằm trên màn hình không.
+     *
+     * Khác hẳn với "biến có khác null không": khi người dùng gỡ quyền hiển thị,
+     * hệ thống gỡ luôn cửa sổ mà không báo cho app biết, nên biến vẫn trỏ vào
+     * một cái xác.
+     */
+    private boolean conTrenManHinh(View v) {
+        return v != null && v.isAttachedToWindow();
     }
 
     private void goLopNghi() {
