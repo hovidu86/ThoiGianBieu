@@ -1,6 +1,6 @@
 {
-  "versionCode": 16,
-  "versionName": "3.1",
-  "apk": "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-  "ghiChu": "Gỡ quyền hiển thị không còn thoát được quãng nghỉ: mất quyền là màn hình tự tắt lại cho tới hết giờ."
+    "versionCode":  17,
+    "versionName":  "3.2",
+    "apk":  "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
+    "ghiChu":  "Qua giờ kết thúc thì tự mở khoá đêm, khỏi cần mã. Sửa dùng ngắt quãng: máy có mã khoá màn hình hệ thống thì trước giờ chưa từng đếm được lúc mở khoá bình thường ban ngày; dịch vụ bị hệ thống giết giữa chừng không còn tính oan cả khoảng chết thành đang dùng máy. Thêm nút tắt hẳn khoá theo giờ. Bỏ email nhắc ngủ hàng ngày."
 }

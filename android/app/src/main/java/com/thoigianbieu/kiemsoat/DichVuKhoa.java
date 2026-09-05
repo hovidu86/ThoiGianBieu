@@ -97,6 +97,7 @@ public class DichVuKhoa extends Service {
     private Runnable nhipNghi;
     private Runnable nhipDemLui;
     private Runnable canhGacNghi;
+    private Runnable canhGacMoKhoaHeThong;
     private boolean daCanhBaoDot;
     /** Mỗi quãng nghỉ chỉ đếm một lần né tránh và báo một lần, khỏi dội liên tục. */
     private boolean daBaoMatQuyen;
@@ -119,8 +120,14 @@ public class DichVuKhoa extends Service {
         dangKyManHinh();
 
         // Dịch vụ vừa dựng lại giữa lúc màn hình đang bật thì phải đếm tiếp ngay.
-        if (manHinhDangBat() && !mayDangKhoa()) {
-            manHinhVaoDung(System.currentTimeMillis());
+        if (manHinhDangBat()) {
+            if (!mayDangKhoa()) {
+                manHinhVaoDung(System.currentTimeMillis());
+            } else if (nq.dangApDung(System.currentTimeMillis())) {
+                // Màn bật nhưng còn khoá hệ thống, ngóng mở khoá — chỉ đáng
+                // ngóng khi ngắt quãng thật sự đang áp dụng lúc này.
+                batCanhGacMoKhoaHeThong();
+            }
         }
     }
 
@@ -190,8 +197,14 @@ public class DichVuKhoa extends Service {
         soatLaiLich();
 
         long bayGio = System.currentTimeMillis();
-        if (nq.dangApDung(bayGio) && manHinhDangBat() && !mayDangKhoa() && lopKhoa == null) {
-            manHinhVaoDung(bayGio);
+        // nhipNgatQuang != null nghĩa là nhịp đang tự chạy tốt (dịch vụ không
+        // hề chết) — đụng vào chỉ tổ đặt lại nhịp về chu kỳ thô 10 giây, làm
+        // trễ mất lúc sắp hết hạn mức đang được soát sát từng 500ms. Chỉ can
+        // thiệp khi thực sự chưa có nhịp nào chạy.
+        if (nq.dangApDung(bayGio) && manHinhDangBat() && lopKhoa == null
+                && nhipNgatQuang == null) {
+            if (!mayDangKhoa()) manHinhVaoDung(bayGio);
+            else if (canhGacMoKhoaHeThong == null) batCanhGacMoKhoaHeThong();
         }
         // Dịch vụ vừa dựng lại giữa quãng nghỉ thì vòng canh gác chưa ai bật.
         if (nq.dangNghi(bayGio) && canhGacNghi == null) batCanhGacNghi();
@@ -210,7 +223,8 @@ public class DichVuKhoa extends Service {
                         + (nq.dangNghi(bayGio) ? ", đang nghỉ" : "")
                         + (nq.dangApDung(bayGio) ? "" : ", NGOÀI khung giờ")
                         + (manHinhDangBat() ? ", màn hình bật" : ", màn hình tắt")
-                        + (nhipNgatQuang != null ? ", nhịp đang chạy" : ", NHỊP CHƯA CHẠY"));
+                        + (nhipNgatQuang != null ? ", nhịp đang chạy" : ", NHỊP CHƯA CHẠY")
+                        + (canhGacMoKhoaHeThong != null ? ", đang ngóng mở khoá hệ thống" : ""));
     }
 
     /**
@@ -219,7 +233,7 @@ public class DichVuKhoa extends Service {
      */
     private void soatLaiLich() {
         if (lopKhoa != null) return;
-        if (!ch.daDatMa()) return;
+        if (!ch.daDatMa() || !ch.khoaTheoGioBat()) return;
 
         long bayGio = System.currentTimeMillis();
         if (ch.mocKhoa() > 0 && bayGio >= ch.mocKhoa() && ch.trongKhoangKhoa(bayGio)) {
@@ -260,15 +274,12 @@ public class DichVuKhoa extends Service {
         PendingIntent moApp = PendingIntent.getActivity(this, 0, yMoApp,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        String phu;
-        if (!ch.daDatMa()) {
-            phu = getString(R.string.chua_dat_ma);
-        } else if (ch.ngatQuangBat()) {
-            phu = getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()))
-                    + " · " + getString(R.string.ngat_quang_dang_bat, ch.nqPhutDung(), ch.nqPhutNghi());
-        } else {
-            phu = getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()));
-        }
+        String khoaTheoGio = !ch.daDatMa() ? getString(R.string.chua_dat_ma)
+                : !ch.khoaTheoGioBat() ? getString(R.string.khoa_theo_gio_dang_tat)
+                : getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa()));
+        String phu = ch.ngatQuangBat()
+                ? khoaTheoGio + " · " + getString(R.string.ngat_quang_dang_bat, ch.nqPhutDung(), ch.nqPhutNghi())
+                : khoaTheoGio;
 
         Notification.Builder b = new Notification.Builder(this, KENH_NEN)
                 .setContentTitle(getString(R.string.ten_app))
@@ -373,7 +384,7 @@ public class DichVuKhoa extends Service {
             try { wm.removeView(lopKhoa); } catch (Exception ignore) { }
             lopKhoa = null;
         }
-        if (!ch.daDatMa()) return;
+        if (!ch.daDatMa() || !ch.khoaTheoGioBat()) return;
 
         // Đang gọi điện thì hoãn lại, nhịp soát sau sẽ khoá bù.
         if (choPhepHoan()) {
@@ -408,6 +419,17 @@ public class DichVuKhoa extends Service {
             public void run() {
                 if (lopKhoa == null) return;   // đã nhập đúng mã, xong việc
                 long bayGio = System.currentTimeMillis();
+
+                // Đã qua giờ kết thúc (hoặc tính năng vừa bị tắt) mà vẫn còn
+                // kẹt trong lớp khoá — chờ tới sáng hôm sau người dùng thức
+                // dậy trễ hơn giờ khoá kết thúc thì không có lý do gì bắt nhập
+                // mã nữa. Tự mở, không cần đúng mã.
+                if (!ch.khoaTheoGioBat() || !ch.trongKhoangKhoa(bayGio)) {
+                    moKhoaTuDong(!ch.khoaTheoGioBat()
+                            ? "khoá theo giờ vừa bị tắt"
+                            : "đã qua giờ kết thúc " + ch.gioKetThuc());
+                    return;
+                }
 
                 if (!conTrenManHinh(lopKhoa)) {
                     // Gỡ quyền hiển thị giữa lúc đang khoá. Dựng lại nếu được,
@@ -597,6 +619,23 @@ public class DichVuKhoa extends Service {
         datMocSauKhiMo();
     }
 
+    /**
+     * Tự mở lớp khoá mà không cần đúng mã — dùng khi phát hiện đã qua giờ kết
+     * thúc hoặc khoá theo giờ vừa bị tắt giữa lúc đang khoá. Khác {@link
+     * #moKhoa()} duy nhất ở chỗ không đòi mã, còn lại xử lý y hệt.
+     */
+    private void moKhoaTuDong(String lyDo) {
+        NhatKy.ghi(this, "het-gio-khoa", lyDo + " — tự mở, không cần nhập mã");
+        if (nhipDem != null) tay.removeCallbacks(nhipDem);
+        if (nhipDongHo != null) tay.removeCallbacks(nhipDongHo);
+        if (canhGac != null) tay.removeCallbacks(canhGac);
+        if (lopKhoa != null) {
+            try { wm.removeView(lopKhoa); } catch (Exception ignore) { }
+            lopKhoa = null;
+        }
+        datMocSauKhiMo();
+    }
+
     private void datMocSauKhiMo() {
         ch.datMocKhoa(ch.mocSauKhiMo(System.currentTimeMillis()));
         LenLich.datLai(this);
@@ -628,8 +667,16 @@ public class DichVuKhoa extends Service {
                     manHinhVaoDung(bayGio);
                 } else if (Intent.ACTION_SCREEN_ON.equals(viec)) {
                     soatLichKhiThucDay(bayGio);
-                    // Máy không đặt khoá màn hình thì không có USER_PRESENT.
-                    if (!mayDangKhoa()) manHinhVaoDung(bayGio);
+                    if (!mayDangKhoa()) {
+                        manHinhVaoDung(bayGio);
+                    } else if (nq.dangApDung(bayGio)) {
+                        // Máy có đặt khoá màn hình hệ thống (mã PIN/vân tay của
+                        // Android, khác với mã của app). USER_PRESENT không
+                        // bao giờ tới trên máy này, nên không có tin nào báo
+                        // lúc người dùng mở khoá xong — phải tự ngóng. Chỉ
+                        // đáng ngóng khi ngắt quãng thật sự đang áp dụng.
+                        batCanhGacMoKhoaHeThong();
+                    }
                 }
             }
         };
@@ -669,8 +716,44 @@ public class DichVuKhoa extends Service {
     private void manHinhRoiDung(long bayGio) {
         nq.dungDem(bayGio);
         dungNhipNgatQuang();
+        dungCanhGacMoKhoaHeThong();   // tắt màn hình rồi thì thôi ngóng mở khoá
         goLopDemLui();
         goLopNghi();   // màn hình tắt rồi thì lớp phủ để đó vô nghĩa
+    }
+
+    /**
+     * Ngóng lúc người dùng mở xong khoá màn hình HỆ THỐNG (mã PIN/vân tay của
+     * Android — khác hẳn mã của app, dùng cho lớp khoá đêm). Máy này không bao
+     * giờ gửi USER_PRESENT (đã xác nhận bằng nhật ký thật), nên SCREEN_ON lúc
+     * máy đang khoá không có tin nào báo tiếp theo khi mở khoá xong — không tự
+     * ngóng thì ngắt quãng nằm im suốt, bất kể dùng máy bao lâu. Hai giây một
+     * lần, giống hệt cách canh gác quãng nghỉ đã dùng.
+     */
+    private void batCanhGacMoKhoaHeThong() {
+        dungCanhGacMoKhoaHeThong();
+        canhGacMoKhoaHeThong = new Runnable() {
+            @Override
+            public void run() {
+                if (!manHinhDangBat()) {
+                    // Màn hình tắt lại trước khi kịp mở khoá — không có gì để
+                    // đếm, tin SCREEN_OFF ở trên đã lo dọn rồi.
+                    canhGacMoKhoaHeThong = null;
+                    return;
+                }
+                if (!mayDangKhoa()) {
+                    canhGacMoKhoaHeThong = null;
+                    manHinhVaoDung(System.currentTimeMillis());
+                    return;
+                }
+                tay.postDelayed(this, 2000);
+            }
+        };
+        tay.postDelayed(canhGacMoKhoaHeThong, 2000);
+    }
+
+    private void dungCanhGacMoKhoaHeThong() {
+        if (canhGacMoKhoaHeThong != null) tay.removeCallbacks(canhGacMoKhoaHeThong);
+        canhGacMoKhoaHeThong = null;
     }
 
     private void batNhipNgatQuang() {
@@ -681,12 +764,24 @@ public class DichVuKhoa extends Service {
         NhatKy.ghi(this, "nq-bat-nhip",
                 "đã dùng " + (nq.daDung(bayGio) / 60_000) + "/" + ch.nqPhutDung() + " phút");
 
+        // Báo thức dự phòng đúng lúc hết hạn mức: nhịp Handler bên dưới chết
+        // theo dịch vụ nếu bị hệ thống giết, báo thức thì AlarmManager tự giữ.
+        long con = nq.conLai(bayGio);
+        if (con > 0) LenLich.datBaoThucNgatQuang(this, bayGio + con);
+
         nhipNgatQuang = new Runnable() {
             @Override
             public void run() {
                 long cho = soatNgatQuang();
-                if (cho > 0) tay.postDelayed(this, cho);
-                else nhipNgatQuang = null;
+                if (cho > 0) {
+                    tay.postDelayed(this, cho);
+                } else {
+                    // Tự thoát vì tính năng vừa tắt/ra khỏi khung giờ, hoặc vì
+                    // đã vào nghỉ/đang khoá đêm — dùng dungNhipNgatQuang() để
+                    // dọn luôn báo thức dự phòng đã đặt ở trên, không thì nó
+                    // nằm đó tự nổ vô nghĩa đúng lúc đã tính trước.
+                    dungNhipNgatQuang();
+                }
             }
         };
         tay.postDelayed(nhipNgatQuang, SOAT_NQ_DAY);
@@ -695,6 +790,7 @@ public class DichVuKhoa extends Service {
     private void dungNhipNgatQuang() {
         if (nhipNgatQuang != null) tay.removeCallbacks(nhipNgatQuang);
         nhipNgatQuang = null;
+        LenLich.huyBaoThucNgatQuang(this);
     }
 
     /** Trả về số mili giây tới lần soát kế tiếp. 0 nghĩa là thôi soát. */
@@ -702,6 +798,10 @@ public class DichVuKhoa extends Service {
         long bayGio = System.currentTimeMillis();
         if (lopKhoa != null) return SOAT_NQ_THUA;
         if (!nq.dangApDung(bayGio)) return 0;
+
+        // Dời mốc bắt đầu phiên tới bây giờ mỗi lần soát, để nqBatDauPhien
+        // luôn là một mốc gần đây — xem giải thích trong NgatQuang.checkpoint().
+        nq.checkpoint(bayGio);
 
         if (nq.dangNghi(bayGio)) {
             hienLopNghi();
@@ -743,6 +843,9 @@ public class DichVuKhoa extends Service {
         }
         hoanTuLuc = 0;
         daBaoMatQuyen = false;
+        // Hết hạn mức rồi thì không cần báo thức dự phòng nữa — dọn để khỏi
+        // dựng dịch vụ dậy vô ích lúc đang nghỉ.
+        LenLich.huyBaoThucNgatQuang(this);
         goLopDemLui();
         nq.batDauNghi(bayGio);
         daCanhBaoDot = false;
@@ -1086,6 +1189,7 @@ public class DichVuKhoa extends Service {
     public void onDestroy() {
         dangChay = false;
         dungCanhGacNghi();
+        dungCanhGacMoKhoaHeThong();
         goLopDemLui();
         if (batTatManHinh != null) {
             try { unregisterReceiver(batTatManHinh); } catch (Exception ignore) { }

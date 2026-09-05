@@ -34,6 +34,13 @@ public class BaoThucReceiver extends BroadcastReceiver {
             return;
         }
 
+        if (LenLich.VIEC_NQ_HET_HAN.equals(viec)) {
+            // Dựng dịch vụ bằng hành động canh giữ mặc định: nó tự soát lại
+            // toàn bộ, thấy hết hạn mức thì bắt nghỉ ngay tại đó.
+            goiDichVu(ctx, DichVuKhoa.HANH_DONG_CANH_GIU, 0, false);
+            return;
+        }
+
         boolean laViecKhoa = !LenLich.VIEC_CANH_BAO.equals(viec);
         goiDichVu(ctx,
                 laViecKhoa ? DichVuKhoa.HANH_DONG_KHOA : DichVuKhoa.HANH_DONG_CANH_BAO,

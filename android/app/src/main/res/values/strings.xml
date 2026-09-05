@@ -220,6 +220,8 @@
     <string name="goi_y_moc_chuoi">Giữ chuỗi đủ số ngày bên trái thì được thưởng thêm số tiền bên phải.</string>
 
     <string name="nhom_khoa_theo_gio">Khoá theo giờ</string>
+    <string name="khoa_theo_gio_bat">Bật khoá theo giờ</string>
+    <string name="khoa_theo_gio_dang_tat">Khoá theo giờ: đang tắt</string>
     <string name="nhan_gio_khoa_ngan">Giờ khoá lần đầu</string>
     <string name="nhan_gio_ket_thuc_ngan">Giờ thôi khoá</string>
     <string name="nhan_nq_phut_dung_ngan">Dùng mỗi đợt (phút)</string>

@@ -106,6 +106,15 @@
                 style="@style/Nhom"
                 android:text="@string/nhom_khoa_theo_gio" />
 
+            <CheckBox
+                android:id="@+id/chk_khoa_bat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/khoa_theo_gio_bat"
+                android:textColor="@color/chu"
+                android:textSize="15sp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

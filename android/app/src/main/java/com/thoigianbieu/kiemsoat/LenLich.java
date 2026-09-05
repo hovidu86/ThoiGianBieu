@@ -21,12 +21,14 @@ public class LenLich {
     public static final String VIEC_CANH_BAO = "canh_bao";
     public static final String VIEC_NHIP = "nhip";
     public static final String VIEC_DEM_LUI = "dem_lui";
+    public static final String VIEC_NQ_HET_HAN = "nq_het_han";
     public static final String SO_PHUT = "so_phut";
 
     private static final int MA_KHOA = 1000;
     private static final int MA_CANH_BAO = 2000;   // + số phút
     private static final int MA_NHIP = 3000;
     private static final int MA_DEM_LUI = 4000;
+    private static final int MA_NQ_HET_HAN = 7000;
 
     /**
      * Nhịp tự hồi phục, cũng là cái phao dựng lại dịch vụ.
@@ -43,35 +45,42 @@ public class LenLich {
     public static void datLai(Context ctx) {
         CauHinh ch = new CauHinh(ctx);
         huyHet(ctx, ch);
-        if (!ch.daDatMa()) return;
-
-        long bayGio = System.currentTimeMillis();
-        long moc = ch.mocKhoa();
-        if (moc <= bayGio) {
-            moc = ch.trongKhoangKhoa(bayGio) ? bayGio + 60_000L : ch.mocKhoaDauTien(bayGio);
-            ch.datMocKhoa(moc);
-        }
 
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
+        long bayGio = System.currentTimeMillis();
 
-        dat(ctx, am, MA_KHOA, moc, VIEC_KHOA, 0);
-        // Đồng hồ đếm ngược 10 giây cuối trước khi tắt màn hình.
-        if (moc - 10_000 > bayGio) dat(ctx, am, MA_DEM_LUI, moc - 10_000, VIEC_DEM_LUI, 0);
-
-        // Nhớ lại đúng những mốc đã đặt, để lần sau huỷ cho sạch.
-        java.util.List<Integer> daDat = new java.util.ArrayList<>();
-        for (int phut : ch.mocCanhBao()) {
-            long luc = moc - phut * 60_000L;
-            if (luc > bayGio) {
-                dat(ctx, am, MA_CANH_BAO + phut, luc, VIEC_CANH_BAO, phut);
-                daDat.add(phut);
+        // Chưa đặt mã, hoặc người dùng đã tắt hẳn khoá theo giờ: không đặt báo
+        // thức khoá nào cả. Nhịp tự hồi phục vẫn phải chạy — dùng ngắt quãng
+        // không phụ thuộc mã hay công tắc này.
+        if (ch.daDatMa() && ch.khoaTheoGioBat()) {
+            long moc = ch.mocKhoa();
+            if (moc <= bayGio) {
+                moc = ch.trongKhoangKhoa(bayGio) ? bayGio + 60_000L : ch.mocKhoaDauTien(bayGio);
+                ch.datMocKhoa(moc);
             }
-        }
-        ch.luuMocCanhBaoDaDat(daDat);
-        datNhip(ctx, am, bayGio);
 
-        NhatKy.ghi(ctx, "len-lich", "khoá lúc " + gioPhut(moc));
+            dat(ctx, am, MA_KHOA, moc, VIEC_KHOA, 0);
+            // Đồng hồ đếm ngược 10 giây cuối trước khi tắt màn hình.
+            if (moc - 10_000 > bayGio) dat(ctx, am, MA_DEM_LUI, moc - 10_000, VIEC_DEM_LUI, 0);
+
+            // Nhớ lại đúng những mốc đã đặt, để lần sau huỷ cho sạch.
+            java.util.List<Integer> daDat = new java.util.ArrayList<>();
+            for (int phut : ch.mocCanhBao()) {
+                long luc = moc - phut * 60_000L;
+                if (luc > bayGio) {
+                    dat(ctx, am, MA_CANH_BAO + phut, luc, VIEC_CANH_BAO, phut);
+                    daDat.add(phut);
+                }
+            }
+            ch.luuMocCanhBaoDaDat(daDat);
+            NhatKy.ghi(ctx, "len-lich", "khoá lúc " + gioPhut(moc));
+        } else {
+            ch.luuMocCanhBaoDaDat(new java.util.ArrayList<>());
+            NhatKy.ghi(ctx, "len-lich", !ch.daDatMa()
+                    ? "chưa đặt mã, không khoá gì" : "khoá theo giờ đang tắt");
+        }
+        datNhip(ctx, am, bayGio);
     }
 
     /**
@@ -97,6 +106,25 @@ public class LenLich {
         } catch (SecurityException e) {
             am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, luc, pi);
         }
+    }
+
+    /**
+     * Báo thức đúng lúc hết hạn mức dùng ngắt quãng. Không có nó thì việc bắt
+     * nghỉ chỉ trông vào nhịp Handler trong dịch vụ — dịch vụ bị hệ thống giết
+     * (Samsung hay làm việc này) là nhịp chết theo, dùng vượt hạn mức rất
+     * nhiều mà màn hình không tự tắt, phải chờ tới nhịp hồi phục 30 phút mới
+     * biết. Báo thức thì AlarmManager tự giữ, dịch vụ có chết cũng không mất.
+     */
+    public static void datBaoThucNgatQuang(Context ctx, long luc) {
+        AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        if (am == null) return;
+        dat(ctx, am, MA_NQ_HET_HAN, luc, VIEC_NQ_HET_HAN, 0);
+    }
+
+    public static void huyBaoThucNgatQuang(Context ctx) {
+        AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
+        if (am == null) return;
+        am.cancel(taoY(ctx, MA_NQ_HET_HAN, VIEC_NQ_HET_HAN, 0));
     }
 
     private static void huyHet(Context ctx, CauHinh ch) {

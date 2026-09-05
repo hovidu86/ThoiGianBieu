@@ -9,10 +9,12 @@
  *       Who has access:  Anyone      <-- bắt buộc, nếu không app sẽ báo lỗi
  *     Copy "Web app URL" (kết thúc bằng /exec) dán vào phần Cài đặt của app.
  *  4. TỰ ĐỘNG HÓA: chọn hàm setupTriggers ở thanh trên cùng rồi bấm Run.
- *     Từ đó Google sẽ tự làm 3 việc mỗi ngày, kể cả khi bạn không mở app:
- *       - Nhắc chuẩn bị ngủ qua email đúng giờ REMIND_HOUR.
+ *     Từ đó Google sẽ tự làm 2 việc, kể cả khi bạn không mở app:
  *       - Sáng hôm sau nếu quên ghi thì tự chấm "Không ghi nhận" + phạt.
  *       - Tối Chủ nhật gửi báo cáo tuần.
+ *     (Nhắc chuẩn bị ngủ hàng đêm không còn gửi email nữa — app Android tự
+ *     nhắc bằng thông báo tại chỗ. Nếu trước đó đã chạy setupTriggers rồi,
+ *     chạy lại MỘT LẦN sau khi dán bản này để xoá nốt email nhắc ngủ cũ.)
  *
  *  Mỗi lần sửa mã phải Deploy -> Manage deployments -> Edit -> New version.
  *******************************************************************/
@@ -256,8 +258,8 @@ function setupTriggers() {
     ScriptApp.deleteTrigger(existing[i]);
   }
 
-  ScriptApp.newTrigger('dailyReminder').timeBased()
-    .everyDays(1).atHour(CONFIG.REMIND_HOUR).nearMinute(0).create();
+  // KHÔNG đặt lại 'dailyReminder' nữa: app Android giờ tự nhắc giờ ngủ bằng
+  // thông báo tại chỗ (NhacNgu.java), khỏi cần thêm một email mỗi ngày nữa.
 
   ScriptApp.newTrigger('checkMissingNight').timeBased()
     .everyDays(1).atHour(CONFIG.MISS_CHECK_HOUR).nearMinute(0).create();
@@ -266,8 +268,9 @@ function setupTriggers() {
     .onWeekDay(ScriptApp.WeekDay.SUNDAY).atHour(CONFIG.WEEKLY_REPORT_HOUR).nearMinute(0).create();
 
   getSheet();
-  return 'Đã bật 3 tự động: nhắc ngủ ' + CONFIG.REMIND_HOUR + 'h, kiểm tra lúc ' +
-    CONFIG.MISS_CHECK_HOUR + 'h, báo cáo tuần Chủ nhật ' + CONFIG.WEEKLY_REPORT_HOUR + 'h.';
+  return 'Đã bật 2 tự động: kiểm tra quên ghi lúc ' + CONFIG.MISS_CHECK_HOUR +
+    'h, báo cáo tuần Chủ nhật ' + CONFIG.WEEKLY_REPORT_HOUR + 'h. ' +
+    '(Nhắc ngủ hàng ngày đã chuyển hẳn sang thông báo trong app, không gửi email nữa.)';
 }
 
 function removeTriggers() {

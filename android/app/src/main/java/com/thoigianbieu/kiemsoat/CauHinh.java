@@ -38,15 +38,18 @@ public class CauHinh {
     public String maBam()        { return p.getString("maBam", ""); }
     public boolean daDatMa()     { return !maBam().isEmpty(); }
     public long mocKhoa()        { return p.getLong("mocKhoa", 0L); }
+    /** Người dùng có thể tắt hẳn khoá theo giờ mà vẫn giữ nguyên mã và giờ đã đặt. */
+    public boolean khoaTheoGioBat() { return p.getBoolean("khoaTheoGioBat", true); }
 
     public void luu(String gioKhoa, String gioKetThuc, int lapLaiPhut,
-                    String canhBaoPhut, int khoangCachGiay) {
+                    String canhBaoPhut, int khoangCachGiay, boolean khoaTheoGioBat) {
         p.edit()
                 .putString("gioKhoa", gioKhoa)
                 .putString("gioKetThuc", gioKetThuc)
                 .putInt("lapLaiPhut", lapLaiPhut)
                 .putString("canhBaoPhut", canhBaoPhut)
                 .putInt("khoangCachGiay", khoangCachGiay)
+                .putBoolean("khoaTheoGioBat", khoaTheoGioBat)
                 .apply();
     }
 

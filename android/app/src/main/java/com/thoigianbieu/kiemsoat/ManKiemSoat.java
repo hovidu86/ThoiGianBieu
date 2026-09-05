@@ -36,7 +36,7 @@ public class ManKiemSoat {
     private EditText oNqPhutDung, oNqPhutNghi, oNqPhutReset, oNqCanhBao, oNqKhanCap;
     // Bốn ô giờ là TextView: bấm vào mở bảng chọn giờ của hệ thống.
     private TextView oGioKhoa, oGioKetThuc, oNqTuGio, oNqDenGio;
-    private CheckBox chkNqBat, chkNqKhongKhoaKhiGoi;
+    private CheckBox chkKhoaBat, chkNqBat, chkNqKhongKhoaKhiGoi;
     private TextView tinhTrang;
 
     public ManKiemSoat(Activity ac, View goc) {
@@ -44,6 +44,7 @@ public class ManKiemSoat {
         this.goc = goc;
         ch = new CauHinh(ac);
 
+        chkKhoaBat = goc.findViewById(R.id.chk_khoa_bat);
         oGioKhoa = goc.findViewById(R.id.o_gio_khoa);
         oGioKetThuc = goc.findViewById(R.id.o_gio_ket_thuc);
         oLapLai = goc.findViewById(R.id.o_lap_lai);
@@ -63,6 +64,7 @@ public class ManKiemSoat {
         chkNqBat = goc.findViewById(R.id.chk_nq_bat);
         chkNqKhongKhoaKhiGoi = goc.findViewById(R.id.chk_nq_khong_khoa_khi_goi);
 
+        chkKhoaBat.setChecked(ch.khoaTheoGioBat());
         oGioKhoa.setText(ch.gioKhoa());
         oGioKetThuc.setText(ch.gioKetThuc());
         oLapLai.setText(String.valueOf(ch.lapLaiPhut()));
@@ -122,7 +124,13 @@ public class ManKiemSoat {
         if (!CauHinh.laGio(gioKet)) loi.add(ac.getString(R.string.loi_gio_ket_thuc));
         if (!laSoDuong(lapLai)) loi.add(ac.getString(R.string.loi_lap_lai));
         if (!laSoDuong(khoang)) loi.add(ac.getString(R.string.loi_khoang_cach));
-        if (!canhBao.matches("^[0-9]+( *, *[0-9]+)*$")) loi.add(ac.getString(R.string.loi_canh_bao));
+        // Giới hạn trên: những mốc này cộng vào MA_CANH_BAO=2000 để làm mã báo
+        // thức riêng (LenLich.java). Số quá lớn sẽ đụng mã của các báo thức
+        // khác (nhịp, đếm lùi, hết hạn mức ngắt quãng) — 999 là dư sức cho một
+        // lời cảnh báo trước khi khoá, không ai cần cảnh báo trước cả ngày trời.
+        if (!canhBao.matches("^[0-9]+( *, *[0-9]+)*$") || coSoVuotNguong(canhBao, 999)) {
+            loi.add(ac.getString(R.string.loi_canh_bao));
+        }
 
         // --- dùng ngắt quãng ---
         String nqDung = oNqPhutDung.getText().toString().trim();
@@ -162,7 +170,8 @@ public class ManKiemSoat {
             return;
         }
 
-        ch.luu(gioKhoa, gioKet, Integer.parseInt(lapLai), canhBao, Integer.parseInt(khoang));
+        ch.luu(gioKhoa, gioKet, Integer.parseInt(lapLai), canhBao, Integer.parseInt(khoang),
+                chkKhoaBat.isChecked());
         ch.luuNgatQuang(chkNqBat.isChecked(),
                 Integer.parseInt(nqDung), Integer.parseInt(nqNghi), Integer.parseInt(nqReset),
                 Integer.parseInt(nqCanhBao), nqTu, nqDen,
@@ -182,6 +191,18 @@ public class ManKiemSoat {
         Toast.makeText(ac, ac.getString(R.string.da_luu, LenLich.gioPhut(ch.mocKhoa())),
                 Toast.LENGTH_LONG).show();
         capNhatTinhTrang();
+    }
+
+    /** Có số nào trong danh sách "a, b, c" vượt quá nguong không. */
+    private boolean coSoVuotNguong(String csv, int nguong) {
+        for (String phan : csv.split(",")) {
+            try {
+                if (Integer.parseInt(phan.trim()) > nguong) return true;
+            } catch (NumberFormatException ignore) {
+                // Định dạng sai đã bị regex ở trên bắt riêng.
+            }
+        }
+        return false;
     }
 
     private boolean laSoDuong(String s) {
@@ -273,19 +294,23 @@ public class ManKiemSoat {
         s.append(DichVuKhoa.dangChay ? "  Đang chạy\n" : "  KHÔNG chạy — mở lại app\n");
 
         s.append("\nKHOÁ THEO GIỜ\n");
-        s.append("  Khoảng khoá: ").append(ch.gioKhoa()).append(" → ").append(ch.gioKetThuc()).append('\n');
-        s.append("  Đang trong khoảng khoá: ")
-                .append(ch.trongKhoangKhoa(bayGio) ? "có" : "không").append('\n');
-        if (ch.daDatMa() && ch.mocKhoa() > 0) {
-            long con = ch.mocKhoa() - bayGio;
-            s.append("  Lần khoá kế tiếp: ").append(LenLich.gioPhut(ch.mocKhoa()));
-            if (con > 0) s.append("  (còn ").append(LuatGiacNgu.khoangCach(con)).append(")");
-            s.append('\n');
+        if (!ch.khoaTheoGioBat()) {
+            s.append("  Đang tắt\n");
         } else {
-            s.append("  Chưa đặt mã mở khoá nên chưa khoá gì\n");
+            s.append("  Khoảng khoá: ").append(ch.gioKhoa()).append(" → ").append(ch.gioKetThuc()).append('\n');
+            s.append("  Đang trong khoảng khoá: ")
+                    .append(ch.trongKhoangKhoa(bayGio) ? "có" : "không").append('\n');
+            if (ch.daDatMa() && ch.mocKhoa() > 0) {
+                long con = ch.mocKhoa() - bayGio;
+                s.append("  Lần khoá kế tiếp: ").append(LenLich.gioPhut(ch.mocKhoa()));
+                if (con > 0) s.append("  (còn ").append(LuatGiacNgu.khoangCach(con)).append(")");
+                s.append('\n');
+            } else {
+                s.append("  Chưa đặt mã mở khoá nên chưa khoá gì\n");
+            }
+            s.append("  Mở khoá xong khoá lại sau: ").append(ch.lapLaiPhut()).append(" phút\n");
+            s.append("  Cảnh báo trước: ").append(ch.canhBaoPhut()).append(" phút\n");
         }
-        s.append("  Mở khoá xong khoá lại sau: ").append(ch.lapLaiPhut()).append(" phút\n");
-        s.append("  Cảnh báo trước: ").append(ch.canhBaoPhut()).append(" phút\n");
 
         s.append("\nDÙNG NGẮT QUÃNG\n");
         if (!ch.ngatQuangBat()) {
@@ -377,7 +402,9 @@ public class ManKiemSoat {
         sb.append(danhDau(ch.daDatMa())).append(' ')
                 .append(ac.getString(R.string.tt_ma)).append('\n');
 
-        if (ch.daDatMa() && ch.mocKhoa() > 0) {
+        if (!ch.khoaTheoGioBat()) {
+            sb.append('\n').append(ac.getString(R.string.khoa_theo_gio_dang_tat));
+        } else if (ch.daDatMa() && ch.mocKhoa() > 0) {
             sb.append('\n').append(ac.getString(R.string.khoa_luc, LenLich.gioPhut(ch.mocKhoa())));
         }
         if (ch.ngatQuangBat()) {
