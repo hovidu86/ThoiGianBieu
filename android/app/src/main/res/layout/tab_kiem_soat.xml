@@ -115,6 +115,15 @@
                 android:textColor="@color/chu"
                 android:textSize="15sp" />
 
+            <CheckBox
+                android:id="@+id/chk_chan_am_thanh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/chan_am_thanh_bat"
+                android:textColor="@color/chu"
+                android:textSize="15sp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -36,7 +36,7 @@ public class ManKiemSoat {
     private EditText oNqPhutDung, oNqPhutNghi, oNqPhutReset, oNqCanhBao, oNqKhanCap;
     // Bốn ô giờ là TextView: bấm vào mở bảng chọn giờ của hệ thống.
     private TextView oGioKhoa, oGioKetThuc, oNqTuGio, oNqDenGio;
-    private CheckBox chkKhoaBat, chkNqBat, chkNqKhongKhoaKhiGoi;
+    private CheckBox chkKhoaBat, chkChanAmThanh, chkNqBat, chkNqKhongKhoaKhiGoi;
     private TextView tinhTrang;
 
     public ManKiemSoat(Activity ac, View goc) {
@@ -45,6 +45,7 @@ public class ManKiemSoat {
         ch = new CauHinh(ac);
 
         chkKhoaBat = goc.findViewById(R.id.chk_khoa_bat);
+        chkChanAmThanh = goc.findViewById(R.id.chk_chan_am_thanh);
         oGioKhoa = goc.findViewById(R.id.o_gio_khoa);
         oGioKetThuc = goc.findViewById(R.id.o_gio_ket_thuc);
         oLapLai = goc.findViewById(R.id.o_lap_lai);
@@ -65,6 +66,7 @@ public class ManKiemSoat {
         chkNqKhongKhoaKhiGoi = goc.findViewById(R.id.chk_nq_khong_khoa_khi_goi);
 
         chkKhoaBat.setChecked(ch.khoaTheoGioBat());
+        chkChanAmThanh.setChecked(ch.chanAmThanhBat());
         oGioKhoa.setText(ch.gioKhoa());
         oGioKetThuc.setText(ch.gioKetThuc());
         oLapLai.setText(String.valueOf(ch.lapLaiPhut()));
@@ -172,6 +174,7 @@ public class ManKiemSoat {
 
         ch.luu(gioKhoa, gioKet, Integer.parseInt(lapLai), canhBao, Integer.parseInt(khoang),
                 chkKhoaBat.isChecked());
+        ch.datChanAmThanh(chkChanAmThanh.isChecked());
         ch.luuNgatQuang(chkNqBat.isChecked(),
                 Integer.parseInt(nqDung), Integer.parseInt(nqNghi), Integer.parseInt(nqReset),
                 Integer.parseInt(nqCanhBao), nqTu, nqDen,

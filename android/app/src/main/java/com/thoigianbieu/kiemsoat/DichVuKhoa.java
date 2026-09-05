@@ -13,6 +13,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.graphics.PixelFormat;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
 import android.media.AudioManager;
 import android.os.Build;
 import android.os.Handler;
@@ -108,6 +110,8 @@ public class DichVuKhoa extends Service {
     private long lanKhoaLaiCuoi;
 
     private BroadcastReceiver batTatManHinh;
+    /** Giữ khi đang khoá hoặc đang nghỉ, để buộc app khác (YouTube...) dừng phát. */
+    private AudioFocusRequest yeuCauTieuDiemAmThanh;
 
     @Override
     public void onCreate() {
@@ -399,6 +403,7 @@ public class DichVuKhoa extends Service {
         goLopNghi();
         goLopDemLui();
         NhatKy.ghi(this, "khoa", "mốc " + LenLich.gioPhut(ch.mocKhoa()));
+        chanAmThanhDangPhat();
 
         if (!Settings.canDrawOverlays(this)) {
             // Không có quyền lớp phủ thì vẫn tắt màn hình, chỉ là không đòi được mã.
@@ -637,6 +642,7 @@ public class DichVuKhoa extends Service {
     }
 
     private void datMocSauKhiMo() {
+        thaTieuDiemAmThanh();
         ch.datMocKhoa(ch.mocSauKhiMo(System.currentTimeMillis()));
         LenLich.datLai(this);
         chayNen();
@@ -851,6 +857,7 @@ public class DichVuKhoa extends Service {
         daCanhBaoDot = false;
         NhatKy.ghi(this, "ngat-quang", "hết hạn mức " + ch.nqPhutDung()
                 + " phút, nghỉ " + ch.nqPhutNghi() + " phút");
+        chanAmThanhDangPhat();
         hienLopNghi();
         batCanhGacNghi();
         khoaManHinhNeuDuoc();
@@ -873,6 +880,7 @@ public class DichVuKhoa extends Service {
 
                 if (!nq.dangNghi(bayGio)) {
                     NhatKy.ghi(DichVuKhoa.this, "het-nghi", "được dùng tiếp");
+                    thaTieuDiemAmThanh();
                     nq.ketThucNghi(bayGio);
                     goLopNghi();
                     dungCanhGacNghi();
@@ -993,6 +1001,7 @@ public class DichVuKhoa extends Service {
                 }
                 ch.nqTangSoKhanCap();
                 NhatKy.ghi(this, "khan-cap", "thoát quãng nghỉ sớm");
+                thaTieuDiemAmThanh();
                 nq.ketThucNghi(System.currentTimeMillis());
                 dungCanhGacNghi();
                 goLopNghi();
@@ -1135,6 +1144,49 @@ public class DichVuKhoa extends Service {
     }
 
     /**
+     * Giành quyền phát âm thanh để buộc app khác đang phát (YouTube, nhạc...)
+     * phải dừng. Tắt màn hình không hề dừng âm thanh — video/nhạc cứ phát
+     * tiếp, mà lớp chặn của mình lại không cho với tới nút tạm dừng của app
+     * kia, kẹt cứng không tắt được gì cả. Xin AUDIOFOCUS_GAIN (không phải
+     * TRANSIENT) để app kia hiểu là mất hẳn, không tự phát lại khi mình nhả ra.
+     */
+    private void chanAmThanhDangPhat() {
+        if (!ch.chanAmThanhBat()) return;   // người dùng đã tắt tuỳ chọn này
+        if (yeuCauTieuDiemAmThanh != null) return;   // đã giữ rồi
+        AudioManager am = getSystemService(AudioManager.class);
+        if (am == null) return;
+        try {
+            AudioAttributes att = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
+                    .build();
+            AudioFocusRequest yc = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                    .setAudioAttributes(att)
+                    .setOnAudioFocusChangeListener(doiTieuDiem -> { })
+                    .build();
+            int ket = am.requestAudioFocus(yc);
+            if (ket == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                yeuCauTieuDiemAmThanh = yc;
+                NhatKy.ghi(this, "chan-am-thanh", "đã giành tiêu điểm, app khác phải dừng phát");
+            } else {
+                NhatKy.ghi(this, "chan-am-thanh", "xin tiêu điểm không được, kết quả " + ket);
+            }
+        } catch (Exception e) {
+            NhatKy.ghi(this, "loi-chan-am-thanh", String.valueOf(e.getMessage()));
+        }
+    }
+
+    /** Nhả tiêu điểm âm thanh khi hết khoá/hết nghỉ, để app khác dùng lại bình thường. */
+    private void thaTieuDiemAmThanh() {
+        if (yeuCauTieuDiemAmThanh == null) return;
+        AudioManager am = getSystemService(AudioManager.class);
+        if (am != null) {
+            try { am.abandonAudioFocusRequest(yeuCauTieuDiemAmThanh); } catch (Exception ignore) { }
+        }
+        yeuCauTieuDiemAmThanh = null;
+    }
+
+    /**
      * Có được hoãn khoá vì đang gọi điện không.
      *
      * Phải có trần thời gian. MODE_IN_COMMUNICATION không chỉ có cuộc gọi thật:
@@ -1188,6 +1240,7 @@ public class DichVuKhoa extends Service {
     @Override
     public void onDestroy() {
         dangChay = false;
+        thaTieuDiemAmThanh();
         dungCanhGacNghi();
         dungCanhGacMoKhoaHeThong();
         goLopDemLui();

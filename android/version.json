@@ -1,6 +1,6 @@
 {
-  "versionCode": 18,
-  "versionName": "3.3",
+  "versionCode": 19,
+  "versionName": "3.4",
   "apk": "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-  "ghiChu": "Ghi nhận: giờ lên giường mặc định 22:15, nút Ghi ngay không còn điền nhầm giờ hiện tại. Đổi bảng chọn giờ sang kiểu quay số, phút nhảy 5 một nấc, dễ chọn hơn hẳn mặt đồng hồ cũ. Nhật ký hiển thị dễ nhìn hơn, gọn theo từng dòng thay vì CSV thô."
+  "ghiChu": "Khoá đêm hoặc nghỉ bắt buộc giờ tự giành quyền phát âm thanh, buộc app khác (YouTube, nhạc...) phải dừng thay vì cứ phát tiếp trong lúc màn hình tắt/bị chặn không tắt được. Có công tắc bật/tắt riêng trong tab Khoá máy."
 }

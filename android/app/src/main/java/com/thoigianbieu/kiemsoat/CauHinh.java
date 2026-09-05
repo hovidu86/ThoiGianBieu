@@ -40,6 +40,17 @@ public class CauHinh {
     public long mocKhoa()        { return p.getLong("mocKhoa", 0L); }
     /** Người dùng có thể tắt hẳn khoá theo giờ mà vẫn giữ nguyên mã và giờ đã đặt. */
     public boolean khoaTheoGioBat() { return p.getBoolean("khoaTheoGioBat", true); }
+    /**
+     * Lúc khoá đêm hoặc vào quãng nghỉ bắt buộc, có giành quyền phát âm thanh
+     * để buộc app khác (YouTube, nhạc...) dừng phát không — mặc định có, vì
+     * tắt màn hình không hề dừng âm thanh, để mặc kệ thì kẹt cứng không tắt
+     * được gì. Dùng chung cho cả khoá theo giờ lẫn dùng ngắt quãng.
+     */
+    public boolean chanAmThanhBat() { return p.getBoolean("chanAmThanhBat", true); }
+
+    public void datChanAmThanh(boolean bat) {
+        p.edit().putBoolean("chanAmThanhBat", bat).apply();
+    }
 
     public void luu(String gioKhoa, String gioKetThuc, int lapLaiPhut,
                     String canhBaoPhut, int khoangCachGiay, boolean khoaTheoGioBat) {
