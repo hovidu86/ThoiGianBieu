@@ -47,6 +47,7 @@ public class ChinhActivity extends Activity {
     public static final int TAB_THONG_KE = 1;
     public static final int TAB_CAI_DAT = 2;
     public static final int TAB_MAY = 3;
+    private static final String GIO_LEN_GIUONG_MAC_DINH = "22:15";
 
     private KhoGiacNgu kho;
     private ManKiemSoat manMay;
@@ -132,8 +133,12 @@ public class ChinhActivity extends Activity {
 
         String viec = y.getAction();
         if (y.getBooleanExtra(GHI_NGAY, false) || VIEC_GHI_NGAY.equals(viec)) {
+            // Lối tắt "Ghi ngay" dùng để ghi giờ lên giường ĐÊM QUA sau khi
+            // ngủ dậy — điền giờ hiện tại (như nút "Bây giờ") là sai hoàn
+            // toàn trong tình huống này, đó mới là lý do phải chỉnh lại lâu.
+            // Chỉ áp mặc định vào ô còn trống, giữ nguyên nếu đang ghi dở.
             chuyenTab(TAB_GHI_NHAN);
-            dienGioBayGio();
+            apDungMacDinhGhiNhan();
         } else if (VIEC_CHUAN_BI.equals(viec)) {
             chuyenTab(TAB_GHI_NHAN);
         }
@@ -324,8 +329,20 @@ public class ChinhActivity extends Activity {
         uiSoDu.setTextColor(Color.parseColor(soDu >= 0 ? "#16A34A" : "#F87171"));
         uiChuoi.setText(getString(R.string.chuoi_ngay, kho.chuoiHienTai));
 
-        if (oDem.getText().length() == 0) oDem.setText(kho.demNay);
+        apDungMacDinhGhiNhan();
         veDemNguoc();
+    }
+
+    /**
+     * Điền mặc định cho hai ô còn trống: đêm = demNay (trước 18h tự là hôm
+     * qua, xem LuatGiacNgu.demHienTai), giờ lên giường = một mốc gần đúng
+     * sẵn. Ghi giờ lên giường thường làm sau khi ngủ dậy — có sẵn mốc gần
+     * đúng thì chỉnh lệch vài phút còn nhanh hơn mở bảng chọn từ 00:00.
+     * Chỉ áp vào ô trống, không đụng ô đang ghi dở.
+     */
+    private void apDungMacDinhGhiNhan() {
+        if (oDem.getText().length() == 0) oDem.setText(kho.demNay);
+        if (oGioNgu.getText().length() == 0) oGioNgu.setText(GIO_LEN_GIUONG_MAC_DINH);
     }
 
     private void veDemNguoc() {

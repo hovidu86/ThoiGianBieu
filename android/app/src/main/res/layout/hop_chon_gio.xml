@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bảng chọn giờ kiểu quay số thay cho mặt đồng hồ mặc định của hệ thống —
+  chọn phút lẻ trên mặt đồng hồ phải rê tay rất khó trúng, quay số thì lướt
+  một phát ra đúng số. Phút chỉ có 12 mức cách nhau 5 phút (xem GiaoDien.java)
+  nên cuộn cũng nhanh hơn hẳn so với 60 mức từng phút một.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp">
+
+    <NumberPicker
+        android:id="@+id/np_gio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:layout_marginRight="2dp"
+        android:text=":"
+        android:textColor="@color/chu"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
+    <NumberPicker
+        android:id="@+id/np_phut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

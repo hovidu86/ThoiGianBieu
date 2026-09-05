@@ -1,12 +1,14 @@
 package com.thoigianbieu.kiemsoat;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
-import android.app.TimePickerDialog;
 import android.content.Context;
 import android.graphics.Insets;
 import android.os.Build;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowInsets;
+import android.widget.NumberPicker;
 
 import java.util.Calendar;
 
@@ -143,7 +145,21 @@ public class GiaoDien {
         return LuatGiacNgu.hai(gio) + ":" + LuatGiacNgu.hai(phut);
     }
 
-    /** Bảng chọn giờ của hệ thống, luôn 24 giờ. */
+    /** Mỗi nấc của bánh xe phút cách nhau chừng này — lẻ phút thì tự làm tròn. */
+    private static final int BUOC_PHUT = 5;
+
+    /**
+     * Bảng chọn giờ tự dựng bằng hai bánh xe quay số (24 giờ), thay cho
+     * TimePickerDialog mặc định của hệ thống.
+     *
+     * Lý do không dùng bảng mặc định: kiểu "mặt đồng hồ" (chế độ mới hơn của
+     * Android) bắt rê tay theo hình tròn để chọn từng phút lẻ — rất khó trúng
+     * đúng số, người dùng thật đã kêu khó chịu. Kiểu "quay số" cũ thì lại
+     * không có chỗ nào chỉnh được bước nhảy của phút, mỗi lần vẫn phải lướt
+     * qua từng phút một. Tự dựng bằng NumberPicker (API gốc, không cần thư
+     * viện ngoài) để phút nhảy hẳn 5 một nấc — cuộn vài cái là tới, đúng chỗ
+     * hay dùng nhất (00, 05, 10, 15...).
+     */
     public static void chonGio(Context ctx, String hienTai, final Nhan xong) {
         int gio = 22, phut = 30;
         String chuan = chuanHoaGio(hienTai);
@@ -156,12 +172,32 @@ public class GiaoDien {
             gio = c.get(Calendar.HOUR_OF_DAY);
             phut = c.get(Calendar.MINUTE);
         }
-        new TimePickerDialog(ctx, new TimePickerDialog.OnTimeSetListener() {
-            @Override
-            public void onTimeSet(android.widget.TimePicker v, int g, int p) {
-                xong.nhan(LuatGiacNgu.hai(g) + ":" + LuatGiacNgu.hai(p));
-            }
-        }, gio, phut, true).show();
+
+        View v = LayoutInflater.from(ctx).inflate(R.layout.hop_chon_gio, null);
+        final NumberPicker npGio = v.findViewById(R.id.np_gio);
+        final NumberPicker npPhut = v.findViewById(R.id.np_phut);
+
+        npGio.setMinValue(0);
+        npGio.setMaxValue(23);
+        npGio.setFormatter(LuatGiacNgu::hai);
+        npGio.setValue(gio);
+
+        int soNac = 60 / BUOC_PHUT;
+        String[] nhanPhut = new String[soNac];
+        for (int i = 0; i < soNac; i++) nhanPhut[i] = LuatGiacNgu.hai(i * BUOC_PHUT);
+        npPhut.setMinValue(0);
+        npPhut.setMaxValue(soNac - 1);
+        npPhut.setDisplayedValues(nhanPhut);
+        // Phút cũ lẻ (không chia hết cho bước nhảy) thì chọn nấc gần nhất.
+        npPhut.setValue(Math.round(phut / (float) BUOC_PHUT) % soNac);
+
+        new AlertDialog.Builder(ctx)
+                .setView(v)
+                .setPositiveButton(android.R.string.ok, (d, w) ->
+                        xong.nhan(LuatGiacNgu.hai(npGio.getValue())
+                                + ":" + LuatGiacNgu.hai(npPhut.getValue() * BUOC_PHUT)))
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     /** Bảng chọn ngày của hệ thống. Vào và ra đều là chuỗi YYYY-MM-DD. */

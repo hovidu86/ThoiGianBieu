@@ -75,6 +75,49 @@ public class NhatKy {
         return sb.toString();
     }
 
+    /**
+     * Như {@link #docMoiNhatTruoc}, nhưng dựng lại cho dễ nhìn trong hộp
+     * thoại thay vì phô hết dấu phẩy/ngoặc kép của CSV thô: giờ:phút:giây
+     * và tên sự kiện trên một dòng, chi tiết thụt vào dòng dưới, cách nhau
+     * một dòng trống; chỉ chêm vạch ngày khi ngày đổi (đa số lúc mở ra toàn
+     * bộ nhật ký hiện đều cùng một ngày, lặp lại ngày mỗi dòng chỉ tổ rối).
+     */
+    public static String docDeXem(Context ctx, int soDong) {
+        String tho = docMoiNhatTruoc(ctx, soDong);
+        if (tho.isEmpty()) return "";
+
+        StringBuilder ra = new StringBuilder();
+        String ngayTruoc = null;
+        for (String dong : tho.split("\n")) {
+            if (dong.trim().isEmpty()) continue;
+
+            int i1 = dong.indexOf(',');
+            int i2 = i1 < 0 ? -1 : dong.indexOf(',', i1 + 1);
+            if (i1 < 0 || i2 < 0) {
+                ra.append(dong).append("\n\n");
+                continue;
+            }
+            String thoiDiem = dong.substring(0, i1);
+            String suKien = dong.substring(i1 + 1, i2);
+            String chiTiet = dong.substring(i2 + 1).trim();
+            if (chiTiet.length() >= 2 && chiTiet.startsWith("\"") && chiTiet.endsWith("\"")) {
+                chiTiet = chiTiet.substring(1, chiTiet.length() - 1);
+            }
+
+            String ngay = thoiDiem.length() >= 10 ? thoiDiem.substring(0, 10) : "";
+            String gio = thoiDiem.length() >= 19 ? thoiDiem.substring(11) : thoiDiem;
+            if (!ngay.isEmpty() && !ngay.equals(ngayTruoc)) {
+                if (ngayTruoc != null) ra.append('\n');
+                ra.append("── ").append(ngay).append(" ──\n");
+                ngayTruoc = ngay;
+            }
+
+            ra.append(gio).append("  ").append(suKien).append('\n');
+            ra.append("    ").append(chiTiet).append("\n\n");
+        }
+        return ra.toString().trim();
+    }
+
     private static void catBotPhanCu(File f) {
         try {
             List<String> giu = new ArrayList<>();

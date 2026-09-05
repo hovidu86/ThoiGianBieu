@@ -358,7 +358,7 @@ public class ManKiemSoat {
 
     private void xemNhatKy() {
         // Mới nhất lên đầu: cái vừa xảy ra mới là cái cần xem.
-        String noi = NhatKy.docMoiNhatTruoc(ac, 120);
+        String noi = NhatKy.docDeXem(ac, 120);
         new AlertDialog.Builder(ac)
                 .setTitle(R.string.nhat_ky)
                 .setMessage(noi.isEmpty() ? ac.getString(R.string.nhat_ky_trong) : noi)
