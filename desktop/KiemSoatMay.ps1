@@ -334,12 +334,20 @@ function Khoa-May {
     'Nhập mã mở khoá, đợi ' + $script:CH.khoangCachGiay + ' giây, rồi nhập lại đúng mã đó lần nữa. ' +
     'Nhập sai bất kỳ lần nào là phải làm lại từ đầu.'
 
-  $script:BuocMo = 1   # 1 = chờ lần 1, 2 = đang đếm ngược, 3 = chờ lần 2
-  $script:ConLai = 0
+  # QUAN TRỌNG về phạm vi biến: mọi handler dưới đây đều .GetNewClosure(). Closure
+  # tạo BÊN TRONG một hàm chỉ sao chép biến CỤC BỘ của hàm; biến $script: (dù đặt
+  # ở đâu) KHÔNG lọt vào, và bên trong closure '$script:X' đọc ra $null.
+  #  - Lỗi cũ 1: 'if ($script:BuocMo -ne 1) { return }' luôn đúng -> nút "Xác nhận
+  #    lần 1" vô dụng. Nay dùng hashtable cục bộ $tt (sao chép theo THAM CHIẾU nên
+  #    mọi closure sửa chung một đối tượng).
+  #  - Lỗi cũ 2: '$script:CH.maBam' trong closure là $null -> so mã luôn sai, không
+  #    ai mở khoá được. Nay bắt $script:CH vào biến cục bộ $ch trước khi dựng closure.
+  $ch = $script:CH
+  $tt = @{ buoc = 1; conLai = 0 }   # buoc: 1 = chờ lần 1, 2 = đếm ngược, 3 = chờ lần 2
 
   $datLai = {
-    $script:BuocMo = 1
-    $script:ConLai = 0
+    $tt.buoc = 1
+    $tt.conLai = 0
     $pw1.Password = ''; $pw2.Password = ''
     $pw1.IsEnabled = $true;  $btn1.IsEnabled = $true
     $pw2.IsEnabled = $false; $btn2.IsEnabled = $false
@@ -354,12 +362,12 @@ function Khoa-May {
   $nhip.Interval = [TimeSpan]::FromSeconds(1)
   $nhip.Add_Tick({
     $txtDongHo.Text = (Get-Date).ToString('HH:mm')
-    if ($script:BuocMo -eq 2) {
-      $script:ConLai = $script:ConLai - 1
-      if ($script:ConLai -gt 0) {
-        $txtDem.Text = 'Chờ thêm ' + $script:ConLai + ' giây nữa mới được nhập lần 2...'
+    if ($tt.buoc -eq 2) {
+      $tt.conLai = $tt.conLai - 1
+      if ($tt.conLai -gt 0) {
+        $txtDem.Text = 'Chờ thêm ' + $tt.conLai + ' giây nữa mới được nhập lần 2...'
       } else {
-        $script:BuocMo = 3
+        $tt.buoc = 3
         $txtDem.Text = 'Được rồi. Nhập lại mã lần 2.'
         $lblB2.Foreground = '#E2E8F0'
         $pw2.IsEnabled = $true
@@ -374,13 +382,13 @@ function Khoa-May {
   $script:NhipKhoa = $nhip
 
   $btn1.Add_Click({
-    if ($script:BuocMo -ne 1) { return }
-    if ((Bam-Ma $pw1.Password) -eq $script:CH.maBam) {
-      $script:BuocMo = 2
-      $script:ConLai = [int]$script:CH.khoangCachGiay
+    if ($tt.buoc -ne 1) { return }
+    if ((Bam-Ma $pw1.Password) -eq $ch.maBam) {
+      $tt.buoc = 2
+      $tt.conLai = [int]$ch.khoangCachGiay
       $pw1.IsEnabled = $false; $btn1.IsEnabled = $false
       $txtTrangThai.Text = ''
-      $txtDem.Text = 'Chờ thêm ' + $script:ConLai + ' giây nữa mới được nhập lần 2...'
+      $txtDem.Text = 'Chờ thêm ' + $tt.conLai + ' giây nữa mới được nhập lần 2...'
     } else {
       $txtTrangThai.Text = 'Sai mã. Nhập lại.'
       Ghi-NhatKy 'sai-ma' 'lần 1'
@@ -390,8 +398,8 @@ function Khoa-May {
   }.GetNewClosure())
 
   $btn2.Add_Click({
-    if ($script:BuocMo -ne 3) { return }
-    if ((Bam-Ma $pw2.Password) -eq $script:CH.maBam) {
+    if ($tt.buoc -ne 3) { return }
+    if ((Bam-Ma $pw2.Password) -eq $ch.maBam) {
       Mo-Khoa
     } else {
       $txtTrangThai.Text = 'Sai mã ở lần 2. Làm lại từ đầu, kể cả thời gian chờ.'
@@ -418,20 +426,40 @@ function Khoa-May {
   $win.Add_Closing({
     if (-not $script:ChoPhepDong) { $_.Cancel = $true }
   })
-  # Bị mất tiêu điểm thì giành lại
+  # Bị mất tiêu điểm thì giành lại - nhưng KHÔNG gọi Activate() thẳng trong đây.
+  # Activate() có thể làm cửa sổ deactivate tiếp, tạo vòng Deactivated -> Activate
+  # -> Deactivated chạy đệ quy trên luồng giao diện tới tràn ngăn xếp: app treo
+  # rồi thoát hẳn, chỉ một cú click là thoát được khoá. Thay bằng: cờ chống tái
+  # nhập + đẩy việc giành tiêu điểm ra khỏi ngăn xếp sự kiện qua BeginInvoke ở
+  # mức ưu tiên thấp, nên giữa hai lần luôn có một vòng bơm thông điệp.
   $win.Add_Deactivated({
     if (-not $script:DangKhoa) { return }
-    # Cửa sổ che màn hình phụ của chính mình cũng làm mất tiêu điểm, đừng tính
-    # đó là né tránh. Và mỗi lần khoá chỉ ghi một dòng, không ghi mỗi lần click.
-    if (-not $script:DangCheManHinh -and -not $script:DaGhiNeTranh) {
+    if ($script:DangCheManHinh) { return }   # cửa sổ che màn hình phụ của chính mình
+    if ($script:PhienBiKhoa)    { return }   # màn hình khoá của Windows - giành lại vô ích
+    if ($script:DangGianhTieuDiem) { return } # đã có một lượt đang chờ chạy
+    $script:DangGianhTieuDiem = $true
+
+    # Mỗi lần khoá chỉ ghi một dòng né tránh, không ghi mỗi lần click.
+    if (-not $script:DaGhiNeTranh) {
       $script:DaGhiNeTranh = $true
       Ghi-NhatKy 'ne-tranh' 'cửa sổ khoá bị mất tiêu điểm'
     }
-    try {
-      $script:CuaSoKhoa.Topmost = $true
-      $script:CuaSoKhoa.Activate() | Out-Null
-    } catch { }
+
+    $script:CuaSoKhoa.Dispatcher.BeginInvoke(
+      [System.Windows.Threading.DispatcherPriority]::ApplicationIdle,
+      [action]{
+        try {
+          if ($script:DangKhoa -and -not $script:PhienBiKhoa -and $script:CuaSoKhoa) {
+            $script:CuaSoKhoa.Topmost = $true
+            $script:CuaSoKhoa.Activate() | Out-Null
+          }
+        } catch { }
+        $script:DangGianhTieuDiem = $false
+      }) | Out-Null
   })
+  # Cửa sổ khoá vừa giành lại được tiêu điểm nghĩa là phiên Windows đã mở lại
+  # (người dùng đăng nhập xong) - từ giờ mất tiêu điểm mới tính là né tránh.
+  $win.Add_Activated({ $script:PhienBiKhoa = $false })
 
   $script:DangKhoa = $true
   $script:DaGhiNeTranh = $false
@@ -443,6 +471,10 @@ function Khoa-May {
 
   Tat-ManHinh
   if ($script:CH.khoaWindows) {
+    # Đặt cờ trước: cửa sổ khoá mất tiêu điểm ngay sau đây là do màn hình khoá
+    # của Windows, không phải người dùng né tránh. Cờ được hạ lại ở sự kiện
+    # SessionUnlock lúc đăng nhập xong.
+    $script:PhienBiKhoa = $true
     try { [void][TGB.Win]::LockWorkStation() } catch { }
   }
 }
@@ -453,6 +485,8 @@ function Mo-Khoa {
   # người dùng né tránh và giành lại tiêu điểm của một cửa sổ đang đóng dở.
   $script:DangKhoa = $false
   $script:ChoPhepDong = $true
+  $script:DangGianhTieuDiem = $false
+  $script:PhienBiKhoa = $false
   try { $script:NhipKhoa.Stop() } catch { }
   foreach ($w in $script:CuaSoPhu) { try { $w.Close() } catch { } }
   $script:CuaSoPhu = @()
@@ -603,6 +637,11 @@ function Ap-CaiDat($giaTri, [bool]$khoaWindows) {
   $now = Get-Date
   if (Trong-KhoangKhoa $now) { Dat-MocKhoa $now.AddMinutes(1) }
   else { Dat-MocKhoa (Moc-KhoaDauTien $now) }
+
+  # Trả về mốc vừa đặt. Người gọi (sự kiện bấm Lưu) là một .GetNewClosure() nên
+  # $script:MocKhoa bên trong nó là bản sao ĐÓNG BĂNG từ lúc mở cửa sổ, đọc thẳng
+  # sẽ ra giờ cũ. Phải lấy qua giá trị trả về này.
+  return $script:MocKhoa
 }
 
 function Mo-CaiDat([bool]$batBuocDatMa) {
@@ -628,6 +667,10 @@ function Mo-CaiDat([bool]$batBuocDatMa) {
     $txtLoi.Text = 'Chưa đặt mã mở khoá.'
   }
 
+  # Bắt $script:CH vào biến cục bộ: các sự kiện bấm nút bên dưới đều .GetNewClosure()
+  # nên không đọc được biến $script: (xem ghi chú dài trong Khoa-May).
+  $ch = $script:CH
+
   $w.FindName('btnLuu').Add_Click({
     # Bọc toàn bộ trong try: lỗi trong sự kiện WPF vốn bị nuốt lặng, người dùng
     # bấm Lưu thấy không có gì xảy ra và tưởng đã lưu xong.
@@ -640,7 +683,7 @@ function Mo-CaiDat([bool]$batBuocDatMa) {
               $w.FindName('txtKhoangCach').Text.Trim() `
               $w.FindName('pwMa').Password `
               $w.FindName('pwMa2').Password `
-              ($script:CH.maBam -ne '')
+              ($ch.maBam -ne '')
 
       if ($kq.loi.Count -gt 0) {
         $txtLoi.Text = ($kq.loi -join '  ')
@@ -651,15 +694,14 @@ function Mo-CaiDat([bool]$batBuocDatMa) {
         return
       }
 
-      Ap-CaiDat $kq.giaTri ([bool]$w.FindName('chkKhoaWin').IsChecked)
+      $mocMoi = Ap-CaiDat $kq.giaTri ([bool]$w.FindName('chkKhoaWin').IsChecked)
 
-      $script:CuaSoCaiDat = $null
-      $w.Close()
-      Bao-Khay 'Đã lưu' ('Lần khoá kế tiếp: ' + $script:MocKhoa.ToString('HH:mm dd/MM'))
+      $w.Close()   # Add_Closed lo việc dọn $script:CuaSoCaiDat
+      Bao-Khay 'Đã lưu' ('Lần khoá kế tiếp: ' + $mocMoi.ToString('HH:mm dd/MM'))
       [System.Windows.Forms.MessageBox]::Show(
         'Đã lưu xong.' + "`r`n`r`n" +
-        'Lần khoá kế tiếp: ' + $script:MocKhoa.ToString('HH:mm dd/MM') + "`r`n" +
-        'Cảnh báo trước đó: ' + ($script:CH.canhBaoPhut -join ', ') + ' phút.',
+        'Lần khoá kế tiếp: ' + $mocMoi.ToString('HH:mm dd/MM') + "`r`n" +
+        'Cảnh báo trước đó: ' + ($kq.giaTri.canhBaoPhut -join ', ') + ' phút.',
         'Kiểm soát máy',
         [System.Windows.Forms.MessageBoxButtons]::OK,
         [System.Windows.Forms.MessageBoxIcon]::Information) | Out-Null
@@ -673,11 +715,10 @@ function Mo-CaiDat([bool]$batBuocDatMa) {
   }.GetNewClosure())
 
   $w.FindName('btnHuy').Add_Click({
-    if ($script:CH.maBam -eq '') {
+    if ($ch.maBam -eq '') {
       $txtLoi.Text = 'Phải đặt mã mở khoá trước đã, nếu không app không khoá được gì.'
       return
     }
-    $script:CuaSoCaiDat = $null
     $w.Close()
   }.GetNewClosure())
 
@@ -762,6 +803,9 @@ function Dung-Khay {
 
 function Nhip-Chinh {
   if ($script:DangKhoa) { return }
+  # Không khoá thì chắc chắn không ở màn hình khoá của Windows - dọn cờ phòng khi
+  # một sự kiện SessionUnlock/Activated nào đó bị bỏ lỡ.
+  $script:PhienBiKhoa = $false
   if ($script:CH.maBam -eq '') {
     # Không có mã thì app không khoá gì cả. Nói thẳng ra ở khay hệ thống,
     # đừng để im lặng như thể đang hoạt động bình thường.
@@ -802,16 +846,32 @@ function Nhip-Chinh {
 
 # ==================== KHỞI ĐỘNG ====================
 
-$script:DangKhoa     = $false
-$script:ChoPhepDong  = $false
-$script:CuaSoPhu     = @()
-$script:CuaSoKhoa    = $null
-$script:CuaSoCaiDat  = $null
-$script:Tray         = $null
-$script:MucTrangThai = $null
-$script:DaCanhBao    = @{}
-$script:MocKhoa      = (Get-Date).AddYears(1)
+$script:DangKhoa          = $false
+$script:ChoPhepDong       = $false
+$script:CuaSoPhu          = @()
+$script:CuaSoKhoa         = $null
+$script:CuaSoCaiDat       = $null
+$script:Tray              = $null
+$script:MucTrangThai      = $null
+$script:DaCanhBao         = @{}
+$script:MocKhoa           = (Get-Date).AddYears(1)
+$script:DangGianhTieuDiem = $false   # đang có một lượt giành lại tiêu điểm chờ chạy
+# Bật ngay trước LockWorkStation(); tắt khi cửa sổ khoá được kích hoạt lại (người
+# dùng đăng nhập Windows xong), khi mở khoá, hoặc ở nhịp chính lúc không khoá.
+# Trong lúc bật thì cửa sổ khoá mất tiêu điểm KHÔNG bị tính là né tránh.
+$script:PhienBiKhoa       = $false
 $script:CH = Doc-CauHinh
+
+# Một lỗi bất kỳ trên luồng giao diện mà không ai bắt sẽ làm Dispatcher.Run()
+# thoát, kéo theo cả app - tức là khoá mất tác dụng trong im lặng. Bắt hết ở
+# đây, ghi nhật ký, rồi để app chạy tiếp.
+try {
+  [System.Windows.Threading.Dispatcher]::CurrentDispatcher.add_UnhandledException({
+    param($nguon, $bienCo)
+    try { Ghi-NhatKy 'loi-giao-dien' ($bienCo.Exception.GetType().Name + ': ' + $bienCo.Exception.Message) } catch { }
+    $bienCo.Handled = $true
+  })
+} catch { }
 
 # Chỉ cho một bản chạy cùng lúc. Giữ tham chiếu ở phạm vi script, nếu để biến
 # cục bộ thì bộ dọn rác thu hồi mutex và bản thứ hai lại chạy được.
