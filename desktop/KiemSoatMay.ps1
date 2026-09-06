@@ -34,6 +34,21 @@ Add-Type -Namespace TGB -Name Win -MemberDefinition @'
 public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 [DllImport("user32.dll")]
 public static extern bool LockWorkStation();
+
+[DllImport("user32.dll", SetLastError=true)]
+static extern IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, uint dwDesiredAccess);
+[DllImport("user32.dll")]
+static extern bool CloseDesktop(IntPtr hDesktop);
+
+// Đang ở màn hình khoá / màn hình bảo mật của Windows hay không. Khi đó tiến
+// trình của người dùng không mở được "input desktop", OpenInputDesktop trả về
+// null. Không cần đăng ký sự kiện phiên (vốn chạy trên luồng khác, dễ hỏng).
+public static bool ManHinhKhoaDangHien() {
+  IntPtr h = OpenInputDesktop(0, false, 0x0001 /*DESKTOP_READOBJECTS*/);
+  if (h == IntPtr.Zero) return true;
+  CloseDesktop(h);
+  return false;
+}
 '@
 
 # ==================== ĐƯỜNG DẪN & CẤU HÌNH ====================
@@ -429,15 +444,12 @@ function Khoa-May {
   # Bị mất tiêu điểm thì giành lại - nhưng KHÔNG gọi Activate() thẳng trong đây.
   # Activate() có thể làm cửa sổ deactivate tiếp, tạo vòng Deactivated -> Activate
   # -> Deactivated chạy đệ quy trên luồng giao diện tới tràn ngăn xếp: app treo
-  # rồi thoát hẳn, chỉ một cú click là thoát được khoá. Thay bằng: cờ chống tái
-  # nhập + đẩy việc giành tiêu điểm ra khỏi ngăn xếp sự kiện qua BeginInvoke ở
-  # mức ưu tiên thấp, nên giữa hai lần luôn có một vòng bơm thông điệp.
+  # rồi thoát hẳn, chỉ một cú click là thoát được khoá. Thay bằng: đẩy việc giành
+  # tiêu điểm ra khỏi ngăn xếp sự kiện qua BeginInvoke, kèm cờ chống tái nhập.
+  # Nếu người dùng tạo input liên tục làm đói hàng đợi, nhịp chính (mỗi 5 giây,
+  # là HÀM nên đọc $script: sống) vẫn gọi lại Gianh-TieuDiem như lưới an toàn.
   $win.Add_Deactivated({
-    if (-not $script:DangKhoa) { return }
-    if ($script:DangCheManHinh) { return }   # cửa sổ che màn hình phụ của chính mình
-    if ($script:PhienBiKhoa)    { return }   # màn hình khoá của Windows - giành lại vô ích
-    if ($script:DangGianhTieuDiem) { return } # đã có một lượt đang chờ chạy
-    $script:DangGianhTieuDiem = $true
+    if (-not $script:DangKhoa -or $script:DangCheManHinh -or $script:PhienBiKhoa) { return }
 
     # Mỗi lần khoá chỉ ghi một dòng né tránh, không ghi mỗi lần click.
     if (-not $script:DaGhiNeTranh) {
@@ -445,21 +457,12 @@ function Khoa-May {
       Ghi-NhatKy 'ne-tranh' 'cửa sổ khoá bị mất tiêu điểm'
     }
 
+    if ($script:DangGianhTieuDiem) { return }   # đã có một lượt đang chờ chạy
+    $script:DangGianhTieuDiem = $true
     $script:CuaSoKhoa.Dispatcher.BeginInvoke(
-      [System.Windows.Threading.DispatcherPriority]::ApplicationIdle,
-      [action]{
-        try {
-          if ($script:DangKhoa -and -not $script:PhienBiKhoa -and $script:CuaSoKhoa) {
-            $script:CuaSoKhoa.Topmost = $true
-            $script:CuaSoKhoa.Activate() | Out-Null
-          }
-        } catch { }
-        $script:DangGianhTieuDiem = $false
-      }) | Out-Null
+      [System.Windows.Threading.DispatcherPriority]::Input,
+      [action]{ Gianh-TieuDiem }) | Out-Null
   })
-  # Cửa sổ khoá vừa giành lại được tiêu điểm nghĩa là phiên Windows đã mở lại
-  # (người dùng đăng nhập xong) - từ giờ mất tiêu điểm mới tính là né tránh.
-  $win.Add_Activated({ $script:PhienBiKhoa = $false })
 
   $script:DangKhoa = $true
   $script:DaGhiNeTranh = $false
@@ -471,12 +474,30 @@ function Khoa-May {
 
   Tat-ManHinh
   if ($script:CH.khoaWindows) {
-    # Đặt cờ trước: cửa sổ khoá mất tiêu điểm ngay sau đây là do màn hình khoá
-    # của Windows, không phải người dùng né tránh. Cờ được hạ lại ở sự kiện
-    # SessionUnlock lúc đăng nhập xong.
-    $script:PhienBiKhoa = $true
-    try { [void][TGB.Win]::LockWorkStation() } catch { }
+    # Chỉ bật cờ khi khoá phiên THÀNH CÔNG. Nếu LockWorkStation() hỏng hoặc bị
+    # chính sách chặn mà vẫn bật cờ, cửa sổ khoá sẽ thôi giành lại tiêu điểm suốt
+    # phiên -> một cú click là lách qua được. Nhịp chính vẫn tự soát lại cờ này
+    # mỗi 5 giây bằng ManHinhKhoaDangHien().
+    $khoaXong = $false
+    try { $khoaXong = [TGB.Win]::LockWorkStation() } catch { }
+    $script:PhienBiKhoa = [bool]$khoaXong
   }
+}
+
+# Giành lại tiêu điểm cho cửa sổ khoá. Là HÀM (không phải closure) nên mọi biến
+# $script: đọc ra giá trị SỐNG. Gọi từ: nhánh BeginInvoke của Add_Deactivated, và
+# nhịp chính mỗi 5 giây (lưới an toàn khi hàng đợi giao diện bị đói).
+function Gianh-TieuDiem {
+  $script:DangGianhTieuDiem = $false
+  if (-not $script:DangKhoa) { return }
+  if ($script:PhienBiKhoa -or $script:DangCheManHinh) { return }
+  if (-not $script:CuaSoKhoa) { return }
+  try {
+    if (-not $script:CuaSoKhoa.IsActive) {
+      $script:CuaSoKhoa.Topmost = $true
+      $script:CuaSoKhoa.Activate() | Out-Null
+    }
+  } catch { }
 }
 
 function Mo-Khoa {
@@ -802,9 +823,15 @@ function Dung-Khay {
 # ==================== VÒNG LẶP CHÍNH ====================
 
 function Nhip-Chinh {
-  if ($script:DangKhoa) { return }
-  # Không khoá thì chắc chắn không ở màn hình khoá của Windows - dọn cờ phòng khi
-  # một sự kiện SessionUnlock/Activated nào đó bị bỏ lỡ.
+  if ($script:DangKhoa) {
+    # Đang khoá: soát lại xem có đang ở màn hình khoá Windows không (nguồn tin
+    # cậy, hỏi thẳng hệ thống chứ không suy từ sự kiện cửa sổ), rồi giành lại
+    # tiêu điểm. Đây là lưới an toàn cho nhánh sự kiện Add_Deactivated.
+    try { $script:PhienBiKhoa = [TGB.Win]::ManHinhKhoaDangHien() } catch { }
+    Gianh-TieuDiem
+    return
+  }
+  # Không khoá thì chắc chắn không ở màn hình khoá của Windows.
   $script:PhienBiKhoa = $false
   if ($script:CH.maBam -eq '') {
     # Không có mã thì app không khoá gì cả. Nói thẳng ra ở khay hệ thống,
