@@ -6,16 +6,33 @@ lại khoá tiếp, cho tới giờ kết thúc.
 
 ## Cài đặt
 
-Nhấn đúp **`Cai-dat.cmd`**. File tự xin quyền quản trị (bấm *Yes*), rồi:
+Nhấn đúp **`KiemSoatMay-Setup.exe`**. Bộ cài:
 
-1. Đăng ký tác vụ `ThoiGianBieu-KiemSoatMay` trong Task Scheduler.
-2. Kiểm lại từng tuỳ chọn vừa đặt và in ra `[OK]` / `[HONG]` cho từng cái.
-3. Khởi động app qua chính tác vụ đó — vừa là phép thử thật, vừa để app chạy
-   với quyền thường chứ không thừa hưởng quyền quản trị của bộ cài.
+1. Chép `KiemSoatMay.ps1` + `Khoi-dong.vbs` vào `%LOCALAPPDATA%\ThoiGianBieu\app\`
+   (nơi ở lâu dài — xoá thư mục dự án này về sau cũng không sao).
+2. Đăng ký tác vụ `ThoiGianBieu-KiemSoatMay` trong Task Scheduler, trỏ vào bản
+   vừa chép.
+3. Kiểm lại từng tuỳ chọn vừa đặt, khởi động app, in ra `[OK]` / `[HONG]`.
+
+Nếu máy đã có tác vụ cũ do một bản cài **có quyền quản trị** tạo ra, bộ cài xin
+nâng quyền một lần (hộp thoại UAC — bấm *Yes*). Cài mới hoàn toàn thì không cần.
+
+Gỡ: mở thư mục `%LOCALAPPDATA%\ThoiGianBieu\app` (bộ cài đặt sẵn tệp gỡ ở đó),
+nhấn đúp **`Go-cai-dat.cmd`**. Sau đó chuột phải icon khiên ở khay hệ thống →
+*Thoát (cần mã)* để tắt app đang chạy.
+
+> Cách cũ vẫn dùng được cho lúc phát triển: nhấn đúp `Cai-dat.cmd` (tự xin
+> quyền quản trị) — nó đăng ký tác vụ trỏ thẳng vào tệp trong thư mục này.
 
 Lần đầu chạy **bắt buộc đặt mã mở khoá tối thiểu 10 ký tự, gõ giống nhau ở cả
 hai ô**. Thiếu gì app hiện hộp thoại nói rõ lý do. Chưa có mã thì app không khoá
 gì cả, và khay hệ thống ghi thẳng "CHƯA ĐẶT MÃ".
+
+### Dựng lại bộ cài
+
+`powershell -ExecutionPolicy Bypass -File Tao-bo-cai.ps1` — gói ba tệp
+(`KiemSoatMay.ps1`, `Khoi-dong.vbs`, `Cai-dat-goi.ps1`) thành `KiemSoatMay-Setup.exe`
+bằng **IExpress** (có sẵn trong mọi bản Windows, không cần cài thêm gì).
 
 ### Vì sao phải dựng tác vụ bằng XML
 
@@ -28,12 +45,9 @@ gì cả, và khay hệ thống ghi thẳng "CHƯA ĐẶT MÃ".
 | `ExecutionTimeLimit = 72 giờ` | quá 3 ngày là bị giết |
 | chỉ có một mốc kích hoạt lúc đăng nhập | app tắt giữa chừng thì thôi luôn |
 
-Bộ cài hiện tại đặt ba cái đầu về `false`/`PT0S`, và thêm **lịch lặp mỗi 30
-phút**: app tắt vì bất cứ lý do gì thì chậm nhất nửa tiếng sau tự sống lại. Bản
-đang chạy giữ một mutex nên các lần gọi thừa tự thoát lặng lẽ, không nhân bản.
-
-Gỡ bỏ: nhấn đúp `Go-cai-dat.cmd`, rồi chuột phải icon khiên ở khay hệ thống →
-*Thoát (cần mã)*.
+Bộ cài đặt ba cái đầu về `false`/`PT0S`, và thêm **lịch lặp mỗi 30 phút**: app
+tắt vì bất cứ lý do gì thì chậm nhất nửa tiếng sau tự sống lại. Bản đang chạy
+giữ một mutex nên các lần gọi thừa tự thoát lặng lẽ, không nhân bản.
 
 ## Dùng hằng ngày
 

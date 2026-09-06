@@ -11,5 +11,9 @@ desktop.ini
 .vscode/
 .idea/
 
+# Rác khi dựng bộ cài Windows bằng IExpress
+desktop/_build.sed
+desktop/*.[Cc][Aa][Bb]
+
 # Typings cua tien ich Apps Script trong VS Code, khong can len repo
 .gas-sync/
