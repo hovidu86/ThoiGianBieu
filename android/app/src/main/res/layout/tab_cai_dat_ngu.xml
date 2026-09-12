@@ -296,7 +296,36 @@
                         android:focusable="true"
                         android:gravity="center" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Nhan"
+                        android:text="@string/nhan_nhac_sang_luc" />
+
+                    <TextView
+                        android:id="@+id/o_nhac_sang_luc"
+                        style="@style/O"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center"
+                        android:hint="@string/nhac_sang_tat"
+                        android:textColorHint="@color/chu_rat_mo" />
+                </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/nhac_sang_giai_thich"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <Button

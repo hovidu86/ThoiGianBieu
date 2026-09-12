@@ -223,6 +223,7 @@ public class KhoGiacNgu {
         c.truocGioNay = o.optString("truocGioNay", c.truocGioNay);
         c.matChuoiSau = o.optString("matChuoiSau", c.matChuoiSau);
         c.nhacLuc = o.optString("nhacLuc", c.nhacLuc);
+        c.nhacSangLuc = o.optString("nhacSangLuc", c.nhacSangLuc);
         c.phutChuanBi = o.optInt("phutChuanBi", c.phutChuanBi);
         c.thuongThoiQuen = o.optLong("thuongThoiQuen", c.thuongThoiQuen);
 
@@ -264,6 +265,7 @@ public class KhoGiacNgu {
             o.put("truocGioNay", c.truocGioNay);
             o.put("matChuoiSau", c.matChuoiSau);
             o.put("nhacLuc", c.nhacLuc);
+            o.put("nhacSangLuc", c.nhacSangLuc);
             o.put("phutChuanBi", c.phutChuanBi);
             o.put("thuongThoiQuen", c.thuongThoiQuen);
 

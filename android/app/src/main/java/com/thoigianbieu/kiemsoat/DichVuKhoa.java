@@ -82,6 +82,10 @@ public class DichVuKhoa extends Service {
 
     private CauHinh ch;
     private NgatQuang nq;
+    private PhienDung pd;
+    private Runnable canhGacPhienDung;
+    private Runnable nhipTimPhienDung;
+    private static final long NHIP_TIM_PHIEN = 60_000L;
     private WindowManager wm;
     private final Handler tay = new Handler(Looper.getMainLooper());
 
@@ -119,9 +123,17 @@ public class DichVuKhoa extends Service {
         dangChay = true;
         ch = new CauHinh(this);
         nq = new NgatQuang(ch);
+        pd = new PhienDung(this);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
         taoKenh();
         dangKyManHinh();
+
+        // Sổ phiên dùng máy: dịch vụ chết giữa lúc màn hình đang bật rồi dựng
+        // lại lúc màn hình đã tắt thì phiên cũ còn mở dở — chốt nó tại đây, sai
+        // lệch cùng lắm bằng quãng dịch vụ vắng mặt. Màn hình đang bật thì ngóng
+        // xem đã mở khoá chưa như thường.
+        if (!manHinhDangBat() && pd.dangMoTu() > 0) pd.ketThucTheoNhipTim();
+        if (manHinhDangBat()) batCanhGacPhienDung();   // tự xử lý phiên mở dở bên trong
 
         // Dịch vụ vừa dựng lại giữa lúc màn hình đang bật thì phải đếm tiếp ngay.
         if (manHinhDangBat()) {
@@ -405,6 +417,7 @@ public class DichVuKhoa extends Service {
         goLopNghi();
         goLopDemLui();
         NhatKy.ghi(this, "khoa", "mốc " + LenLich.gioPhut(ch.mocKhoa()));
+        pd.ketThuc(System.currentTimeMillis());   // bị khoá là hết dùng, dù màn hình còn sáng
         chanAmThanhDangPhat();
 
         if (!Settings.canDrawOverlays(this)) {
@@ -652,7 +665,87 @@ public class DichVuKhoa extends Service {
         // Mở khoá đêm xong thì màn hình đang bật, nhưng sẽ không có tin bật màn
         // hình nào nữa để khởi động lại bộ đếm ngắt quãng. Không gọi tay ở đây
         // thì ngắt quãng nằm im suốt cả quãng vừa mở khoá được.
-        if (manHinhDangBat()) manHinhVaoDung(System.currentTimeMillis());
+        if (manHinhDangBat()) {
+            manHinhVaoDung(System.currentTimeMillis());
+            batCanhGacPhienDung();   // cùng lý do: sổ phiên dùng máy cũng cần biết
+        }
+    }
+
+    /* ==================== SỔ PHIÊN DÙNG MÁY ==================== */
+
+    /**
+     * Ngóng tới lúc người dùng THẬT SỰ dùng được máy — đã mở khoá hệ thống và
+     * không bị lớp khoá đêm che — rồi mở một phiên trong sổ {@link PhienDung}.
+     * Cùng lý do với {@link #batCanhGacMoKhoaHeThong}: máy này không gửi
+     * USER_PRESENT nên phải tự nhìn, hai giây một lần, chỉ trong lúc chờ.
+     * Khác ở chỗ vòng này chạy cho MỌI lần bật màn hình, không lọc theo ngắt
+     * quãng, vì lời nhắc buổi sáng cần cả những ngày ngắt quãng đang tắt.
+     */
+    private void batCanhGacPhienDung() {
+        dungCanhGacPhienDung();
+        long bayGio = System.currentTimeMillis();
+        if (pd.dangMoTu() > 0) {
+            if (pd.nhipTimDaCu(bayGio)) {
+                // Dịch vụ chết giữa phiên (máy sập nguồn qua đêm chẳng hạn):
+                // phiên cũ không thể kéo dài tới giờ. Chốt ở nhịp tim cuối,
+                // rồi ngóng như một lần bật màn hình mới bên dưới.
+                pd.ketThucTheoNhipTim();
+            } else {
+                // Phiên còn nóng (tin tắt màn hình bị lỡ, hoặc dịch vụ vừa
+                // dựng lại ngay): vẫn đang dùng, chỉ nối lại nhịp tim.
+                batNhipTimPhienDung();
+                return;
+            }
+        }
+        canhGacPhienDung = new Runnable() {
+            @Override
+            public void run() {
+                if (!manHinhDangBat()) {
+                    canhGacPhienDung = null;   // tắt trước khi kịp mở khoá: không phải dùng
+                    return;
+                }
+                if (!mayDangKhoa() && lopKhoa == null) {
+                    canhGacPhienDung = null;
+                    pd.batDau(System.currentTimeMillis());
+                    batNhipTimPhienDung();
+                    return;
+                }
+                tay.postDelayed(this, 2000);
+            }
+        };
+        tay.post(canhGacPhienDung);
+    }
+
+    private void dungCanhGacPhienDung() {
+        if (canhGacPhienDung != null) tay.removeCallbacks(canhGacPhienDung);
+        canhGacPhienDung = null;
+        dungNhipTimPhienDung();
+    }
+
+    /**
+     * Mỗi phút ghi một mốc "vẫn đang dùng" trong lúc phiên mở — xem
+     * {@link PhienDung#nhipTim}. Một lần ghi prefs mỗi phút lúc màn hình
+     * sáng, không đáng kể; màn hình tắt là tự dừng.
+     */
+    private void batNhipTimPhienDung() {
+        dungNhipTimPhienDung();
+        nhipTimPhienDung = new Runnable() {
+            @Override
+            public void run() {
+                if (!manHinhDangBat() || pd.dangMoTu() <= 0) {
+                    nhipTimPhienDung = null;
+                    return;
+                }
+                pd.nhipTim(System.currentTimeMillis());
+                tay.postDelayed(this, NHIP_TIM_PHIEN);
+            }
+        };
+        tay.postDelayed(nhipTimPhienDung, NHIP_TIM_PHIEN);
+    }
+
+    private void dungNhipTimPhienDung() {
+        if (nhipTimPhienDung != null) tay.removeCallbacks(nhipTimPhienDung);
+        nhipTimPhienDung = null;
     }
 
     /* ==================== DÙNG NGẮT QUÃNG ==================== */
@@ -669,12 +762,15 @@ public class DichVuKhoa extends Service {
                 String viec = intent.getAction();
                 NhatKy.ghi(DichVuKhoa.this, "tin-man-hinh", String.valueOf(viec));
                 if (Intent.ACTION_SCREEN_OFF.equals(viec)) {
+                    dungCanhGacPhienDung();
+                    pd.ketThuc(bayGio);
                     manHinhRoiDung(bayGio);
                 } else if (Intent.ACTION_USER_PRESENT.equals(viec)) {
                     soatLichKhiThucDay(bayGio);
                     manHinhVaoDung(bayGio);
                 } else if (Intent.ACTION_SCREEN_ON.equals(viec)) {
                     soatLichKhiThucDay(bayGio);
+                    batCanhGacPhienDung();
                     if (!mayDangKhoa()) {
                         manHinhVaoDung(bayGio);
                     } else if (nq.dangApDung(bayGio)) {
@@ -1272,6 +1368,7 @@ public class DichVuKhoa extends Service {
         thaTieuDiemAmThanh();
         dungCanhGacNghi();
         dungCanhGacMoKhoaHeThong();
+        dungCanhGacPhienDung();
         goLopDemLui();
         if (batTatManHinh != null) {
             try { unregisterReceiver(batTatManHinh); } catch (Exception ignore) { }

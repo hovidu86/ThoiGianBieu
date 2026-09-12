@@ -48,6 +48,8 @@ public class CaiDatNgu {
     public String matChuoiSau = "23:30";   // muộn hơn mốc này thì chuỗi về 0
     public List<MocChuoi> cacMocChuoi = new ArrayList<>();
     public String nhacLuc = "21:30";
+    /** Giờ nhắc buổi sáng ghi giờ lên giường đêm qua. Để trống là tắt. */
+    public String nhacSangLuc = "08:00";
     public int phutChuanBi = 45;
     public long thuongThoiQuen = 20_000L;
     public List<Buoc> cacBuoc = new ArrayList<>();

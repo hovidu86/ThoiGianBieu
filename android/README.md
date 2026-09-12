@@ -80,6 +80,23 @@ báo thức hoặc máy tắt ngang qua mốc khoá, nhịp này khoá bù và d
 
 Nhập sai ở lần 2 phải làm lại từ đầu, kể cả 15 giây chờ.
 
+## Lời nhắc buổi sáng (từ v3.6)
+
+Mặc định 08:00 (ô "Nhắc sáng lúc" trong tab Cài đặt, để trống là tắt) app hiện
+thông báo "Tối qua lên giường lúc ~22:45?". Bấm nút **Đúng, ghi 22:45** là ghi
+luôn không cần mở app (`GhiNhanhReceiver`, đi qua đúng `KhoGiacNgu.ghiDem` và
+đẩy Sheet như nút Xác nhận); bấm vào thân thông báo thì ra hộp điền nhanh trên
+tab Ghi nhận để sửa giờ trước khi ghi. Đêm đã ghi rồi thì không nhắc.
+
+Gợi ý lấy từ **sổ phiên dùng máy** (`PhienDung`): dịch vụ khoá máy ghi lại mỗi
+phiên từ lúc mở xong khoá màn hình hệ thống (và không bị lớp khoá đêm che) tới
+lúc tắt màn hình — màn hình sáng mà còn khoá (nhìn giờ, xem thông báo) không
+tính. Giờ lên giường gợi ý = đầu **quãng không dùng máy dài nhất** kể từ 18:00
+đêm đó, làm tròn 5 phút. Lấy quãng dài nhất chứ không lấy "lần tắt cuối" vì tới
+8h sáng người dùng thường đã cầm máy rồi; cách này cũng tự xử lý việc mở khoá
+đêm bằng mã rồi dùng thêm. Không có quãng nào từ 2 giờ trở lên thì báo "chưa đủ
+dữ liệu" và hộp điền nhanh dùng giờ mặc định 22:15.
+
 ## Dùng ngắt quãng
 
 Tính năng thứ hai, cho ban ngày. Mặc định **tắt**, bật trong Cài đặt.
@@ -149,6 +166,8 @@ nên hệ thống có giết dịch vụ rồi dựng lại thì vẫn đếm ti
 | `BieuDo.java` | biểu đồ 14 đêm, vẽ tay bằng Canvas |
 | `CauHinh.java` | cấu hình khoá máy + phép tính mốc thời gian + băm mã |
 | `NgatQuang.java` | luật dùng ngắt quãng. Phần tính toán là hàm tĩnh, kiểm thử được bằng Java thuần |
+| `PhienDung.java` | sổ phiên dùng máy thật + luật tìm quãng không dùng dài nhất (hàm tĩnh, kiểm thử được) |
+| `GhiNhanhReceiver.java` | nút "Đúng, ghi ..." trên lời nhắc buổi sáng |
 | `LenLich.java` | đặt báo thức chính xác cho lần khoá và từng mốc cảnh báo |
 | `BaoThucReceiver.java` | báo thức nổ → chuyển việc sang dịch vụ |
 | `DichVuKhoa.java` | dịch vụ nền: lớp phủ khoá, lớp phủ nghỉ, theo dõi bật/tắt màn hình |

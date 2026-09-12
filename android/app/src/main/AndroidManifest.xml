@@ -75,6 +75,10 @@
             android:exported="false" />
 
         <receiver
+            android:name=".GhiNhanhReceiver"
+            android:exported="false" />
+
+        <receiver
             android:name=".KhoiDongReceiver"
             android:exported="true">
             <intent-filter>

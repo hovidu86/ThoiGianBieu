@@ -13,6 +13,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -43,6 +44,10 @@ public class ChinhActivity extends Activity {
     /** Lối tắt khi giữ icon app trên màn hình chính. */
     public static final String VIEC_GHI_NGAY = "com.thoigianbieu.kiemsoat.GHI_NGAY";
     public static final String VIEC_CHUAN_BI = "com.thoigianbieu.kiemsoat.CHUAN_BI";
+    /** Từ lời nhắc buổi sáng: mở hộp điền nhanh giờ lên giường đêm qua. */
+    public static final String VIEC_GHI_NHANH = "com.thoigianbieu.kiemsoat.GHI_NHANH_HOP";
+    public static final String GHI_NHANH_DEM = "ghi_nhanh_dem";
+    public static final String GHI_NHANH_GIO = "ghi_nhanh_gio";
     public static final int TAB_GHI_NHAN = 0;
     public static final int TAB_THONG_KE = 1;
     public static final int TAB_CAI_DAT = 2;
@@ -75,7 +80,7 @@ public class ChinhActivity extends Activity {
 
     // Tab Cài đặt
     private EditText oUrl, oPhatVuot, oThuongThoiQuen;
-    private TextView oTruocGio, oMatChuoi, oNhacLuc, tinKetNoi, tinCapNhat;
+    private TextView oTruocGio, oMatChuoi, oNhacLuc, oNhacSangLuc, tinKetNoi, tinCapNhat;
     private Button nutCapNhat;
     private LinearLayout dsMoc, dsMocChuoi, dsBuocSua;
     private CapNhat.BanMoi banMoiDangCho;
@@ -141,13 +146,77 @@ public class ChinhActivity extends Activity {
             apDungMacDinhGhiNhan();
         } else if (VIEC_CHUAN_BI.equals(viec)) {
             chuyenTab(TAB_GHI_NHAN);
+        } else if (VIEC_GHI_NHANH.equals(viec)) {
+            // Xoá hành động khỏi intent ngay, kẻo xoay màn hình / dựng lại
+            // Activity là hộp thoại lại nhảy ra lần nữa.
+            y.setAction(null);
+            chuyenTab(TAB_GHI_NHAN);
+            NhacNgu.huyNhacSang(this);
+            hienHopGhiNhanh(y.getStringExtra(GHI_NHANH_DEM), y.getStringExtra(GHI_NHANH_GIO));
         }
+    }
+
+    /**
+     * Hộp điền nhanh từ lời nhắc buổi sáng: đêm cần ghi, giờ lên giường (đã
+     * điền gợi ý nếu có), giờ dậy để trống. "Ghi" đi qua đúng luồng xacNhan()
+     * — kể cả hỏi ghi đè — nên không có luật ghi nào khác ở đây. "Sửa chi
+     * tiết" chỉ đổ số vào biểu mẫu đầy đủ rồi đóng hộp.
+     */
+    private void hienHopGhiNhanh(String dem, String goiY) {
+        kho.doiDemNeuCan();
+        final String demGhi = (dem != null && dem.matches("^\\d{4}-\\d{2}-\\d{2}$")) ? dem : kho.demNay;
+        final boolean coGoiY = CauHinh.laGio(goiY);
+
+        // Đêm đó đã ghi rồi (bấm "Đúng, ghi" trên thông báo xong mới bấm thân
+        // thông báo, hoặc hệ thống phát lại intent sau khi tiến trình chết):
+        // không mở hộp nữa, kẻo dẫn tới hỏi ghi đè vô cớ.
+        DemNgu daCo = kho.timTheoNgay(demGhi);
+        if (daCo != null) {
+            bao(getString(R.string.gn_da_ghi_roi, LuatGiacNgu.ngayNgan(demGhi), daCo.gio));
+            return;
+        }
+
+        View v = LayoutInflater.from(this).inflate(R.layout.hop_ghi_nhanh, null);
+        final TextView oGio = v.findViewById(R.id.gn_gio);
+        final TextView oDay = v.findViewById(R.id.gn_gio_day);
+        TextView ghiChu = v.findViewById(R.id.gn_ghi_chu);
+
+        oGio.setText(coGoiY ? goiY : GIO_LEN_GIUONG_MAC_DINH);
+        ghiChu.setText(coGoiY
+                ? getString(R.string.gn_goi_y_theo_may, goiY)
+                : getString(R.string.gn_khong_goi_y));
+        oGio.setOnClickListener(x -> GiaoDien.chonGio(this, oGio.getText().toString(), oGio::setText));
+        oDay.setOnClickListener(x -> GiaoDien.chonGio(this,
+                oDay.getText().length() == 0 ? "06:30" : oDay.getText().toString(), oDay::setText));
+        oDay.setOnLongClickListener(x -> { oDay.setText(""); return true; });
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.gn_tieu_de, LuatGiacNgu.ngayNgan(demGhi)))
+                .setView(v)
+                .setPositiveButton(R.string.gn_ghi, (d, w) -> {
+                    oDem.setText(demGhi);
+                    oGioNgu.setText(oGio.getText());
+                    oGioDay.setText(oDay.getText());
+                    veXemTruoc();
+                    xacNhan();
+                })
+                .setNeutralButton(R.string.gn_sua_chi_tiet, (d, w) -> {
+                    oDem.setText(demGhi);
+                    oGioNgu.setText(oGio.getText());
+                    oGioDay.setText(oDay.getText());
+                    veXemTruoc();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (kho.doiDemNeuCan()) sangDemMoi();
+        // Kho là singleton dùng chung với GhiNhanhReceiver: bấm "Đúng, ghi"
+        // trên thông báo trong lúc app đang mở nền thì quay lại phải thấy ngay.
+        veTatCa();
         veDemNguoc();
         if (manMay != null) manMay.capNhat();
         nhip = new Runnable() {
@@ -229,6 +298,7 @@ public class ChinhActivity extends Activity {
         oMatChuoi = findViewById(R.id.o_mat_chuoi);
         oThuongThoiQuen = findViewById(R.id.o_thuong_thoi_quen);
         oNhacLuc = findViewById(R.id.o_nhac_luc);
+        oNhacSangLuc = findViewById(R.id.o_nhac_sang_luc);
         tinKetNoi = findViewById(R.id.tin_ket_noi);
         tinCapNhat = findViewById(R.id.tin_cap_nhat);
         nutCapNhat = findViewById(R.id.nut_cap_nhat);
@@ -289,6 +359,11 @@ public class ChinhActivity extends Activity {
                 GiaoDien.chonGio(this, oMatChuoi.getText().toString(), oMatChuoi::setText));
         oNhacLuc.setOnClickListener(v ->
                 GiaoDien.chonGio(this, oNhacLuc.getText().toString(), oNhacLuc::setText));
+        // Ô trống nghĩa là tắt nhắc sáng (hint hiện chữ "tắt"); giữ lâu để xoá.
+        oNhacSangLuc.setOnClickListener(v -> GiaoDien.chonGio(this,
+                oNhacSangLuc.getText().length() == 0 ? "08:00" : oNhacSangLuc.getText().toString(),
+                oNhacSangLuc::setText));
+        oNhacSangLuc.setOnLongClickListener(v -> { oNhacSangLuc.setText(""); return true; });
 
         TextWatcher doiGio = new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
@@ -849,6 +924,7 @@ public class ChinhActivity extends Activity {
         oMatChuoi.setText(c.matChuoiSau);
         oThuongThoiQuen.setText(String.valueOf(c.thuongThoiQuen));
         oNhacLuc.setText(c.nhacLuc);
+        oNhacSangLuc.setText(c.nhacSangLuc);
 
         dsMoc.removeAllViews(); hangMoc.clear();
         for (CaiDatNgu.Muc m : c.cacMuc) themHangMoc(m);
@@ -957,10 +1033,18 @@ public class ChinhActivity extends Activity {
         c.matChuoiSau = oMatChuoi.getText().toString().trim();
         c.thuongThoiQuen = soNguyen(oThuongThoiQuen, 0);
         c.nhacLuc = oNhacLuc.getText().toString().trim();
+        c.nhacSangLuc = oNhacSangLuc.getText().toString().trim();
 
         if (!laGioMoc(c.truocGioNay)) loi.add("\"Ngủ trước\" phải dạng HH:mm.");
         if (!laGioMoc(c.matChuoiSau)) loi.add("\"Muộn hơn\" phải dạng HH:mm.");
         if (!CauHinh.laGio(c.nhacLuc)) loi.add("Giờ nhắc phải dạng HH:mm.");
+        // Nhắc sáng phải nổ TRƯỚC mốc chia ngày 18:00 — sau mốc đó "đêm nay"
+        // của kho đã là đêm sắp tới, lời nhắc sẽ đòi ghi một đêm chưa ngủ.
+        if (!c.nhacSangLuc.isEmpty() && (!CauHinh.laGio(c.nhacSangLuc)
+                || Integer.parseInt(c.nhacSangLuc.substring(0, 2)) >= LuatGiacNgu.MOC_CHIA_NGAY)) {
+            loi.add("Giờ nhắc sáng phải dạng HH:mm và trước "
+                    + LuatGiacNgu.MOC_CHIA_NGAY + ":00, hoặc để trống để tắt.");
+        }
 
         c.cacMuc = new ArrayList<>();
         for (HangMoc h : hangMoc) {

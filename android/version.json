@@ -1,6 +1,6 @@
 {
-    "versionCode":  20,
-    "versionName":  "3.5",
+    "versionCode":  21,
+    "versionName":  "3.6",
     "apk":  "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-    "ghiChu":  "Dùng ngắt quãng: thêm ba cách tính khi tắt màn hình chưa đủ ngưỡng reset (chọn trong tab Khoá máy). Mặc định là \"hồi dần\": mỗi phút tắt màn hình hồi lại 3 phút dùng, hết cảnh còn 10 giây mà phải chờ 4 phút + 5 phút. Cách \"trừ vào quãng nghỉ\" giữ luật cũ nhưng lần nghỉ bắt buộc được trừ đi quãng đã tắt màn hình."
+    "ghiChu":  "Thêm lời nhắc buổi sáng (mặc định 08:00, chỉnh trong tab Cài đặt): thông báo ghi giờ lên giường đêm qua, gợi ý theo lần buông máy cuối cùng (quãng không dùng máy dài nhất trong đêm; màn hình sáng mà còn khoá không tính). Có nút \"Đúng, ghi ...\" ghi luôn từ thông báo, hoặc bấm vào để sửa trước khi ghi."
 }

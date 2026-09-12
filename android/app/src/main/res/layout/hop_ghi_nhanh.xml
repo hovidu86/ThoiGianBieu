@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Hộp điền nhanh mở từ lời nhắc buổi sáng. Chỉ hai ô giờ, bấm vào là ra bảng
+  chọn 5 phút quen thuộc; đêm cần ghi nằm trên tiêu đề hộp thoại.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp"
+    android:paddingTop="8dp">
+
+    <TextView
+        android:id="@+id/gn_ghi_chu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:lineSpacingExtra="2dp"
+        android:textColor="@color/chu_mo"
+        android:textSize="13.5sp" />
+
+    <TextView
+        style="@style/Nhan"
+        android:text="@string/gn_gio_len_giuong" />
+
+    <TextView
+        android:id="@+id/gn_gio"
+        style="@style/O"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:textSize="22sp"
+        android:textStyle="bold" />
+
+    <TextView
+        style="@style/Nhan"
+        android:layout_marginTop="12dp"
+        android:text="@string/gn_gio_day" />
+
+    <TextView
+        android:id="@+id/gn_gio_day"
+        style="@style/O"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:hint="--:--"
+        android:textColorHint="@color/chu_rat_mo" />
+
+</LinearLayout>
