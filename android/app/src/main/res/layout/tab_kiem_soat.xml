@@ -315,6 +315,52 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/nhan_nq_che_do"
+                style="@style/Nhan"
+                android:layout_marginTop="11dp"
+                android:layout_marginBottom="0dp"
+                android:text="@string/nhan_nq_che_do" />
+
+            <RadioGroup
+                android:id="@+id/nhom_nq_che_do"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <RadioButton
+                    android:id="@+id/rd_nq_cu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nq_che_do_cu"
+                    android:textColor="@color/chu"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rd_nq_hoi_dan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nq_che_do_hoi_dan"
+                    android:textColor="@color/chu"
+                    android:textSize="14sp" />
+
+                <RadioButton
+                    android:id="@+id/rd_nq_tru_nghi"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nq_che_do_tru_nghi"
+                    android:textColor="@color/chu"
+                    android:textSize="14sp" />
+            </RadioGroup>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/nq_che_do_ghi_chu"
+                android:textColor="@color/chu_rat_mo"
+                android:textSize="12sp" />
+
+            <TextView
                 style="@style/Nhan"
                 android:layout_marginTop="11dp"
                 android:text="@string/nhan_nq_khung_gio" />

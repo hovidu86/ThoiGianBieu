@@ -107,12 +107,15 @@ public class CauHinh {
     public String nqDenGio()          { return p.getString("nqDenGio", "00:00"); }
     public int nqKhanCapMoiNgay()     { return p.getInt("nqKhanCapMoiNgay", 2); }
     public boolean nqKhongKhoaKhiGoi(){ return p.getBoolean("nqKhongKhoaKhiGoi", true); }
+    /** Một trong ba hằng {@code NgatQuang.CHE_DO_*}. Mặc định là hồi dần. */
+    public int nqCheDo()              { return p.getInt("nqCheDo", NgatQuang.CHE_DO_HOI_DAN); }
 
     public void luuNgatQuang(boolean bat, int phutDung, int phutNghi, int phutReset,
                              int canhBaoPhut, String tuGio, String denGio,
-                             int khanCapMoiNgay, boolean khongKhoaKhiGoi) {
+                             int khanCapMoiNgay, boolean khongKhoaKhiGoi, int cheDo) {
         p.edit()
                 .putBoolean("nqBat", bat)
+                .putInt("nqCheDo", cheDo)
                 .putInt("nqPhutDung", phutDung)
                 .putInt("nqPhutNghi", phutNghi)
                 .putInt("nqPhutReset", phutReset)
@@ -142,6 +145,22 @@ public class CauHinh {
     public void nqDatKetThucNghi(long luc) {
         p.edit().putLong("nqKetThucNghi", luc).apply();
     }
+
+    /**
+     * Quãng tắt màn hình dài nhất trong đợt đang đếm (ms). Bộ đếm về 0 thì số
+     * này cũng về 0. Chế độ "trừ vào quãng nghỉ" dùng nó để rút ngắn quãng nghỉ
+     * bắt buộc; hai chế độ kia vẫn ghi để đổi chế độ giữa đợt không mất dấu.
+     */
+    public long nqNghiDaiNhat()        { return p.getLong("nqNghiDaiNhat", 0L); }
+    public void nqDatNghiDaiNhat(long ms) { p.edit().putLong("nqNghiDaiNhat", ms).apply(); }
+
+    /**
+     * Quãng nghỉ bắt buộc đang diễn ra đã được trừ bao nhiêu ms nhờ lần tắt
+     * màn hình trước đó. Chỉ để lớp phủ nghỉ nói cho người dùng biết vì sao
+     * đồng hồ ngắn hơn mọi khi; dịch vụ dựng lại giữa quãng nghỉ vẫn nói đúng.
+     */
+    public long nqNghiDaTru()          { return p.getLong("nqNghiDaTru", 0L); }
+    public void nqDatNghiDaTru(long ms) { p.edit().putLong("nqNghiDaTru", ms).apply(); }
 
     /* --- thống kê trong ngày --- */
 
@@ -293,5 +312,13 @@ public class CauHinh {
         long phut = ms / 60_000L;
         if (phut < 60) return phut + " phút";
         return (phut / 60) + " giờ " + (phut % 60) + " phút";
+    }
+
+    /** Như {@link #doDai} nhưng kể cả giây lẻ — cho những quãng vài phút. */
+    public static String doDaiGiay(long ms) {
+        long giay = ms / 1000L;
+        if (giay < 60) return giay + " giây";
+        if (giay % 60 == 0) return (giay / 60) + " phút";
+        return (giay / 60) + " phút " + (giay % 60) + " giây";
     }
 }

@@ -10,10 +10,14 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.provider.Settings;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +41,9 @@ public class ManKiemSoat {
     // Bốn ô giờ là TextView: bấm vào mở bảng chọn giờ của hệ thống.
     private TextView oGioKhoa, oGioKetThuc, oNqTuGio, oNqDenGio;
     private CheckBox chkKhoaBat, chkChanAmThanh, chkNqBat, chkNqKhongKhoaKhiGoi;
+    private RadioGroup nhomNqCheDo;
+    private TextView nhanNqCheDo;
+    private RadioButton rdNqHoiDan;
     private TextView tinhTrang;
 
     public ManKiemSoat(Activity ac, View goc) {
@@ -64,6 +71,9 @@ public class ManKiemSoat {
         oNqKhanCap = goc.findViewById(R.id.o_nq_khan_cap);
         chkNqBat = goc.findViewById(R.id.chk_nq_bat);
         chkNqKhongKhoaKhiGoi = goc.findViewById(R.id.chk_nq_khong_khoa_khi_goi);
+        nhomNqCheDo = goc.findViewById(R.id.nhom_nq_che_do);
+        nhanNqCheDo = goc.findViewById(R.id.nhan_nq_che_do);
+        rdNqHoiDan = goc.findViewById(R.id.rd_nq_hoi_dan);
 
         chkKhoaBat.setChecked(ch.khoaTheoGioBat());
         chkChanAmThanh.setChecked(ch.chanAmThanhBat());
@@ -82,6 +92,19 @@ public class ManKiemSoat {
         oNqDenGio.setText(ch.nqDenGio());
         oNqKhanCap.setText(String.valueOf(ch.nqKhanCapMoiNgay()));
         chkNqKhongKhoaKhiGoi.setChecked(ch.nqKhongKhoaKhiGoi());
+        nhomNqCheDo.check(ch.nqCheDo() == NgatQuang.CHE_DO_CU ? R.id.rd_nq_cu
+                : ch.nqCheDo() == NgatQuang.CHE_DO_TRU_NGHI ? R.id.rd_nq_tru_nghi
+                : R.id.rd_nq_hoi_dan);
+        // Nhãn ba nút chọn nói bằng con số thật ("hồi lại 3 phút") và đổi theo
+        // ngay khi gõ vào ô hạn mức hoặc ô ngưỡng reset, chưa cần bấm Lưu.
+        TextWatcher doiNhanCheDo = new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence c, int a, int b, int d) { }
+            @Override public void onTextChanged(CharSequence c, int a, int b, int d) { }
+            @Override public void afterTextChanged(Editable e) { capNhatNhanCheDo(); }
+        };
+        oNqPhutDung.addTextChangedListener(doiNhanCheDo);
+        oNqPhutReset.addTextChangedListener(doiNhanCheDo);
+        capNhatNhanCheDo();
 
         oGioKhoa.setOnClickListener(v ->
                 GiaoDien.chonGio(ac, oGioKhoa.getText().toString(), oGioKhoa::setText));
@@ -175,10 +198,13 @@ public class ManKiemSoat {
         ch.luu(gioKhoa, gioKet, Integer.parseInt(lapLai), canhBao, Integer.parseInt(khoang),
                 chkKhoaBat.isChecked());
         ch.datChanAmThanh(chkChanAmThanh.isChecked());
+        int cheDo = nhomNqCheDo.getCheckedRadioButtonId() == R.id.rd_nq_cu ? NgatQuang.CHE_DO_CU
+                : nhomNqCheDo.getCheckedRadioButtonId() == R.id.rd_nq_tru_nghi ? NgatQuang.CHE_DO_TRU_NGHI
+                : NgatQuang.CHE_DO_HOI_DAN;
         ch.luuNgatQuang(chkNqBat.isChecked(),
                 Integer.parseInt(nqDung), Integer.parseInt(nqNghi), Integer.parseInt(nqReset),
                 Integer.parseInt(nqCanhBao), nqTu, nqDen,
-                Integer.parseInt(nqKhanCap), chkNqKhongKhoaKhiGoi.isChecked());
+                Integer.parseInt(nqKhanCap), chkNqKhongKhoaKhiGoi.isChecked(), cheDo);
         if (doiMa) {
             ch.datMa(ma);
             oMa.setText("");
@@ -194,6 +220,26 @@ public class ManKiemSoat {
         Toast.makeText(ac, ac.getString(R.string.da_luu, LenLich.gioPhut(ch.mocKhoa())),
                 Toast.LENGTH_LONG).show();
         capNhatTinhTrang();
+    }
+
+    /**
+     * Điền con số thật vào nhãn nhóm chế độ theo hai ô đang gõ. Ô đang trống
+     * hoặc sai thì lấy số đã lưu, để nhãn không bao giờ hiện "chưa đủ 0 phút".
+     */
+    private void capNhatNhanCheDo() {
+        int dung = laSoDuong(oNqPhutDung.getText().toString().trim())
+                ? Integer.parseInt(oNqPhutDung.getText().toString().trim()) : ch.nqPhutDung();
+        int reset = laSoDuong(oNqPhutReset.getText().toString().trim())
+                ? Integer.parseInt(oNqPhutReset.getText().toString().trim()) : ch.nqPhutReset();
+        nhanNqCheDo.setText(ac.getString(R.string.nhan_nq_che_do, reset));
+        rdNqHoiDan.setText(ac.getString(R.string.nq_che_do_hoi_dan, tiLe(dung, reset)));
+    }
+
+    /** "3" cho 15/5, "3,8" cho 15/4 — không hiện "3.0". */
+    static String tiLe(int dung, int reset) {
+        if (reset <= 0) return "?";
+        if (dung % reset == 0) return String.valueOf(dung / reset);
+        return String.format(java.util.Locale.getDefault(), "%.1f", dung / (double) reset);
     }
 
     /** Có số nào trong danh sách "a, b, c" vượt quá nguong không. */
@@ -334,7 +380,24 @@ public class ManKiemSoat {
                 s.append("  Còn lại: ").append(Math.max(0, nq.conLai(bayGio) / 60_000))
                         .append(" phút\n");
             }
-            s.append("  Nghỉ ").append(ch.nqPhutReset()).append(" phút thì bộ đếm về 0\n");
+            s.append("  Tắt màn hình ").append(ch.nqPhutReset()).append(" phút thì bộ đếm về 0\n");
+            switch (ch.nqCheDo()) {
+                case NgatQuang.CHE_DO_HOI_DAN:
+                    s.append("  Tắt chưa đủ: hồi dần, 1 phút tắt = ")
+                            .append(tiLe(ch.nqPhutDung(), ch.nqPhutReset())).append(" phút dùng\n");
+                    break;
+                case NgatQuang.CHE_DO_TRU_NGHI:
+                    s.append("  Tắt chưa đủ: trừ vào lần nghỉ bắt buộc sau\n");
+                    if (ch.nqNghiDaiNhat() > 0) {
+                        s.append("  Quãng tắt dài nhất đợt này: ")
+                                .append(CauHinh.doDaiGiay(ch.nqNghiDaiNhat()))
+                                .append(" → lần nghỉ tới còn ")
+                                .append(CauHinh.doDaiGiay(nq.doDaiNghi())).append('\n');
+                    }
+                    break;
+                default:
+                    s.append("  Tắt chưa đủ: không tính gì\n");
+            }
         }
 
         s.append("\nHÔM NAY\n");

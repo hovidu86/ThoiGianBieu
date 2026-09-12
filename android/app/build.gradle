@@ -8,8 +8,8 @@ android {
         applicationId 'com.thoigianbieu.kiemsoat'
         minSdkVersion 26
         targetSdkVersion 36
-        versionCode 19
-        versionName '3.4'
+        versionCode 20
+        versionName '3.5'
     }
 
     compileOptions {

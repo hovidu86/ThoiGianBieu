@@ -224,6 +224,8 @@ public class DichVuKhoa extends Service {
         long bayGio = System.currentTimeMillis();
         NhatKy.ghi(this, "nq-trang-thai",
                 "đã dùng " + (nq.daDung(bayGio) / 60_000) + "/" + ch.nqPhutDung() + " phút"
+                        + ", chế độ " + ch.nqCheDo()
+                        + (ch.nqNghiDaiNhat() > 0 ? ", tắt dài nhất " + (ch.nqNghiDaiNhat() / 1000) + " giây" : "")
                         + (nq.dangNghi(bayGio) ? ", đang nghỉ" : "")
                         + (nq.dangApDung(bayGio) ? "" : ", NGOÀI khung giờ")
                         + (manHinhDangBat() ? ", màn hình bật" : ", màn hình tắt")
@@ -768,7 +770,9 @@ public class DichVuKhoa extends Service {
         long bayGio = System.currentTimeMillis();
         if (!nq.dangApDung(bayGio)) return;
         NhatKy.ghi(this, "nq-bat-nhip",
-                "đã dùng " + (nq.daDung(bayGio) / 60_000) + "/" + ch.nqPhutDung() + " phút");
+                "đã dùng " + CauHinh.doDaiGiay(nq.daDung(bayGio)) + "/" + ch.nqPhutDung() + " phút"
+                        + ", chế độ " + ch.nqCheDo()
+                        + (ch.nqNghiDaiNhat() > 0 ? ", tắt dài nhất " + CauHinh.doDaiGiay(ch.nqNghiDaiNhat()) : ""));
 
         // Báo thức dự phòng đúng lúc hết hạn mức: nhịp Handler bên dưới chết
         // theo dịch vụ nếu bị hệ thống giết, báo thức thì AlarmManager tự giữ.
@@ -816,13 +820,32 @@ public class DichVuKhoa extends Service {
 
         long con = nq.conLai(bayGio);
         if (con <= 0) {
+            if (nq.nghiKhongDangKhoa()) {
+                // Chế độ trừ vào quãng nghỉ: đã tắt màn hình gần đủ ngưỡng
+                // trước đó, phần còn phải nghỉ chưa tới nửa phút. Không khoá,
+                // mở đợt mới ngay và đếm tiếp.
+                long daTru = ch.nqNghiDaiNhat();
+                nq.boQuaNghi(bayGio);
+                daCanhBaoDot = false;
+                NhatKy.ghi(this, "bo-qua-nghi", "đã tắt màn hình "
+                        + (daTru / 1000) + " giây trước đó, coi như nghỉ đủ");
+                baoNhanh(ID_THONG_BAO_NGAT_QUANG, getString(R.string.nq_bo_qua_nghi),
+                        getString(R.string.nq_bo_qua_nghi_noi, CauHinh.doDaiGiay(daTru)));
+                goLopDemLui();
+                // Báo thức dự phòng đặt cho đợt cũ đã nổ/hết nghĩa, đặt lại cho đợt mới.
+                LenLich.datBaoThucNgatQuang(this, bayGio + nq.conLai(bayGio));
+                return SOAT_NQ_DAY;
+            }
             vaoNghi(bayGio);
             return 0;
         }
         if (!daCanhBaoDot && con <= ch.nqCanhBaoPhut() * 60_000L) {
             daCanhBaoDot = true;
             int phut = (int) Math.max(1, Math.round(con / 60_000.0));
-            String noi = getString(R.string.nq_sap_het_noi, phut, ch.nqPhutNghi());
+            // Chế độ trừ vào quãng nghỉ có thể chỉ còn phải nghỉ 1 phút — nói
+            // đúng số đó, đừng doạ 5 phút.
+            int phutNghi = (int) Math.max(1, Math.round(nq.doDaiNghi() / 60_000.0));
+            String noi = getString(R.string.nq_sap_het_noi, phut, phutNghi);
             baoNhanh(ID_THONG_BAO_NGAT_QUANG, getString(R.string.nq_sap_het), noi);
             hienDaiCanhBao(getString(R.string.nq_sap_het), noi);
             rung(250);
@@ -856,7 +879,9 @@ public class DichVuKhoa extends Service {
         nq.batDauNghi(bayGio);
         daCanhBaoDot = false;
         NhatKy.ghi(this, "ngat-quang", "hết hạn mức " + ch.nqPhutDung()
-                + " phút, nghỉ " + ch.nqPhutNghi() + " phút");
+                + " phút, nghỉ " + (nq.conNghi(bayGio) / 1000) + " giây"
+                + (ch.nqNghiDaTru() > 0 ? " (đã trừ " + (ch.nqNghiDaTru() / 1000)
+                + " giây tắt màn hình trước đó)" : ""));
         chanAmThanhDangPhat();
         hienLopNghi();
         batCanhGacNghi();
@@ -978,7 +1003,11 @@ public class DichVuKhoa extends Service {
         final TextView thongKe = khung.findViewById(R.id.thong_ke_nghi);
         final Button nutKhanCap = khung.findViewById(R.id.nut_khan_cap);
 
-        loiNhac.setText(R.string.nq_loi_nhac);
+        long daTru = ch.nqNghiDaTru();
+        loiNhac.setText(daTru > 0
+                ? getString(R.string.nq_da_tru, CauHinh.doDaiGiay(daTru))
+                        + "\n" + getString(R.string.nq_loi_nhac)
+                : getString(R.string.nq_loi_nhac));
         thongKe.setText(getString(R.string.nq_thong_ke,
                 CauHinh.doDai(ch.nqTongHomNay()), ch.nqSoDotHomNay()));
 

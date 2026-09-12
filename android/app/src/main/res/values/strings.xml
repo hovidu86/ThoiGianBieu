@@ -83,6 +83,14 @@
     <string name="nhan_nq_den_gio">Đến giờ (HH:mm)</string>
     <string name="nhan_nq_khan_cap">Số lần được thoát khẩn cấp mỗi ngày (0 = không cho)</string>
     <string name="nq_khong_khoa_khi_goi">Không tắt màn hình khi đang gọi điện</string>
+    <string name="nhan_nq_che_do">Khi tắt màn hình chưa đủ %1$d phút:</string>
+    <string name="nq_che_do_cu">Không tính gì, chỉ về 0 khi nghỉ đủ (như cũ)</string>
+    <string name="nq_che_do_hoi_dan">Hồi dần: mỗi phút tắt màn hình hồi lại %1$s phút dùng</string>
+    <string name="nq_che_do_tru_nghi">Trừ quãng tắt dài nhất vào lần nghỉ bắt buộc sau đó</string>
+    <string name="nq_che_do_ghi_chu">Chỉ tính những lần tắt màn hình từ 1 phút trở lên.</string>
+    <string name="nq_da_tru">Bạn đã tắt màn hình %1$s trước đó, nên chỉ cần nghỉ thêm phần còn lại.</string>
+    <string name="nq_bo_qua_nghi">Đã nghỉ đủ, bắt đầu đợt mới</string>
+    <string name="nq_bo_qua_nghi_noi">Bạn đã tắt màn hình %1$s trước đó — gần đủ quãng nghỉ, nên không khoá nữa.</string>
 
     <string name="nghi_bat_buoc">ĐANG NGHỈ BẮT BUỘC</string>
     <string name="nq_loi_nhac">Đứng dậy đi lại, uống nước, nhìn ra xa 20 giây.\nHết giờ màn hình này tự tan.</string>

@@ -96,12 +96,27 @@ phút, tắt, mở 6 phút — là đủ 15. Nhưng nếu khoảng nghỉ giữa
 ngưỡng reset** (mặc định 5 phút) thì bộ đếm về 0. Nghỉ tử tế thì được dùng tiếp
 trọn vẹn một đợt mới.
 
+Tắt màn hình **chưa đủ** ngưỡng reset thì sao? Có ba cách tính, chọn trong tab
+Khoá máy (từ v3.5, vì tình huống thật: còn 10 giây, tắt máy 4 phút, mở lại dùng
+nốt 10 giây rồi phải nghỉ tiếp 5 phút — 9 phút chờ cho một quãng nghỉ 5 phút):
+
+| Cách tính | Tắt 4 phút khi còn 10 giây | Ghi chú |
+|---|---|---|
+| Không tính gì (như cũ) | vẫn còn 10 giây, rồi nghỉ 5 phút | chỉ reset khi tắt đủ 5 phút |
+| **Hồi dần** (mặc định) | còn 12 phút, dùng tiếp | 1 phút tắt = (hạn mức ÷ ngưỡng reset) phút dùng, ở đây là 3; tắt đủ 5 phút thì hồi đầy — trùng với reset |
+| Trừ vào quãng nghỉ | dùng nốt 10 giây, rồi chỉ nghỉ 1 phút | trừ quãng tắt **dài nhất** trong đợt; phần còn phải nghỉ dưới 30 giây thì không khoá, coi như nghỉ đủ |
+
+Cả hai cách sau chỉ tính những lần tắt màn hình **từ 1 phút trở lên** — tắt vài
+giây nhìn thông báo không phải là nghỉ, nếu không "dùng 45 giây, tắt 15 giây"
+sẽ thành dùng liên tục trá hình.
+
 | Thiết lập | Mặc định | Ý nghĩa |
 |---|---|---|
 | Bật dùng ngắt quãng | tắt | công tắc chính |
 | Dùng liên tục mỗi đợt | 15 phút | hạn mức cộng dồn của một đợt |
 | Nghỉ bắt buộc | 5 phút | dài bao lâu thì được dùng lại |
 | Ngưỡng reset bộ đếm | 5 phút | nghỉ lâu hơn chừng này thì đếm lại từ 0 |
+| Khi tắt chưa đủ ngưỡng | hồi dần | ba cách tính ở bảng trên |
 | Cảnh báo trước khi hết đợt | 2 phút | phải nhỏ hơn hạn mức mỗi đợt |
 | Khung giờ áp dụng | cả ngày | để hai ô giờ giống nhau nghĩa là cả ngày |
 | Thoát khẩn cấp mỗi ngày | 2 lượt | đặt 0 là không cho thoát |

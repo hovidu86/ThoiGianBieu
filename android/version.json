@@ -1,6 +1,6 @@
 {
-  "versionCode": 19,
-  "versionName": "3.4",
-  "apk": "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
-  "ghiChu": "Khoá đêm hoặc nghỉ bắt buộc giờ tự giành quyền phát âm thanh, buộc app khác (YouTube, nhạc...) phải dừng thay vì cứ phát tiếp trong lúc màn hình tắt/bị chặn không tắt được. Có công tắc bật/tắt riêng trong tab Khoá máy."
+    "versionCode":  20,
+    "versionName":  "3.5",
+    "apk":  "https://github.com/hovidu86/ThoiGianBieu/raw/main/android/dist-apk/ThoiGianBieu.apk",
+    "ghiChu":  "Dùng ngắt quãng: thêm ba cách tính khi tắt màn hình chưa đủ ngưỡng reset (chọn trong tab Khoá máy). Mặc định là \"hồi dần\": mỗi phút tắt màn hình hồi lại 3 phút dùng, hết cảnh còn 10 giây mà phải chờ 4 phút + 5 phút. Cách \"trừ vào quãng nghỉ\" giữ luật cũ nhưng lần nghỉ bắt buộc được trừ đi quãng đã tắt màn hình."
 }
